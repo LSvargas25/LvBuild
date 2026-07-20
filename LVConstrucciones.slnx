@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="LvApi/LvApi.csproj" Id="e7e3158a-472b-469e-ac96-e5aeb3c7235a" />
+  <Project Path="LvApplication/LvApplication.csproj" Id="7d0b79eb-58ec-4acc-bffe-813e833e1ee6" />
+  <Project Path="LvDomain/LvDomain.csproj" />
+  <Project Path="LvInfrastructure/LvInfrastructure.csproj" Id="732fe917-976f-4002-86d6-0b7b06c90ba6" />
+  <Project Path="LvTest/LvTest.csproj" />
+</Solution>
