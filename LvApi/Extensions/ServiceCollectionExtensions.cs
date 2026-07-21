@@ -6,6 +6,7 @@ using LvApplication.Services.Customers;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Materials;
 using LvApplication.Services.Offers;
+using LvApplication.Services.Payroll;
 using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvApplication.Services.Storage;
@@ -22,6 +23,7 @@ using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
 using LvInfrastructure.Repositories.Offers;
+using LvInfrastructure.Repositories.Payroll;
 using LvInfrastructure.Repositories.Projects;
 using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
@@ -54,6 +56,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMaterialTicketRepository, MaterialTicketRepository>();
         services.AddScoped<IProjectInventoryItemRepository, ProjectInventoryItemRepository>();
         services.AddScoped<ISiteLogRepository, SiteLogRepository>();
+        services.AddScoped<IPayrollRepository, PayrollRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
@@ -78,6 +81,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IMaterialTicketService, MaterialTicketService>();
         services.AddScoped<ISiteLogService, SiteLogService>();
+        services.AddScoped<IPayrollService, PayrollService>();
 
         return services;
     }

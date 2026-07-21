@@ -4,6 +4,7 @@ using LvApplication.Services.Budgets;
 using LvApplication.Services.Customers;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Offers;
+using LvApplication.Services.Payroll;
 using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvApplication.Services.Storage;
@@ -15,6 +16,7 @@ using LvApplication.Validators.Budgets;
 using LvApplication.Validators.Customers;
 using LvApplication.Validators.Inventory;
 using LvApplication.Validators.Offers;
+using LvApplication.Validators.Payroll;
 using LvApplication.Validators.Projects;
 using LvApplication.Validators.SiteLogs;
 using LvApplication.Validators.Suppliers;
@@ -30,6 +32,7 @@ using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
 using LvInfrastructure.Repositories.Offers;
+using LvInfrastructure.Repositories.Payroll;
 using LvInfrastructure.Repositories.Projects;
 using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
@@ -155,4 +158,13 @@ public static class ServiceFactory
             new ProjectInventoryItemRepository(context),
             new CreateSiteLogDtoValidator(),
             new UpdateSiteLogDtoValidator());
+
+    public static PayrollService CreatePayrollService(AppDbContext context) =>
+        new(
+            new PayrollRepository(context),
+            CreateSiteLogService(context),
+            new ProjectRepository(context),
+            CreateProjectService(context),
+            new CreatePayrollDtoValidator(),
+            new UpdatePayrollDtoValidator());
 }
