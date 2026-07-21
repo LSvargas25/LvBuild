@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using LvApplication.DTOs.Auth;
 using LvApplication.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace LvApi.Controllers.Auth;
 
@@ -18,6 +20,7 @@ public class AuthController : ControllerBase
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterPolicies.Login)]
     [HttpPost("login")]
     public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
     {
@@ -43,11 +46,12 @@ public class AuthController : ControllerBase
     }
 
     [AllowAnonymous]
+    [EnableRateLimiting(RateLimiterPolicies.ForgotPassword)]
     [HttpPost("forgot-password")]
-    public async Task<IActionResult> ForgotPassword(ForgotPasswordRequestDto request)
+    public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword(ForgotPasswordRequestDto request)
     {
-        await _authService.ForgotPasswordAsync(request);
-        return NoContent();
+        var result = await _authService.ForgotPasswordAsync(request);
+        return Ok(result);
     }
 
     [AllowAnonymous]
@@ -56,5 +60,45 @@ public class AuthController : ControllerBase
     {
         await _authService.ResetPasswordAsync(request);
         return NoContent();
+    }
+
+    [HttpGet("me")]
+    public async Task<ActionResult<UserProfileDto>> GetMe()
+    {
+        var result = await _authService.GetMyProfileAsync(GetCurrentUserId());
+        return Ok(result);
+    }
+
+    [HttpPut("me")]
+    public async Task<ActionResult<UserProfileDto>> UpdateMe(UpdateProfileDto request)
+    {
+        var result = await _authService.UpdateMyProfileAsync(GetCurrentUserId(), request);
+        return Ok(result);
+    }
+
+    [HttpPost("me/change-password")]
+    public async Task<IActionResult> ChangeMyPassword(ChangePasswordDto request)
+    {
+        await _authService.ChangeMyPasswordAsync(GetCurrentUserId(), request);
+        return NoContent();
+    }
+
+    [HttpPost("me/photo")]
+    public async Task<ActionResult<UserProfileDto>> UploadMyPhoto(IFormFile file)
+    {
+        await using var stream = file.OpenReadStream();
+        var result = await _authService.UpdateMyProfilePhotoAsync(
+            GetCurrentUserId(),
+            stream,
+            file.FileName,
+            file.ContentType);
+
+        return Ok(result);
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
+        return int.Parse(userIdClaim!.Value);
     }
 }

@@ -3,17 +3,27 @@ using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
 using LvApplication.Services.Customers;
+using LvApplication.Services.Inventory;
+using LvApplication.Services.Materials;
 using LvApplication.Services.Offers;
+using LvApplication.Services.Projects;
+using LvApplication.Services.SiteLogs;
+using LvApplication.Services.Storage;
 using LvApplication.Services.Suppliers;
 using LvApplication.Services.Workers;
 using LvInfrastructure.Auth;
 using LvInfrastructure.Offers;
 using LvInfrastructure.Persistence;
+using LvInfrastructure.Storage;
 using LvInfrastructure.Repositories.Auth;
 using LvInfrastructure.Repositories.Branches;
 using LvInfrastructure.Repositories.Budgets;
 using LvInfrastructure.Repositories.Customers;
+using LvInfrastructure.Repositories.Inventory;
+using LvInfrastructure.Repositories.Materials;
 using LvInfrastructure.Repositories.Offers;
+using LvInfrastructure.Repositories.Projects;
+using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
 using LvInfrastructure.Repositories.Workers;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +49,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBudgetRepository, BudgetRepository>();
         services.AddScoped<IOfferRepository, OfferRepository>();
         services.AddScoped<IOfferPdfGenerator, OfferPdfGenerator>();
+        services.AddScoped<IProjectRepository, ProjectRepository>();
+        services.AddScoped<IMaterialCatalogRepository, MaterialCatalogRepository>();
+        services.AddScoped<IMaterialTicketRepository, MaterialTicketRepository>();
+        services.AddScoped<IProjectInventoryItemRepository, ProjectInventoryItemRepository>();
+        services.AddScoped<ISiteLogRepository, SiteLogRepository>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }
@@ -59,6 +75,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IBudgetService, BudgetService>();
         services.AddScoped<IOfferService, OfferService>();
+        services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<IMaterialTicketService, MaterialTicketService>();
+        services.AddScoped<ISiteLogService, SiteLogService>();
 
         return services;
     }

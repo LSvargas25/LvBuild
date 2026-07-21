@@ -9,6 +9,10 @@ namespace LvApplication.Services.Auth;
 
 public class UserService : IUserService
 {
+    // Matches the fixed seed data in RoleConfiguration (Role catalog from Fase 1: Id=1 is always GeneralManager).
+    private const int GeneralManagerRoleId = 1;
+    private const string GeneralManagerRoleName = "GeneralManager";
+
     private readonly IUserRepository _userRepository;
     private readonly IValidator<CreateUserDto> _createValidator;
 
@@ -18,9 +22,14 @@ public class UserService : IUserService
         _createValidator = createValidator;
     }
 
-    public async Task<UserResponseDto> CreateUserAsync(CreateUserDto request)
+    public async Task<UserResponseDto> CreateUserAsync(CreateUserDto request, IEnumerable<string> actingUserRoles)
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
+
+        if (request.RoleIds.Contains(GeneralManagerRoleId) && !actingUserRoles.Contains(GeneralManagerRoleName))
+        {
+            throw new ValidationAppException("Solo un Gerente General puede asignar el rol de Gerente General a un nuevo usuario.");
+        }
 
         if (await _userRepository.EmailExistsAsync(request.Email))
         {

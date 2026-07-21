@@ -21,7 +21,7 @@ public class UserServiceTests
             RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
         };
 
-        await userService.CreateUserAsync(first);
+        await userService.CreateUserAsync(first, new[] { "GeneralManager" });
 
         var duplicate = new CreateUserDto
         {
@@ -31,9 +31,60 @@ public class UserServiceTests
             RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
         };
 
-        var act = async () => await userService.CreateUserAsync(duplicate);
+        var act = async () => await userService.CreateUserAsync(duplicate, new[] { "GeneralManager" });
 
         await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_AssigningGeneralManagerRoleByNonGeneralManager_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var userService = ServiceFactory.CreateUserService(context);
+
+        var act = async () => await userService.CreateUserAsync(new CreateUserDto
+        {
+            Name = "Aspiring Manager",
+            Email = "aspiring.manager@example.com",
+            Password = "Password#123",
+            RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId }
+        }, new[] { "OperationsDirector" });
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_AssigningGeneralManagerRoleByGeneralManager_Succeeds()
+    {
+        using var context = TestDbContextFactory.Create();
+        var userService = ServiceFactory.CreateUserService(context);
+
+        var result = await userService.CreateUserAsync(new CreateUserDto
+        {
+            Name = "New Manager",
+            Email = "new.manager@example.com",
+            Password = "Password#123",
+            RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId }
+        }, new[] { "GeneralManager" });
+
+        result.Roles.Should().Contain("GeneralManager");
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_AssigningNonGeneralManagerRole_SucceedsRegardlessOfActingRole()
+    {
+        using var context = TestDbContextFactory.Create();
+        var userService = ServiceFactory.CreateUserService(context);
+
+        var result = await userService.CreateUserAsync(new CreateUserDto
+        {
+            Name = "New Project Admin",
+            Email = "new.projectadmin@example.com",
+            Password = "Password#123",
+            RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
+        }, new[] { "OperationsDirector" });
+
+        result.Roles.Should().Contain("ProjectAdmin");
     }
 
     [Fact]
@@ -48,7 +99,7 @@ public class UserServiceTests
             Email = "john.smith@example.com",
             Password = "Password#123",
             RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
-        });
+        }, new[] { "GeneralManager" });
 
         var result = await userService.GetByIdAsync(created.Id);
 
@@ -83,7 +134,7 @@ public class UserServiceTests
                 Email = $"pagination-user-{i}@example.com",
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
-            });
+            }, new[] { "GeneralManager" });
         }
 
         var firstPage = await userService.GetAllAsync(pageNumber: 1, pageSize: 2);

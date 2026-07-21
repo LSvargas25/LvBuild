@@ -12,6 +12,7 @@ public class User : BaseEntity
     public DateTime? LastLoginAt { get; set; }
     public int FailedLoginAttempts { get; set; } = 0;
     public DateTime? BlockedAt { get; set; }
+    public string? ProfilePhotoPath { get; set; }
 
     public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

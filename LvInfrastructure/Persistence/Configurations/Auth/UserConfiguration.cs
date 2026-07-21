@@ -32,6 +32,9 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .HasMaxLength(20)
             .IsRequired();
 
+        builder.Property(u => u.ProfilePhotoPath)
+            .HasMaxLength(300);
+
         builder.HasData(new User
         {
             Id = 1,

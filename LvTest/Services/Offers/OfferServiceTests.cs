@@ -533,7 +533,7 @@ public class OfferServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_ClientAccepted_ThrowsForbiddenException()
+    public async Task DeleteAsync_ClientAccepted_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
         var director = await TestUserFactory.CreateAsync(context, "director-offer-delacc@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
@@ -550,7 +550,26 @@ public class OfferServiceTests
 
         var act = async () => await service.DeleteAsync(created.Id);
 
-        await act.Should().ThrowAsync<ForbiddenException>();
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_SentToClient_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-offer-delsent@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-delsent@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
+        var service = ServiceFactory.CreateOfferService(context);
+
+        var created = await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
+        await service.SendToClientAsync(created.Id);
+
+        var act = async () => await service.DeleteAsync(created.Id);
+
+        await act.Should().ThrowAsync<ValidationAppException>();
     }
 
     [Fact]
@@ -632,7 +651,7 @@ public class OfferServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_DraftOrSentToClient_DeletesSuccessfully()
+    public async Task DeleteAsync_Draft_DeletesSuccessfully()
     {
         using var context = TestDbContextFactory.Create();
         var director = await TestUserFactory.CreateAsync(context, "director-offer-del@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
@@ -647,13 +666,5 @@ public class OfferServiceTests
 
         var getDraftAct = async () => await service.GetByIdAsync(draftOffer.Id);
         await getDraftAct.Should().ThrowAsync<NotFoundException>();
-
-        var budgetSentDelete = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
-        var sentOffer = await service.CreateAsync(BuildTurnkeyCreateDto(budgetSentDelete.Id), creator.Id);
-        await service.SendToClientAsync(sentOffer.Id);
-        await service.DeleteAsync(sentOffer.Id);
-
-        var getSentAct = async () => await service.GetByIdAsync(sentOffer.Id);
-        await getSentAct.Should().ThrowAsync<NotFoundException>();
     }
 }

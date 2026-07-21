@@ -6,5 +6,6 @@ public enum BudgetStatus
     Review,
     Correction,
     Sent,
-    ClientApproved
+    ClientApproved,
+    Cancelled
 }

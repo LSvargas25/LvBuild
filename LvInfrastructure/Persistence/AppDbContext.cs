@@ -2,8 +2,11 @@ using LvDomain.Entities.Auth;
 using LvDomain.Entities.Branches;
 using LvDomain.Entities.Budgets;
 using LvDomain.Entities.Customers;
+using LvDomain.Entities.Inventory;
 using LvDomain.Entities.Materials;
 using LvDomain.Entities.Offers;
+using LvDomain.Entities.Projects;
+using LvDomain.Entities.SiteLogs;
 using LvDomain.Entities.Suppliers;
 using LvDomain.Entities.Workers;
 using Microsoft.EntityFrameworkCore;
@@ -41,6 +44,18 @@ public class AppDbContext : DbContext
 
     public DbSet<Offer> Offers => Set<Offer>();
     public DbSet<OfferChapter> OfferChapters => Set<OfferChapter>();
+
+    public DbSet<Project> Projects => Set<Project>();
+    public DbSet<ProjectEndDateHistory> ProjectEndDateHistories => Set<ProjectEndDateHistory>();
+    public DbSet<ProjectWorker> ProjectWorkers => Set<ProjectWorker>();
+
+    public DbSet<MaterialTicket> MaterialTickets => Set<MaterialTicket>();
+    public DbSet<ProjectInventoryItem> ProjectInventoryItems => Set<ProjectInventoryItem>();
+
+    public DbSet<SiteLog> SiteLogs => Set<SiteLog>();
+    public DbSet<SiteLogWorker> SiteLogWorkers => Set<SiteLogWorker>();
+    public DbSet<SiteLogMaterial> SiteLogMaterials => Set<SiteLogMaterial>();
+    public DbSet<SiteLogEquipment> SiteLogEquipment => Set<SiteLogEquipment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

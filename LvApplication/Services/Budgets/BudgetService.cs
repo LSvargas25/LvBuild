@@ -13,17 +13,20 @@ public class BudgetService : IBudgetService
     private readonly IValidator<CreateBudgetDto> _createValidator;
     private readonly IValidator<UpdateBudgetDto> _updateValidator;
     private readonly IValidator<RequestCorrectionDto> _requestCorrectionValidator;
+    private readonly IValidator<CancelBudgetDto> _cancelValidator;
 
     public BudgetService(
         IBudgetRepository budgetRepository,
         IValidator<CreateBudgetDto> createValidator,
         IValidator<UpdateBudgetDto> updateValidator,
-        IValidator<RequestCorrectionDto> requestCorrectionValidator)
+        IValidator<RequestCorrectionDto> requestCorrectionValidator,
+        IValidator<CancelBudgetDto> cancelValidator)
     {
         _budgetRepository = budgetRepository;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
         _requestCorrectionValidator = requestCorrectionValidator;
+        _cancelValidator = cancelValidator;
     }
 
     public async Task<BudgetResponseDto> CreateAsync(CreateBudgetDto request, int createdByUserId)
@@ -159,6 +162,43 @@ public class BudgetService : IBudgetService
         await TransitionAsync(budget, BudgetStatus.ClientApproved, actingUserId, comment: null, reason: null);
 
         return MapToDto(budget);
+    }
+
+    public async Task<BudgetResponseDto> CancelAsync(int id, CancelBudgetDto request, int actingUserId)
+    {
+        await _cancelValidator.ValidateAndThrowAppExceptionAsync(request);
+
+        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+
+        if (budget.Status is BudgetStatus.ClientApproved or BudgetStatus.Cancelled)
+        {
+            throw new ValidationAppException($"No se puede cancelar un presupuesto en estado {budget.Status}.");
+        }
+
+        await TransitionAsync(budget, BudgetStatus.Cancelled, actingUserId, comment: null, reason: request.Reason);
+
+        return MapToDto(budget);
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+
+        if (budget.Status != BudgetStatus.Draft)
+        {
+            throw new ValidationAppException("Solo se puede eliminar un presupuesto en estado Borrador; use Cancelar en cualquier otro estado.");
+        }
+
+        // The creation entry always has PreviousStatus == null; any entry with a non-null
+        // PreviousStatus means the budget actually transitioned away from Draft at some point
+        // (even if it later came back to Draft via Correction), which disqualifies hard delete.
+        var history = await _budgetRepository.GetHistoryAsync(id);
+        if (history.Any(h => h.PreviousStatus.HasValue))
+        {
+            throw new ValidationAppException("Este presupuesto ya tuvo actividad (salió de Borrador alguna vez); use Cancelar en vez de Eliminar.");
+        }
+
+        await _budgetRepository.DeleteAsync(budget);
     }
 
     public async Task<BudgetResponseDto> GetByIdAsync(int id)

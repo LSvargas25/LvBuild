@@ -9,5 +9,6 @@ public interface IBudgetRepository
     Task<(List<Budget> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, BudgetStatus? status);
     Task AddAsync(Budget budget);
     Task UpdateAsync(Budget budget);
+    Task DeleteAsync(Budget budget);
     Task<List<BudgetHistory>> GetHistoryAsync(int budgetId);
 }

@@ -1,0 +1,88 @@
+using System.Security.Claims;
+using LvApplication.Common;
+using LvApplication.DTOs.Projects;
+using LvApplication.Services.Projects;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
+namespace LvApi.Controllers.Projects;
+
+[ApiController]
+[Route("api/projects")]
+[Authorize]
+public class ProjectsController : ControllerBase
+{
+    private readonly IProjectService _projectService;
+
+    public ProjectsController(IProjectService projectService)
+    {
+        _projectService = projectService;
+    }
+
+    [Authorize(Roles = "GeneralManager,OperationsDirector")]
+    [HttpPost]
+    public async Task<ActionResult<ProjectDto>> Create(CreateProjectDto request)
+    {
+        var result = await _projectService.CreateProjectAsync(request, GetCurrentUserId());
+        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult<PagedResult<ProjectDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    {
+        var result = await _projectService.GetAllAsync(pageNumber, pageSize);
+        return Ok(result);
+    }
+
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<ProjectDto>> GetById(int id)
+    {
+        var result = await _projectService.GetByIdAsync(id);
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "GeneralManager,OperationsDirector,ProjectAdmin")]
+    [HttpPut("{id:int}/end-date")]
+    public async Task<ActionResult<ProjectDto>> UpdateEndDate(int id, UpdateEndDateDto request)
+    {
+        var result = await _projectService.UpdateEndDateAsync(id, request, GetCurrentUserId());
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "GeneralManager,OperationsDirector,ProjectAdmin")]
+    [HttpPost("{id:int}/workers")]
+    public async Task<ActionResult<ProjectDto>> AssignWorker(int id, AssignWorkerDto request)
+    {
+        var result = await _projectService.AssignWorkerAsync(id, request, GetCurrentUserId());
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "GeneralManager,OperationsDirector,ProjectAdmin")]
+    [HttpDelete("{id:int}/workers/{workerId:int}")]
+    public async Task<ActionResult<ProjectDto>> UnassignWorker(int id, int workerId)
+    {
+        var result = await _projectService.UnassignWorkerAsync(id, workerId);
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "GeneralManager,OperationsDirector")]
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _projectService.DeleteAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("{id:int}/end-date-history")]
+    public async Task<ActionResult<List<ProjectEndDateHistoryDto>>> GetEndDateHistory(int id)
+    {
+        var result = await _projectService.GetEndDateHistoryAsync(id);
+        return Ok(result);
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
+        return int.Parse(userIdClaim!.Value);
+    }
+}

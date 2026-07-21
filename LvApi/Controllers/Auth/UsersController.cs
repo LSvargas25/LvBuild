@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using LvApplication.Common;
 using LvApplication.DTOs.Auth;
 using LvApplication.Services.Auth;
@@ -18,13 +19,16 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
+    [Authorize(Roles = "GeneralManager")]
     [HttpPost]
     public async Task<ActionResult<UserResponseDto>> Create(CreateUserDto request)
     {
-        var result = await _userService.CreateUserAsync(request);
+        var actingUserRoles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+        var result = await _userService.CreateUserAsync(request, actingUserRoles);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<UserResponseDto>> GetById(int id)
     {
@@ -32,6 +36,7 @@ public class UsersController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpGet]
     public async Task<ActionResult<PagedResult<UserResponseDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
     {

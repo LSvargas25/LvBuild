@@ -11,7 +11,6 @@ public class ResetPasswordRequestDtoValidator : AbstractValidator<ResetPasswordR
             .NotEmpty();
 
         RuleFor(x => x.NewPassword)
-            .NotEmpty()
-            .MinimumLength(8);
+            .MustBeAValidNewPassword();
     }
 }

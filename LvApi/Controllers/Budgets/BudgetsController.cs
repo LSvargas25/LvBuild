@@ -76,6 +76,22 @@ public class BudgetsController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = "GeneralManager,OperationsDirector")]
+    [HttpPost("{id:int}/cancel")]
+    public async Task<ActionResult<BudgetResponseDto>> Cancel(int id, CancelBudgetDto request)
+    {
+        var result = await _budgetService.CancelAsync(id, request, GetCurrentUserId());
+        return Ok(result);
+    }
+
+    [Authorize(Roles = "GeneralManager,OperationsDirector")]
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        await _budgetService.DeleteAsync(id);
+        return NoContent();
+    }
+
     [HttpGet]
     public async Task<ActionResult<PagedResult<BudgetResponseDto>>> GetAll(
         [FromQuery] int pageNumber = 1,

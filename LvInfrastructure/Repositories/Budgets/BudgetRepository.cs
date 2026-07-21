@@ -55,6 +55,12 @@ public class BudgetRepository : IBudgetRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task DeleteAsync(Budget budget)
+    {
+        _context.Budgets.Remove(budget);
+        await _context.SaveChangesAsync();
+    }
+
     public async Task<List<BudgetHistory>> GetHistoryAsync(int budgetId) =>
         await _context.BudgetHistories
             .Where(h => h.BudgetId == budgetId)

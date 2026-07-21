@@ -572,6 +572,203 @@ public class BudgetServiceTests
         result.Items.Should().NotContain(b => b.Id == draft.Id);
     }
 
+    [Theory]
+    [InlineData(BudgetStatus.Draft)]
+    [InlineData(BudgetStatus.Review)]
+    [InlineData(BudgetStatus.Correction)]
+    [InlineData(BudgetStatus.Sent)]
+    public async Task CancelAsync_FromAllowedState_CancelsAndRecordsHistoryWithReason(BudgetStatus fromStatus)
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, $"director-cancel-{fromStatus}@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, $"projectadmin-cancel-{fromStatus}@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var manager = await TestUserFactory.CreateAsync(context, $"gm-cancel-{fromStatus}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var created = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+
+        if (fromStatus is BudgetStatus.Review or BudgetStatus.Correction or BudgetStatus.Sent)
+        {
+            await service.SubmitForReviewAsync(created.Id, creator.Id);
+        }
+
+        if (fromStatus == BudgetStatus.Correction)
+        {
+            await service.RequestCorrectionAsync(created.Id, new RequestCorrectionDto { Comment = "Ajustar precios" }, manager.Id);
+        }
+
+        if (fromStatus == BudgetStatus.Sent)
+        {
+            await service.ApproveInternalAsync(created.Id, manager.Id);
+        }
+
+        var result = await service.CancelAsync(created.Id, new CancelBudgetDto { Reason = "El cliente desistió del proyecto" }, manager.Id);
+
+        result.Status.Should().Be(BudgetStatus.Cancelled);
+
+        var history = await service.GetHistoryAsync(created.Id);
+        history.Last().NewStatus.Should().Be(BudgetStatus.Cancelled);
+        history.Last().Reason.Should().Be("El cliente desistió del proyecto");
+    }
+
+    [Fact]
+    public async Task CancelAsync_FromClientApproved_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-cancel-approved@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-cancel-approved@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var manager = await TestUserFactory.CreateAsync(context, "gm-cancel-approved@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var created = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+        await service.SubmitForReviewAsync(created.Id, creator.Id);
+        await service.ApproveInternalAsync(created.Id, manager.Id);
+        await service.MarkClientApprovedAsync(created.Id, manager.Id);
+
+        var act = async () => await service.CancelAsync(created.Id, new CancelBudgetDto { Reason = "x" }, manager.Id);
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
+    public async Task CancelAsync_AlreadyCancelled_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-cancel-twice@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-cancel-twice@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var manager = await TestUserFactory.CreateAsync(context, "gm-cancel-twice@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var created = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+        await service.CancelAsync(created.Id, new CancelBudgetDto { Reason = "Primera cancelación" }, manager.Id);
+
+        var act = async () => await service.CancelAsync(created.Id, new CancelBudgetDto { Reason = "Segunda cancelación" }, manager.Id);
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
+    public async Task CancelAsync_EmptyReason_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-cancel-noreason@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-cancel-noreason@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var manager = await TestUserFactory.CreateAsync(context, "gm-cancel-noreason@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var created = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+
+        var act = async () => await service.CancelAsync(created.Id, new CancelBudgetDto { Reason = "" }, manager.Id);
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_DraftWithoutHistory_DeletesSuccessfully()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-delete-clean@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-delete-clean@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var created = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+
+        await service.DeleteAsync(created.Id);
+
+        var stored = await context.Budgets.FindAsync(created.Id);
+        stored.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_DraftWithPriorTransitionHistory_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-delete-hadhistory@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-delete-hadhistory@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var created = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+
+        // Simulate a budget that is currently Draft but previously left Draft at some point
+        // (e.g. Draft -> Review -> Correction cycle), which the state machine itself never
+        // routes back to literal Draft, but the Delete guard must still catch defensively.
+        var budgetEntity = await context.Budgets.FindAsync(created.Id);
+        context.BudgetHistories.Add(new LvDomain.Entities.Budgets.BudgetHistory
+        {
+            BudgetId = created.Id,
+            UserId = creator.Id,
+            PreviousStatus = BudgetStatus.Review,
+            NewStatus = BudgetStatus.Draft,
+            Timestamp = DateTime.UtcNow,
+            CreatedAt = DateTime.UtcNow
+        });
+        await context.SaveChangesAsync();
+
+        var act = async () => await service.DeleteAsync(created.Id);
+
+        var exception = await act.Should().ThrowAsync<ValidationAppException>();
+        exception.Which.Message.Should().Contain("Cancelar");
+    }
+
+    [Theory]
+    [InlineData(BudgetStatus.Review)]
+    [InlineData(BudgetStatus.Correction)]
+    [InlineData(BudgetStatus.Sent)]
+    [InlineData(BudgetStatus.ClientApproved)]
+    [InlineData(BudgetStatus.Cancelled)]
+    public async Task DeleteAsync_NonDraftState_ThrowsValidationException(BudgetStatus targetStatus)
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, $"director-delete-nondraft-{targetStatus}@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, $"projectadmin-delete-nondraft-{targetStatus}@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var manager = await TestUserFactory.CreateAsync(context, $"gm-delete-nondraft-{targetStatus}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var created = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+
+        if (targetStatus == BudgetStatus.Cancelled)
+        {
+            await service.CancelAsync(created.Id, new CancelBudgetDto { Reason = "x" }, manager.Id);
+        }
+        else
+        {
+            await service.SubmitForReviewAsync(created.Id, creator.Id);
+
+            if (targetStatus == BudgetStatus.Correction)
+            {
+                await service.RequestCorrectionAsync(created.Id, new RequestCorrectionDto { Comment = "Ajustar" }, manager.Id);
+            }
+
+            if (targetStatus is BudgetStatus.Sent or BudgetStatus.ClientApproved)
+            {
+                await service.ApproveInternalAsync(created.Id, manager.Id);
+            }
+
+            if (targetStatus == BudgetStatus.ClientApproved)
+            {
+                await service.MarkClientApprovedAsync(created.Id, manager.Id);
+            }
+        }
+
+        var act = async () => await service.DeleteAsync(created.Id);
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
     private static UpdateBudgetDto BuildUpdateDtoFrom(BudgetResponseDto created, int customerId, int branchId) => new()
     {
         CustomerId = customerId,

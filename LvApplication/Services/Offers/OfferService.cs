@@ -189,9 +189,9 @@ public class OfferService : IOfferService
     {
         var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
 
-        if (offer.Status == OfferStatus.ClientAccepted)
+        if (offer.Status != OfferStatus.Draft)
         {
-            throw new ForbiddenException("No se puede eliminar una oferta Aceptada por el Cliente.");
+            throw new ValidationAppException("Solo se puede eliminar una oferta en estado Borrador; una vez enviada al cliente ya no se puede eliminar.");
         }
 
         await _offerRepository.DeleteAsync(offer);
