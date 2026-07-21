@@ -3,6 +3,7 @@ using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.SiteLogs;
 using LvApplication.Services.Inventory;
+using LvApplication.Services.Progress;
 using LvApplication.Services.Projects;
 using LvDomain.Entities.Inventory;
 using LvDomain.Entities.SiteLogs;
@@ -15,6 +16,7 @@ public class SiteLogService : ISiteLogService
     private readonly ISiteLogRepository _siteLogRepository;
     private readonly IProjectRepository _projectRepository;
     private readonly IProjectInventoryItemRepository _inventoryRepository;
+    private readonly IProjectProgressService _projectProgressService;
     private readonly IValidator<CreateSiteLogDto> _createValidator;
     private readonly IValidator<UpdateSiteLogDto> _updateValidator;
 
@@ -22,12 +24,14 @@ public class SiteLogService : ISiteLogService
         ISiteLogRepository siteLogRepository,
         IProjectRepository projectRepository,
         IProjectInventoryItemRepository inventoryRepository,
+        IProjectProgressService projectProgressService,
         IValidator<CreateSiteLogDto> createValidator,
         IValidator<UpdateSiteLogDto> updateValidator)
     {
         _siteLogRepository = siteLogRepository;
         _projectRepository = projectRepository;
         _inventoryRepository = inventoryRepository;
+        _projectProgressService = projectProgressService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -161,6 +165,10 @@ public class SiteLogService : ISiteLogService
         siteLog.Status = SiteLogStatus.Approved;
         siteLog.ApprovedByUserId = approvedByUserId;
         siteLog.UpdatedAt = DateTime.UtcNow;
+
+        var progress = await _projectProgressService.CalculateAndRecordAsync(siteLog.Id);
+        siteLog.ProgressPercentage = progress.ProgressPercentage;
+
         await _siteLogRepository.UpdateAsync(siteLog);
 
         project.TotalWorkedHours += siteLog.Workers.Sum(w => w.HoursWorked);

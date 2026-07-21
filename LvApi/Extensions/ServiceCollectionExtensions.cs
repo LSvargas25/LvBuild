@@ -3,10 +3,12 @@ using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
 using LvApplication.Services.Customers;
+using LvApplication.Services.Incidents;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Materials;
 using LvApplication.Services.Offers;
 using LvApplication.Services.Payroll;
+using LvApplication.Services.Progress;
 using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvApplication.Services.Storage;
@@ -22,8 +24,10 @@ using LvInfrastructure.Repositories.Budgets;
 using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
+using LvInfrastructure.Repositories.Incidents;
 using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Payroll;
+using LvInfrastructure.Repositories.Progress;
 using LvInfrastructure.Repositories.Projects;
 using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
@@ -57,6 +61,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProjectInventoryItemRepository, ProjectInventoryItemRepository>();
         services.AddScoped<ISiteLogRepository, SiteLogRepository>();
         services.AddScoped<IPayrollRepository, PayrollRepository>();
+        services.AddScoped<IProjectProgressRepository, ProjectProgressRepository>();
+        services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
@@ -82,6 +88,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMaterialTicketService, MaterialTicketService>();
         services.AddScoped<ISiteLogService, SiteLogService>();
         services.AddScoped<IPayrollService, PayrollService>();
+        services.AddScoped<IProjectProgressService, ProjectProgressService>();
+        services.AddScoped<IIncidentService, IncidentService>();
 
         return services;
     }

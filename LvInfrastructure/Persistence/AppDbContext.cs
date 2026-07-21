@@ -4,8 +4,10 @@ using LvDomain.Entities.Budgets;
 using LvDomain.Entities.Customers;
 using LvDomain.Entities.Inventory;
 using LvDomain.Entities.Materials;
+using LvDomain.Entities.Incidents;
 using LvDomain.Entities.Offers;
 using LvDomain.Entities.Payroll;
+using LvDomain.Entities.Progress;
 using LvDomain.Entities.Projects;
 using LvDomain.Entities.SiteLogs;
 using LvDomain.Entities.Suppliers;
@@ -61,6 +63,12 @@ public class AppDbContext : DbContext
     public DbSet<Payroll> Payrolls => Set<Payroll>();
     public DbSet<PayrollDetail> PayrollDetails => Set<PayrollDetail>();
     public DbSet<PayrollDetailPayment> PayrollDetailPayments => Set<PayrollDetailPayment>();
+
+    public DbSet<ProjectProgress> ProjectProgresses => Set<ProjectProgress>();
+
+    public DbSet<Incident> Incidents => Set<Incident>();
+    public DbSet<IncidentMaterial> IncidentMaterials => Set<IncidentMaterial>();
+    public DbSet<IncidentWorker> IncidentWorkers => Set<IncidentWorker>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

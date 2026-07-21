@@ -3,8 +3,10 @@ using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
 using LvApplication.Services.Customers;
 using LvApplication.Services.Inventory;
+using LvApplication.Services.Incidents;
 using LvApplication.Services.Offers;
 using LvApplication.Services.Payroll;
+using LvApplication.Services.Progress;
 using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvApplication.Services.Storage;
@@ -15,6 +17,7 @@ using LvApplication.Validators.Branches;
 using LvApplication.Validators.Budgets;
 using LvApplication.Validators.Customers;
 using LvApplication.Validators.Inventory;
+using LvApplication.Validators.Incidents;
 using LvApplication.Validators.Offers;
 using LvApplication.Validators.Payroll;
 using LvApplication.Validators.Projects;
@@ -31,8 +34,10 @@ using LvInfrastructure.Repositories.Budgets;
 using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
+using LvInfrastructure.Repositories.Incidents;
 using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Payroll;
+using LvInfrastructure.Repositories.Progress;
 using LvInfrastructure.Repositories.Projects;
 using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
@@ -151,11 +156,19 @@ public static class ServiceFactory
             new CreateMaterialTicketDtoValidator(),
             new UpdateMaterialTicketDtoValidator());
 
+    public static ProjectProgressService CreateProjectProgressService(AppDbContext context) =>
+        new(
+            new ProjectProgressRepository(context),
+            new SiteLogRepository(context),
+            new ProjectRepository(context),
+            new OfferRepository(context));
+
     public static SiteLogService CreateSiteLogService(AppDbContext context) =>
         new(
             new SiteLogRepository(context),
             new ProjectRepository(context),
             new ProjectInventoryItemRepository(context),
+            CreateProjectProgressService(context),
             new CreateSiteLogDtoValidator(),
             new UpdateSiteLogDtoValidator());
 
@@ -167,4 +180,13 @@ public static class ServiceFactory
             CreateProjectService(context),
             new CreatePayrollDtoValidator(),
             new UpdatePayrollDtoValidator());
+
+    public static IncidentService CreateIncidentService(AppDbContext context) =>
+        new(
+            new IncidentRepository(context),
+            new ProjectRepository(context),
+            new ProjectInventoryItemRepository(context),
+            new WorkerRepository(context),
+            new CreateIncidentDtoValidator(),
+            new UpdateIncidentDtoValidator());
 }

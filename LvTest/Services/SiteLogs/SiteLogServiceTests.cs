@@ -436,4 +436,92 @@ public class SiteLogServiceTests
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
+
+    [Fact]
+    public async Task ApproveAsync_ZeroElapsedWeeks_SetsProgressPercentageToZero()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (project, managerId, projectAdminId) = await CreateActiveProjectAsync(context);
+        var service = ServiceFactory.CreateSiteLogService(context);
+
+        var created = await service.CreateAsync(new CreateSiteLogDto
+        {
+            ProjectId = project.Id,
+            WeekStart = project.StartDate,
+            WeekEnd = project.StartDate,
+            TaskDescription = "Semana inicial"
+        }, projectAdminId);
+        await service.SubmitToReviewAsync(created.Id);
+
+        var approved = await service.ApproveAsync(created.Id, managerId);
+
+        approved.ProgressPercentage.Should().Be(0m);
+    }
+
+    [Fact]
+    public async Task ApproveAsync_AtMidpointOfEstimatedDuration_SetsProgressPercentageTo50()
+    {
+        using var context = TestDbContextFactory.Create();
+        // CreateAcceptedOfferAsync sets EstimatedDurationWeeks = 10, so 5 elapsed weeks = 50%.
+        var (project, managerId, projectAdminId) = await CreateActiveProjectAsync(context);
+        var service = ServiceFactory.CreateSiteLogService(context);
+
+        var created = await service.CreateAsync(new CreateSiteLogDto
+        {
+            ProjectId = project.Id,
+            WeekStart = project.StartDate,
+            WeekEnd = project.StartDate.AddDays(35),
+            TaskDescription = "Semana intermedia"
+        }, projectAdminId);
+        await service.SubmitToReviewAsync(created.Id);
+
+        var approved = await service.ApproveAsync(created.Id, managerId);
+
+        approved.ProgressPercentage.Should().Be(50m);
+    }
+
+    [Fact]
+    public async Task ApproveAsync_BeyondEstimatedDuration_CapsProgressPercentageAt100()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (project, managerId, projectAdminId) = await CreateActiveProjectAsync(context);
+        var service = ServiceFactory.CreateSiteLogService(context);
+
+        var created = await service.CreateAsync(new CreateSiteLogDto
+        {
+            ProjectId = project.Id,
+            WeekStart = project.StartDate,
+            WeekEnd = project.StartDate.AddDays(140), // 20 weeks, double the 10-week estimate
+            TaskDescription = "Semana muy avanzada"
+        }, projectAdminId);
+        await service.SubmitToReviewAsync(created.Id);
+
+        var approved = await service.ApproveAsync(created.Id, managerId);
+
+        approved.ProgressPercentage.Should().Be(100m);
+    }
+
+    [Fact]
+    public async Task ApproveAsync_CreatesProjectProgressRecord()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (project, managerId, projectAdminId) = await CreateActiveProjectAsync(context);
+        var service = ServiceFactory.CreateSiteLogService(context);
+
+        var created = await service.CreateAsync(new CreateSiteLogDto
+        {
+            ProjectId = project.Id,
+            WeekStart = project.StartDate,
+            WeekEnd = project.StartDate.AddDays(35),
+            TaskDescription = "Semana intermedia"
+        }, projectAdminId);
+        await service.SubmitToReviewAsync(created.Id);
+
+        await service.ApproveAsync(created.Id, managerId);
+
+        var progressRecords = await context.ProjectProgresses.Where(p => p.SiteLogId == created.Id).ToListAsync();
+        progressRecords.Should().ContainSingle();
+        progressRecords[0].ProjectId.Should().Be(project.Id);
+        progressRecords[0].ProgressPercentage.Should().Be(50m);
+    }
 }
