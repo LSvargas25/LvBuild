@@ -1,0 +1,14 @@
+using LvDomain.Enums;
+
+namespace LvApplication.DTOs.Workers;
+
+public class CreateWorkerDto
+{
+    public string Name { get; set; } = string.Empty;
+    public string? PersonalId { get; set; }
+    public string? PhoneNumber { get; set; }
+    public DateTime? Birthday { get; set; }
+    public WorkerCategory Category { get; set; }
+    public WorkerType Type { get; set; }
+    public decimal HourlyRate { get; set; }
+}
