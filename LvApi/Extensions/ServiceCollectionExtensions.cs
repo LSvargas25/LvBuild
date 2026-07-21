@@ -3,14 +3,17 @@ using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
 using LvApplication.Services.Customers;
+using LvApplication.Services.Offers;
 using LvApplication.Services.Suppliers;
 using LvApplication.Services.Workers;
 using LvInfrastructure.Auth;
+using LvInfrastructure.Offers;
 using LvInfrastructure.Persistence;
 using LvInfrastructure.Repositories.Auth;
 using LvInfrastructure.Repositories.Branches;
 using LvInfrastructure.Repositories.Budgets;
 using LvInfrastructure.Repositories.Customers;
+using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Suppliers;
 using LvInfrastructure.Repositories.Workers;
 using Microsoft.EntityFrameworkCore;
@@ -34,6 +37,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWorkerRepository, WorkerRepository>();
         services.AddScoped<IBranchRepository, BranchRepository>();
         services.AddScoped<IBudgetRepository, BudgetRepository>();
+        services.AddScoped<IOfferRepository, OfferRepository>();
+        services.AddScoped<IOfferPdfGenerator, OfferPdfGenerator>();
 
         return services;
     }
@@ -53,6 +58,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IWorkerService, WorkerService>();
         services.AddScoped<IBranchService, BranchService>();
         services.AddScoped<IBudgetService, BudgetService>();
+        services.AddScoped<IOfferService, OfferService>();
 
         return services;
     }

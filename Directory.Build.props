@@ -1,0 +1,15 @@
+<Project>
+
+  <!--
+    Centralized analyzer settings for every project in the solution.
+    Uses the .NET SDK's built-in analyzers (Microsoft.CodeAnalysis.NetAnalyzers) —
+    no extra NuGet package needed, so there is no version to pin/track separately from the SDK.
+  -->
+  <PropertyGroup>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>Recommended</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+</Project>

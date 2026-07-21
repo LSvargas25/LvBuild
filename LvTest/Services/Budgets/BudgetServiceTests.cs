@@ -3,6 +3,7 @@ using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Budgets;
 using LvDomain.Entities.Branches;
 using LvDomain.Entities.Customers;
+using LvDomain.Entities.Materials;
 using LvDomain.Enums;
 using LvTest.Common;
 
@@ -53,6 +54,14 @@ public class BudgetServiceTests
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
         return branch;
+    }
+
+    private static async Task<MaterialCatalog> CreateMaterialAsync(LvInfrastructure.Persistence.AppDbContext context, string name)
+    {
+        var material = new MaterialCatalog { Name = name, CreatedAt = DateTime.UtcNow };
+        context.MaterialCatalogs.Add(material);
+        await context.SaveChangesAsync();
+        return material;
     }
 
     private static CreateBudgetDto BuildCreateDto(int customerId, int branchId, bool withChapter = true) => new()
@@ -421,6 +430,146 @@ public class BudgetServiceTests
         await correctionAct.Should().ThrowAsync<ForbiddenException>();
         await withdrawAct.Should().ThrowAsync<ForbiddenException>();
         await approveAgainAct.Should().ThrowAsync<ForbiddenException>();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithMaterialsEquipmentAndLabor_PersistsSubCollections()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-budget-materials-create@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-budget-materials-create@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var cement = await CreateMaterialAsync(context, "Cemento");
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var createDto = BuildCreateDto(customer.Id, branch.Id);
+        createDto.Chapters[0].Activities[0].Materials.Add(new BudgetActivityMaterialDto { MaterialId = cement.Id, UnitPrice = 15 });
+        createDto.Chapters[0].Activities[0].Equipment.Add(new BudgetActivityEquipmentDto { EquipmentName = "Excavadora", UnitPrice = 200 });
+        createDto.Chapters[0].Activities[0].Labor.Add(new BudgetActivityLaborDto { WorkerType = WorkerType.Laborer, HourlyRate = 5 });
+
+        var result = await service.CreateAsync(createDto, creator.Id);
+
+        var activity = result.Chapters[0].Activities[0];
+        activity.Materials.Should().ContainSingle(m => m.MaterialId == cement.Id && m.UnitPrice == 15);
+        activity.Equipment.Should().ContainSingle(e => e.EquipmentName == "Excavadora" && e.UnitPrice == 200);
+        activity.Labor.Should().ContainSingle(l => l.WorkerType == WorkerType.Laborer && l.HourlyRate == 5);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_AddsAndRemovesMaterialsEquipmentAndLabor_SyncsCorrectly()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-budget-materials-update@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-budget-materials-update@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var cement = await CreateMaterialAsync(context, "Cemento");
+        var sand = await CreateMaterialAsync(context, "Arena");
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var createDto = BuildCreateDto(customer.Id, branch.Id);
+        createDto.Chapters[0].Activities[0].Materials.Add(new BudgetActivityMaterialDto { MaterialId = cement.Id, UnitPrice = 15 });
+        createDto.Chapters[0].Activities[0].Equipment.Add(new BudgetActivityEquipmentDto { EquipmentName = "Excavadora", UnitPrice = 200 });
+        createDto.Chapters[0].Activities[0].Labor.Add(new BudgetActivityLaborDto { WorkerType = WorkerType.Laborer, HourlyRate = 5 });
+
+        var created = await service.CreateAsync(createDto, creator.Id);
+        var createdActivity = created.Chapters[0].Activities[0];
+
+        var updateDto = new UpdateBudgetDto
+        {
+            CustomerId = customer.Id,
+            BranchId = branch.Id,
+            Name = created.Name,
+            UtilityPercentage = created.UtilityPercentage,
+            IndirectCostsTotal = created.IndirectCostsTotal,
+            Chapters = new List<BudgetChapterDto>
+            {
+                new()
+                {
+                    Id = created.Chapters[0].Id,
+                    Name = created.Chapters[0].Name,
+                    Order = created.Chapters[0].Order,
+                    EstimatedWeeks = created.Chapters[0].EstimatedWeeks,
+                    Activities = new List<BudgetActivityDto>
+                    {
+                        new()
+                        {
+                            Id = createdActivity.Id,
+                            Description = createdActivity.Description,
+                            MaterialQuantity = createdActivity.MaterialQuantity,
+                            MaterialCost = createdActivity.MaterialCost,
+                            LaborCost = createdActivity.LaborCost,
+                            EquipmentCost = createdActivity.EquipmentCost,
+                            // Omitting the existing "Cemento" line and sending only "Arena" removes the former and adds the latter.
+                            Materials = new List<BudgetActivityMaterialDto>
+                            {
+                                new() { MaterialId = sand.Id, UnitPrice = 8 }
+                            },
+                            // Sending the existing equipment Id with new values updates it in place.
+                            Equipment = new List<BudgetActivityEquipmentDto>
+                            {
+                                new() { Id = createdActivity.Equipment[0].Id, EquipmentName = "Grua", UnitPrice = 250 }
+                            },
+                            // Sending an empty Labor list removes the only existing labor line.
+                            Labor = new List<BudgetActivityLaborDto>()
+                        }
+                    }
+                }
+            }
+        };
+
+        var updated = await service.UpdateAsync(created.Id, updateDto);
+        var updatedActivity = updated.Chapters[0].Activities[0];
+
+        updatedActivity.Materials.Should().ContainSingle(m => m.MaterialId == sand.Id && m.UnitPrice == 8);
+        updatedActivity.Materials.Should().NotContain(m => m.MaterialId == cement.Id);
+        updatedActivity.Equipment.Should().ContainSingle(e => e.Id == createdActivity.Equipment[0].Id && e.EquipmentName == "Grua" && e.UnitPrice == 250);
+        updatedActivity.Labor.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_MoreRecordsThanPageSize_PaginatesCorrectly()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-budget-pagination@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-budget-pagination@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        for (var i = 1; i <= 5; i++)
+        {
+            await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+        }
+
+        var firstPage = await service.GetAllAsync(pageNumber: 1, pageSize: 2, status: null);
+        var thirdPage = await service.GetAllAsync(pageNumber: 3, pageSize: 2, status: null);
+
+        firstPage.Items.Should().HaveCount(2);
+        firstPage.TotalCount.Should().Be(5);
+        thirdPage.Items.Should().HaveCount(1);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_FilteredByStatus_OnlyReturnsMatchingBudgets()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-budget-statusfilter@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, "projectadmin-budget-statusfilter@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var service = ServiceFactory.CreateBudgetService(context);
+
+        var draft = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+        var submitted = await service.CreateAsync(BuildCreateDto(customer.Id, branch.Id), creator.Id);
+        await service.SubmitForReviewAsync(submitted.Id, creator.Id);
+
+        var result = await service.GetAllAsync(pageNumber: 1, pageSize: 10, status: BudgetStatus.Review);
+
+        result.TotalCount.Should().Be(1);
+        result.Items.Should().OnlyContain(b => b.Id == submitted.Id);
+        result.Items.Should().NotContain(b => b.Id == draft.Id);
     }
 
     private static UpdateBudgetDto BuildUpdateDtoFrom(BudgetResponseDto created, int customerId, int branchId) => new()

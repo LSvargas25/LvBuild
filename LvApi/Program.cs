@@ -8,6 +8,9 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// TODO: confirmar que la empresa califica para la licencia Community de QuestPDF (umbral de ingresos anuales) antes de producción.
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
 // Add services to the container.
 builder.Services.AddControllers(options =>
     {

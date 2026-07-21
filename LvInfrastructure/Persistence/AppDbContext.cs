@@ -3,6 +3,7 @@ using LvDomain.Entities.Branches;
 using LvDomain.Entities.Budgets;
 using LvDomain.Entities.Customers;
 using LvDomain.Entities.Materials;
+using LvDomain.Entities.Offers;
 using LvDomain.Entities.Suppliers;
 using LvDomain.Entities.Workers;
 using Microsoft.EntityFrameworkCore;
@@ -37,6 +38,9 @@ public class AppDbContext : DbContext
     public DbSet<BudgetActivityEquipment> BudgetActivityEquipment => Set<BudgetActivityEquipment>();
     public DbSet<BudgetActivityLabor> BudgetActivityLabor => Set<BudgetActivityLabor>();
     public DbSet<BudgetHistory> BudgetHistories => Set<BudgetHistory>();
+
+    public DbSet<Offer> Offers => Set<Offer>();
+    public DbSet<OfferChapter> OfferChapters => Set<OfferChapter>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

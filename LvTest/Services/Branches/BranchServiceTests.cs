@@ -94,6 +94,53 @@ public class BranchServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_WithValidBusinessManager_Succeeds()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-businessmanager-ok@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var admin = await TestUserFactory.CreateAsync(context, "admin-businessmanager-ok@example.com", roleId: TestUserFactory.BranchAdminRoleId);
+        var manager = await TestUserFactory.CreateAsync(context, "manager-businessmanager-ok@example.com", roleId: TestUserFactory.BusinessManagerRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var result = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Store With Manager",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Commercial,
+            OperationsDirectorId = director.Id,
+            BranchAdminId = admin.Id,
+            BusinessManagerId = manager.Id
+        });
+
+        result.Id.Should().BeGreaterThan(0);
+        result.BusinessManagerId.Should().Be(manager.Id);
+    }
+
+    [Fact]
+    public async Task CreateAsync_BusinessManagerWithoutCorrectRole_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-businessmanager-badrole@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var admin = await TestUserFactory.CreateAsync(context, "admin-businessmanager-badrole@example.com", roleId: TestUserFactory.BranchAdminRoleId);
+        var wrongRoleUser = await TestUserFactory.CreateAsync(context, "not-a-businessmanager@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var act = async () => await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Store With Bad Manager",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Commercial,
+            OperationsDirectorId = director.Id,
+            BranchAdminId = admin.Id,
+            BusinessManagerId = wrongRoleUser.Id
+        });
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
     public async Task CreateAsync_OperationsDirectorWithoutCorrectRole_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
@@ -243,6 +290,278 @@ public class BranchServiceTests
         var result = await service.GetAllAsync(1, 10, generalManager.Id, new[] { "GeneralManager" });
 
         result.TotalCount.Should().Be(2);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_AsOwningOperationsDirector_ReturnsBranch()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-getbyid-owner@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Owned Office",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Office,
+            OperationsDirectorId = director.Id
+        });
+
+        var result = await service.GetByIdAsync(created.Id, director.Id, new[] { "OperationsDirector" });
+
+        result.Id.Should().Be(created.Id);
+        result.Name.Should().Be("Owned Office");
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_MissingId_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var generalManager = await TestUserFactory.CreateAsync(context, "gm-getbyid-missing@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var act = async () => await service.GetByIdAsync(999, generalManager.Id, new[] { "GeneralManager" });
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_AsNonOwningOperationsDirector_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var owningDirector = await TestUserFactory.CreateAsync(context, "director-getbyid-owns@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var otherDirector = await TestUserFactory.CreateAsync(context, "director-getbyid-other@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Not Your Office",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Office,
+            OperationsDirectorId = owningDirector.Id
+        });
+
+        var act = async () => await service.GetByIdAsync(created.Id, otherDirector.Id, new[] { "OperationsDirector" });
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ValidData_ModifiesFields()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-update@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var admin = await TestUserFactory.CreateAsync(context, "admin-update@example.com", roleId: TestUserFactory.BranchAdminRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Original Office",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Office,
+            OperationsDirectorId = director.Id
+        });
+
+        var updated = await service.UpdateAsync(created.Id, new UpdateBranchDto
+        {
+            Name = "Renamed Office",
+            PhoneNumber = "8888-9999",
+            Email = "renamed@example.com",
+            City = "Heredia",
+            Province = "Heredia",
+            BranchType = BranchType.Commercial,
+            BranchAdminId = admin.Id
+        });
+
+        updated.Name.Should().Be("Renamed Office");
+        updated.City.Should().Be("Heredia");
+        updated.BranchType.Should().Be(BranchType.Commercial);
+        updated.BranchAdminId.Should().Be(admin.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_WithValidBusinessManager_Succeeds()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-update-businessmanager@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var admin = await TestUserFactory.CreateAsync(context, "admin-update-businessmanager@example.com", roleId: TestUserFactory.BranchAdminRoleId);
+        var manager = await TestUserFactory.CreateAsync(context, "manager-update-businessmanager@example.com", roleId: TestUserFactory.BusinessManagerRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Store Before Manager",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Commercial,
+            OperationsDirectorId = director.Id,
+            BranchAdminId = admin.Id
+        });
+
+        var updated = await service.UpdateAsync(created.Id, new UpdateBranchDto
+        {
+            Name = "Store Before Manager",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Commercial,
+            BranchAdminId = admin.Id,
+            BusinessManagerId = manager.Id
+        });
+
+        updated.BusinessManagerId.Should().Be(manager.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_BusinessManagerWithoutCorrectRole_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-update-businessmanager-bad@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var admin = await TestUserFactory.CreateAsync(context, "admin-update-businessmanager-bad@example.com", roleId: TestUserFactory.BranchAdminRoleId);
+        var wrongRoleUser = await TestUserFactory.CreateAsync(context, "not-a-businessmanager-update@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Store Before Bad Manager",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Commercial,
+            OperationsDirectorId = director.Id,
+            BranchAdminId = admin.Id
+        });
+
+        var act = async () => await service.UpdateAsync(created.Id, new UpdateBranchDto
+        {
+            Name = "Store Before Bad Manager",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Commercial,
+            BranchAdminId = admin.Id,
+            BusinessManagerId = wrongRoleUser.Id
+        });
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MissingId_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var act = async () => await service.UpdateAsync(999, new UpdateBranchDto
+        {
+            Name = "Ghost Office",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Office
+        });
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_CommercialWithoutBranchAdmin_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-update-invalid@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Office To Convert",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Office,
+            OperationsDirectorId = director.Id
+        });
+
+        var act = async () => await service.UpdateAsync(created.Id, new UpdateBranchDto
+        {
+            Name = "Office To Convert",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Commercial,
+            BranchAdminId = null
+        });
+
+        var exception = await act.Should().ThrowAsync<ValidationAppException>();
+        exception.Which.Message.Should().Contain("El administrador de sucursal es obligatorio para sucursales de tipo Comercio o Bodega");
+    }
+
+    [Fact]
+    public async Task ActivateAsync_ReactivatesInactiveBranch()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-activate@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Branch To Reactivate",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Office,
+            OperationsDirectorId = director.Id
+        });
+
+        await service.DeactivateAsync(created.Id);
+
+        var result = await service.ActivateAsync(created.Id);
+
+        result.Status.Should().Be(BranchStatus.Active);
+    }
+
+    [Fact]
+    public async Task DeactivateAsync_SetsStatusToInactive()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-deactivate@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        var created = await service.CreateAsync(new CreateBranchDto
+        {
+            Name = "Branch To Deactivate",
+            City = "San Jose",
+            Province = "San Jose",
+            BranchType = BranchType.Office,
+            OperationsDirectorId = director.Id
+        });
+
+        var result = await service.DeactivateAsync(created.Id);
+
+        result.Status.Should().Be(BranchStatus.Inactive);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_MoreRecordsThanPageSize_PaginatesCorrectly()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "director-pagination@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var generalManager = await TestUserFactory.CreateAsync(context, "gm-pagination@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var service = ServiceFactory.CreateBranchService(context);
+
+        for (var i = 1; i <= 5; i++)
+        {
+            await service.CreateAsync(new CreateBranchDto
+            {
+                Name = $"Office {i}",
+                City = "San Jose",
+                Province = "San Jose",
+                BranchType = BranchType.Office,
+                OperationsDirectorId = director.Id
+            });
+        }
+
+        var firstPage = await service.GetAllAsync(1, 2, generalManager.Id, new[] { "GeneralManager" });
+        var thirdPage = await service.GetAllAsync(3, 2, generalManager.Id, new[] { "GeneralManager" });
+
+        firstPage.Items.Should().HaveCount(2);
+        firstPage.TotalCount.Should().Be(5);
+        thirdPage.Items.Should().HaveCount(1);
     }
 
     [Fact]

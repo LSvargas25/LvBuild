@@ -79,4 +79,169 @@ public class WorkerServiceTests
 
         result.Id.Should().BeGreaterThan(0);
     }
+
+    [Fact]
+    public async Task GetByIdAsync_ExistingId_ReturnsWorker()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var created = await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Jose Fonseca",
+            Category = WorkerCategory.Construction,
+            Type = WorkerType.Laborer,
+            HourlyRate = 6
+        });
+
+        var result = await service.GetByIdAsync(created.Id);
+
+        result.Name.Should().Be("Jose Fonseca");
+        result.Category.Should().Be(WorkerCategory.Construction);
+        result.Type.Should().Be(WorkerType.Laborer);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_MissingId_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var act = async () => await service.GetByIdAsync(999);
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ValidData_ModifiesFields()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var created = await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Ana Solis",
+            Category = WorkerCategory.Commercial,
+            Type = WorkerType.Salesperson,
+            HourlyRate = 9
+        });
+
+        var updated = await service.UpdateAsync(created.Id, new UpdateWorkerDto
+        {
+            Name = "Ana Solis Updated",
+            PersonalId = "1-1111-1111",
+            PhoneNumber = "8888-1234",
+            Status = ActiveStatus.Inactive,
+            Category = WorkerCategory.Commercial,
+            Type = WorkerType.BusinessManager,
+            HourlyRate = 12
+        });
+
+        updated.Name.Should().Be("Ana Solis Updated");
+        updated.PersonalId.Should().Be("1-1111-1111");
+        updated.Status.Should().Be(ActiveStatus.Inactive);
+        updated.Type.Should().Be(WorkerType.BusinessManager);
+        updated.HourlyRate.Should().Be(12);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MismatchedCategoryAndType_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var created = await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Luis Vargas",
+            Category = WorkerCategory.Office,
+            Type = WorkerType.Engineer,
+            HourlyRate = 14
+        });
+
+        var act = async () => await service.UpdateAsync(created.Id, new UpdateWorkerDto
+        {
+            Name = "Luis Vargas",
+            Status = ActiveStatus.Active,
+            Category = WorkerCategory.Office,
+            Type = WorkerType.SiteForeman,
+            HourlyRate = 14
+        });
+
+        var exception = await act.Should().ThrowAsync<ValidationAppException>();
+        exception.Which.Message.Should().Contain("El tipo de trabajador no corresponde a la categoría seleccionada");
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MissingId_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var act = async () => await service.UpdateAsync(999, new UpdateWorkerDto
+        {
+            Name = "Ghost Worker",
+            Status = ActiveStatus.Active,
+            Category = WorkerCategory.Office,
+            Type = WorkerType.Engineer,
+            HourlyRate = 10
+        });
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ExistingId_RemovesWorker()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var created = await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Mario Chinchilla",
+            Category = WorkerCategory.Storage,
+            Type = WorkerType.Transporter,
+            HourlyRate = 7
+        });
+
+        await service.DeleteAsync(created.Id);
+
+        var stored = await context.Workers.FindAsync(created.Id);
+        stored.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task DeleteAsync_MissingId_ThrowsNotFoundException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var act = async () => await service.DeleteAsync(999);
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    [Fact]
+    public async Task GetAllAsync_MoreRecordsThanPageSize_PaginatesCorrectly()
+    {
+        using var context = TestDbContextFactory.Create();
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        for (var i = 1; i <= 5; i++)
+        {
+            await service.CreateAsync(new CreateWorkerDto
+            {
+                Name = $"Worker {i}",
+                Category = WorkerCategory.Construction,
+                Type = WorkerType.Laborer,
+                HourlyRate = 5
+            });
+        }
+
+        var firstPage = await service.GetAllAsync(pageNumber: 1, pageSize: 2);
+        var thirdPage = await service.GetAllAsync(pageNumber: 3, pageSize: 2);
+
+        firstPage.Items.Should().HaveCount(2);
+        firstPage.TotalCount.Should().Be(5);
+        thirdPage.Items.Should().HaveCount(1);
+    }
 }

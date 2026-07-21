@@ -2,20 +2,24 @@ using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
 using LvApplication.Services.Customers;
+using LvApplication.Services.Offers;
 using LvApplication.Services.Suppliers;
 using LvApplication.Services.Workers;
 using LvApplication.Validators.Auth;
 using LvApplication.Validators.Branches;
 using LvApplication.Validators.Budgets;
 using LvApplication.Validators.Customers;
+using LvApplication.Validators.Offers;
 using LvApplication.Validators.Suppliers;
 using LvApplication.Validators.Workers;
 using LvInfrastructure.Auth;
+using LvInfrastructure.Offers;
 using LvInfrastructure.Persistence;
 using LvInfrastructure.Repositories.Auth;
 using LvInfrastructure.Repositories.Branches;
 using LvInfrastructure.Repositories.Budgets;
 using LvInfrastructure.Repositories.Customers;
+using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Suppliers;
 using LvInfrastructure.Repositories.Workers;
 using Microsoft.Extensions.Configuration;
@@ -67,4 +71,28 @@ public static class ServiceFactory
             new CreateBudgetDtoValidator(new CustomerRepository(context)),
             new UpdateBudgetDtoValidator(new CustomerRepository(context)),
             new RequestCorrectionDtoValidator());
+
+    public static OfferService CreateOfferService(AppDbContext context, string? pdfOutputFolder = null, string? logoPath = null)
+    {
+        var overrides = new Dictionary<string, string?>
+        {
+            ["Storage:GeneratedOffersPath"] = pdfOutputFolder
+                ?? Path.Combine(Path.GetTempPath(), "LvTestGeneratedOffers", Guid.NewGuid().ToString())
+        };
+
+        if (logoPath is not null)
+        {
+            overrides["Company:LogoPath"] = logoPath;
+        }
+
+        var configuration = TestConfigurationFactory.Create(overrides);
+
+        return new OfferService(
+            new OfferRepository(context),
+            new BudgetRepository(context),
+            CreateBudgetService(context),
+            new OfferPdfGenerator(configuration),
+            new CreateOfferDtoValidator(),
+            new UpdateOfferDtoValidator());
+    }
 }
