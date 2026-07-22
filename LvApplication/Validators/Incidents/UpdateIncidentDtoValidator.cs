@@ -8,6 +8,7 @@ public class UpdateIncidentDtoValidator : AbstractValidator<UpdateIncidentDto>
     public UpdateIncidentDtoValidator()
     {
         RuleFor(x => x.Description).NotEmpty();
+        RuleFor(x => x.ChapterId).GreaterThan(0).When(x => x.ChapterId.HasValue);
 
         RuleForEach(x => x.Materials).ChildRules(material =>
         {

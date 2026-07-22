@@ -1,5 +1,6 @@
 using LvDomain.Common;
 using LvDomain.Entities.Auth;
+using LvDomain.Entities.Budgets;
 using LvDomain.Entities.Projects;
 using LvDomain.Entities.SiteLogs;
 using LvDomain.Enums;
@@ -25,6 +26,9 @@ public class Payroll : BaseEntity
     public User CreatedByUser { get; set; } = null!;
 
     public DateTime? PaidAt { get; set; }
+
+    public int? ChapterId { get; set; }
+    public BudgetChapter? Chapter { get; set; }
 
     public ICollection<PayrollDetail> Details { get; set; } = new List<PayrollDetail>();
 }

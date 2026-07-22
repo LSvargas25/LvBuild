@@ -54,6 +54,12 @@ public class SiteLogRepository : ISiteLogRepository
         return (items, totalCount);
     }
 
+    public Task<List<SiteLog>> GetInRangeAsync(int projectId, DateTime from, DateTime to) =>
+        SiteLogsWithChildren
+            .Where(s => s.ProjectId == projectId && s.WeekStart >= from && s.WeekEnd <= to)
+            .OrderBy(s => s.WeekStart)
+            .ToListAsync();
+
     public async Task AddAsync(SiteLog siteLog)
     {
         _context.SiteLogs.Add(siteLog);

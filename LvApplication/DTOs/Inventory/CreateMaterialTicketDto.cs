@@ -9,4 +9,5 @@ public class CreateMaterialTicketDto
     public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
     public decimal? Discount { get; set; }
+    public int? ChapterId { get; set; }
 }

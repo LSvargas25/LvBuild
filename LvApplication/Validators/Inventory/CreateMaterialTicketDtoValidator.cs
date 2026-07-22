@@ -12,5 +12,6 @@ public class CreateMaterialTicketDtoValidator : AbstractValidator<CreateMaterial
         RuleFor(x => x.Quantity).GreaterThan(0);
         RuleFor(x => x.UnitPrice).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Discount).GreaterThanOrEqualTo(0).When(x => x.Discount.HasValue);
+        RuleFor(x => x.ChapterId).GreaterThan(0).When(x => x.ChapterId.HasValue);
     }
 }

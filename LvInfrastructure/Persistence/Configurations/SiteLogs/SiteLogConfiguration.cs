@@ -41,5 +41,11 @@ public class SiteLogConfiguration : IEntityTypeConfiguration<SiteLog>
         builder.HasIndex(s => s.ApprovedByUserId);
 
         builder.HasIndex(s => new { s.ProjectId, s.WeekStart }).IsUnique();
+
+        builder.HasOne(s => s.Chapter)
+            .WithMany()
+            .HasForeignKey(s => s.ChapterId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(s => s.ChapterId);
     }
 }

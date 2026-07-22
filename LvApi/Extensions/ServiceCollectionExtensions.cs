@@ -3,6 +3,7 @@ using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
 using LvApplication.Services.Customers;
+using LvApplication.Services.Finance;
 using LvApplication.Services.Incidents;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Materials;
@@ -63,6 +64,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPayrollRepository, PayrollRepository>();
         services.AddScoped<IProjectProgressRepository, ProjectProgressRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
+        services.AddScoped<IProjectChapterRepository, ProjectChapterRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
@@ -90,6 +92,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPayrollService, PayrollService>();
         services.AddScoped<IProjectProgressService, ProjectProgressService>();
         services.AddScoped<IIncidentService, IncidentService>();
+        services.AddScoped<IProjectChapterService, ProjectChapterService>();
+        services.AddScoped<IProjectFinanceService, ProjectFinanceService>();
 
         return services;
     }

@@ -34,5 +34,11 @@ public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
             .WithMany()
             .HasForeignKey(i => i.ApprovedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(i => i.Chapter)
+            .WithMany()
+            .HasForeignKey(i => i.ChapterId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(i => i.ChapterId);
     }
 }

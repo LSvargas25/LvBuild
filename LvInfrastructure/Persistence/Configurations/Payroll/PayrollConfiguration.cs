@@ -34,5 +34,11 @@ public class PayrollConfiguration : IEntityTypeConfiguration<LvDomain.Entities.P
             .WithMany()
             .HasForeignKey(p => p.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(p => p.Chapter)
+            .WithMany()
+            .HasForeignKey(p => p.ChapterId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(p => p.ChapterId);
     }
 }

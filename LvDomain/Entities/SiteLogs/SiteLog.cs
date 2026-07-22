@@ -1,5 +1,6 @@
 using LvDomain.Common;
 using LvDomain.Entities.Auth;
+using LvDomain.Entities.Budgets;
 using LvDomain.Entities.Projects;
 using LvDomain.Enums;
 
@@ -27,6 +28,9 @@ public class SiteLog : BaseEntity
 
     public int? ApprovedByUserId { get; set; }
     public User? ApprovedByUser { get; set; }
+
+    public int? ChapterId { get; set; }
+    public BudgetChapter? Chapter { get; set; }
 
     public ICollection<SiteLogWorker> Workers { get; set; } = new List<SiteLogWorker>();
     public ICollection<SiteLogMaterial> Materials { get; set; } = new List<SiteLogMaterial>();

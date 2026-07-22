@@ -1,5 +1,6 @@
 using LvApplication.Services.Incidents;
 using LvDomain.Entities.Incidents;
+using LvDomain.Enums;
 using LvInfrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,6 +49,17 @@ public class IncidentRepository : IIncidentRepository
             .ToListAsync();
 
         return (items, totalCount);
+    }
+
+    public async Task<(int Count, decimal TotalCost)> GetApprovedSummaryByChapterAsync(int projectId, int chapterId)
+    {
+        var matching = _context.Incidents
+            .Where(i => i.ProjectId == projectId && i.ChapterId == chapterId && i.Status == IncidentStatus.Approved);
+
+        var count = await matching.CountAsync();
+        var totalCost = await matching.SumAsync(i => (decimal?)i.TotalCost) ?? 0m;
+
+        return (count, totalCost);
     }
 
     public async Task AddAsync(Incident incident)

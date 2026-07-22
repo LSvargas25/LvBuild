@@ -7,6 +7,7 @@ public class PayrollDto
     public int Id { get; set; }
     public int ProjectId { get; set; }
     public int SiteLogId { get; set; }
+    public int? ChapterId { get; set; }
     public DateTime WeekStart { get; set; }
     public DateTime WeekEnd { get; set; }
     public decimal TotalPayroll { get; set; }

@@ -10,6 +10,7 @@ public class CreateSiteLogDtoValidator : AbstractValidator<CreateSiteLogDto>
         RuleFor(x => x.ProjectId).GreaterThan(0);
         RuleFor(x => x.TaskDescription).NotEmpty();
         RuleFor(x => x.WeekEnd).GreaterThanOrEqualTo(x => x.WeekStart);
+        RuleFor(x => x.ChapterId).GreaterThan(0).When(x => x.ChapterId.HasValue);
 
         RuleForEach(x => x.Workers).ChildRules(worker =>
         {

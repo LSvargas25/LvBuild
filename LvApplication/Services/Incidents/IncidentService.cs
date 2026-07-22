@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Incidents;
+using LvApplication.Services.Budgets;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Projects;
 using LvApplication.Services.Workers;
@@ -14,23 +15,29 @@ public class IncidentService : IIncidentService
 {
     private readonly IIncidentRepository _incidentRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly IBudgetRepository _budgetRepository;
     private readonly IProjectInventoryItemRepository _inventoryRepository;
     private readonly IWorkerRepository _workerRepository;
+    private readonly IProjectChapterService _projectChapterService;
     private readonly IValidator<CreateIncidentDto> _createValidator;
     private readonly IValidator<UpdateIncidentDto> _updateValidator;
 
     public IncidentService(
         IIncidentRepository incidentRepository,
         IProjectRepository projectRepository,
+        IBudgetRepository budgetRepository,
         IProjectInventoryItemRepository inventoryRepository,
         IWorkerRepository workerRepository,
+        IProjectChapterService projectChapterService,
         IValidator<CreateIncidentDto> createValidator,
         IValidator<UpdateIncidentDto> updateValidator)
     {
         _incidentRepository = incidentRepository;
         _projectRepository = projectRepository;
+        _budgetRepository = budgetRepository;
         _inventoryRepository = inventoryRepository;
         _workerRepository = workerRepository;
+        _projectChapterService = projectChapterService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -42,12 +49,15 @@ public class IncidentService : IIncidentService
         var project = await _projectRepository.GetByIdAsync(request.ProjectId)
             ?? throw new NotFoundException($"Project {request.ProjectId} not found.");
 
+        await ValidateChapterAsync(project.BudgetId, request.ChapterId);
+
         var incident = new Incident
         {
             ProjectId = project.Id,
             Date = request.Date,
             Description = request.Description,
             Status = IncidentStatus.Draft,
+            ChapterId = request.ChapterId,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow
         };
@@ -76,8 +86,14 @@ public class IncidentService : IIncidentService
             throw new ValidationAppException("Solo se puede editar un imprevisto en estado Borrador.");
         }
 
+        var project = await _projectRepository.GetByIdAsync(incident.ProjectId)
+            ?? throw new NotFoundException($"Project {incident.ProjectId} not found.");
+
+        await ValidateChapterAsync(project.BudgetId, request.ChapterId);
+
         var previousTotalCost = incident.TotalCost;
 
+        incident.ChapterId = request.ChapterId;
         incident.Date = request.Date;
         incident.Description = request.Description;
         incident.UpdatedAt = DateTime.UtcNow;
@@ -88,8 +104,6 @@ public class IncidentService : IIncidentService
 
         await _incidentRepository.UpdateAsync(incident);
 
-        var project = await _projectRepository.GetByIdAsync(incident.ProjectId)
-            ?? throw new NotFoundException($"Project {incident.ProjectId} not found.");
         project.PendingExpenses += incident.TotalCost - previousTotalCost;
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
@@ -117,6 +131,11 @@ public class IncidentService : IIncidentService
         project.CurrentDirectExpenses += incident.TotalCost;
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
+
+        if (incident.ChapterId.HasValue)
+        {
+            await _projectChapterService.RecalculateActualCostAsync(incident.ProjectId, incident.ChapterId.Value);
+        }
 
         return MapToDto(incident);
     }
@@ -242,6 +261,7 @@ public class IncidentService : IIncidentService
     {
         Id = incident.Id,
         ProjectId = incident.ProjectId,
+        ChapterId = incident.ChapterId,
         Date = incident.Date,
         Description = incident.Description,
         Status = incident.Status,
@@ -261,4 +281,20 @@ public class IncidentService : IIncidentService
             HoursUsed = w.HoursUsed
         }).ToList()
     };
+
+    private async Task ValidateChapterAsync(int budgetId, int? chapterId)
+    {
+        if (!chapterId.HasValue)
+        {
+            return;
+        }
+
+        var budget = await _budgetRepository.GetByIdAsync(budgetId)
+            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+
+        if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
+        {
+            throw new ValidationAppException($"El capítulo {chapterId} no pertenece al presupuesto de este proyecto.");
+        }
+    }
 }

@@ -3,6 +3,7 @@ namespace LvApplication.DTOs.SiteLogs;
 public class CreateSiteLogDto
 {
     public int ProjectId { get; set; }
+    public int? ChapterId { get; set; }
     public DateTime WeekStart { get; set; }
     public DateTime WeekEnd { get; set; }
     public string TaskDescription { get; set; } = string.Empty;

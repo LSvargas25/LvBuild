@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Payroll;
+using LvApplication.Services.Budgets;
 using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvDomain.Entities.Payroll;
@@ -14,7 +15,9 @@ public class PayrollService : IPayrollService
     private readonly IPayrollRepository _payrollRepository;
     private readonly ISiteLogService _siteLogService;
     private readonly IProjectRepository _projectRepository;
+    private readonly IBudgetRepository _budgetRepository;
     private readonly IProjectService _projectService;
+    private readonly IProjectChapterService _projectChapterService;
     private readonly IValidator<CreatePayrollDto> _createValidator;
     private readonly IValidator<UpdatePayrollDto> _updateValidator;
 
@@ -22,14 +25,18 @@ public class PayrollService : IPayrollService
         IPayrollRepository payrollRepository,
         ISiteLogService siteLogService,
         IProjectRepository projectRepository,
+        IBudgetRepository budgetRepository,
         IProjectService projectService,
+        IProjectChapterService projectChapterService,
         IValidator<CreatePayrollDto> createValidator,
         IValidator<UpdatePayrollDto> updateValidator)
     {
         _payrollRepository = payrollRepository;
         _siteLogService = siteLogService;
         _projectRepository = projectRepository;
+        _budgetRepository = budgetRepository;
         _projectService = projectService;
+        _projectChapterService = projectChapterService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -50,6 +57,13 @@ public class PayrollService : IPayrollService
             throw new ConflictException("Ya existe una planilla para esta bitácora.");
         }
 
+        if (request.ChapterId.HasValue)
+        {
+            var project = await _projectRepository.GetByIdAsync(siteLog.ProjectId)
+                ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
+            await ValidateChapterAsync(project.BudgetId, request.ChapterId);
+        }
+
         var payroll = new LvDomain.Entities.Payroll.Payroll
         {
             ProjectId = siteLog.ProjectId,
@@ -57,6 +71,7 @@ public class PayrollService : IPayrollService
             WeekStart = siteLog.WeekStart,
             WeekEnd = siteLog.WeekEnd,
             Status = PayrollStatus.Pending,
+            ChapterId = request.ChapterId,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow
         };
@@ -80,6 +95,14 @@ public class PayrollService : IPayrollService
             throw new ValidationAppException("Solo se puede editar una planilla en estado Pendiente.");
         }
 
+        if (request.ChapterId.HasValue)
+        {
+            var project = await _projectRepository.GetByIdAsync(payroll.ProjectId)
+                ?? throw new NotFoundException($"Project {payroll.ProjectId} not found.");
+            await ValidateChapterAsync(project.BudgetId, request.ChapterId);
+        }
+
+        payroll.ChapterId = request.ChapterId;
         payroll.UpdatedAt = DateTime.UtcNow;
 
         SyncDetails(payroll, request.Details);
@@ -112,6 +135,11 @@ public class PayrollService : IPayrollService
 
         await _siteLogService.UpdateTotalPayrollAsync(payroll.SiteLogId, payroll.TotalPayroll);
         await _projectService.IncrementWeekCounterAsync(payroll.ProjectId);
+
+        if (payroll.ChapterId.HasValue)
+        {
+            await _projectChapterService.RecalculateActualCostAsync(payroll.ProjectId, payroll.ChapterId.Value);
+        }
 
         return MapToDto(payroll);
     }
@@ -199,6 +227,7 @@ public class PayrollService : IPayrollService
         Id = payroll.Id,
         ProjectId = payroll.ProjectId,
         SiteLogId = payroll.SiteLogId,
+        ChapterId = payroll.ChapterId,
         WeekStart = payroll.WeekStart,
         WeekEnd = payroll.WeekEnd,
         TotalPayroll = payroll.TotalPayroll,
@@ -223,4 +252,20 @@ public class PayrollService : IPayrollService
             }).ToList()
         }).ToList()
     };
+
+    private async Task ValidateChapterAsync(int budgetId, int? chapterId)
+    {
+        if (!chapterId.HasValue)
+        {
+            return;
+        }
+
+        var budget = await _budgetRepository.GetByIdAsync(budgetId)
+            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+
+        if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
+        {
+            throw new ValidationAppException($"El capítulo {chapterId} no pertenece al presupuesto de este proyecto.");
+        }
+    }
 }

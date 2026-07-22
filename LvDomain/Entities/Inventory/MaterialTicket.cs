@@ -1,5 +1,6 @@
 using LvDomain.Common;
 using LvDomain.Entities.Auth;
+using LvDomain.Entities.Budgets;
 using LvDomain.Entities.Materials;
 using LvDomain.Entities.Projects;
 using LvDomain.Entities.Suppliers;
@@ -32,4 +33,7 @@ public class MaterialTicket : BaseEntity
     public decimal Total { get; set; }
 
     public MaterialTicketStatus Status { get; set; }
+
+    public int? ChapterId { get; set; }
+    public BudgetChapter? Chapter { get; set; }
 }

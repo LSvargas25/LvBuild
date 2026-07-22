@@ -2,6 +2,7 @@ namespace LvApplication.DTOs.SiteLogs;
 
 public class UpdateSiteLogDto
 {
+    public int? ChapterId { get; set; }
     public string TaskDescription { get; set; } = string.Empty;
     public string? PendingTasks { get; set; }
     public List<SiteLogWorkerDto> Workers { get; set; } = new();

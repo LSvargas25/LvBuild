@@ -9,6 +9,7 @@ public class CreateIncidentDtoValidator : AbstractValidator<CreateIncidentDto>
     {
         RuleFor(x => x.ProjectId).GreaterThan(0);
         RuleFor(x => x.Description).NotEmpty();
+        RuleFor(x => x.ChapterId).GreaterThan(0).When(x => x.ChapterId.HasValue);
 
         RuleForEach(x => x.Materials).ChildRules(material =>
         {

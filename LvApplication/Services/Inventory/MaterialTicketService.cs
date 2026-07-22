@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Inventory;
+using LvApplication.Services.Budgets;
 using LvApplication.Services.Materials;
 using LvApplication.Services.Projects;
 using LvApplication.Services.Suppliers;
@@ -15,8 +16,10 @@ public class MaterialTicketService : IMaterialTicketService
     private readonly IMaterialTicketRepository _ticketRepository;
     private readonly IProjectInventoryItemRepository _inventoryRepository;
     private readonly IProjectRepository _projectRepository;
+    private readonly IBudgetRepository _budgetRepository;
     private readonly ISupplierRepository _supplierRepository;
     private readonly IMaterialCatalogRepository _materialCatalogRepository;
+    private readonly IProjectChapterService _projectChapterService;
     private readonly IValidator<CreateMaterialTicketDto> _createValidator;
     private readonly IValidator<UpdateMaterialTicketDto> _updateValidator;
 
@@ -24,16 +27,20 @@ public class MaterialTicketService : IMaterialTicketService
         IMaterialTicketRepository ticketRepository,
         IProjectInventoryItemRepository inventoryRepository,
         IProjectRepository projectRepository,
+        IBudgetRepository budgetRepository,
         ISupplierRepository supplierRepository,
         IMaterialCatalogRepository materialCatalogRepository,
+        IProjectChapterService projectChapterService,
         IValidator<CreateMaterialTicketDto> createValidator,
         IValidator<UpdateMaterialTicketDto> updateValidator)
     {
         _ticketRepository = ticketRepository;
         _inventoryRepository = inventoryRepository;
         _projectRepository = projectRepository;
+        _budgetRepository = budgetRepository;
         _supplierRepository = supplierRepository;
         _materialCatalogRepository = materialCatalogRepository;
+        _projectChapterService = projectChapterService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
     }
@@ -44,6 +51,8 @@ public class MaterialTicketService : IMaterialTicketService
 
         var project = await _projectRepository.GetByIdAsync(projectId)
             ?? throw new NotFoundException($"Project {projectId} not found.");
+
+        await ValidateChapterAsync(project.BudgetId, request.ChapterId);
 
         var supplier = await _supplierRepository.GetByIdAsync(request.SupplierId)
             ?? throw new NotFoundException($"Supplier {request.SupplierId} not found.");
@@ -69,6 +78,7 @@ public class MaterialTicketService : IMaterialTicketService
             Subtotal = subtotal,
             Total = total,
             Status = MaterialTicketStatus.Review,
+            ChapterId = request.ChapterId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -92,6 +102,11 @@ public class MaterialTicketService : IMaterialTicketService
             throw new ValidationAppException("Solo se puede editar un ticket en estado Revisión.");
         }
 
+        var project = await _projectRepository.GetByIdAsync(ticket.ProjectId)
+            ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
+
+        await ValidateChapterAsync(project.BudgetId, request.ChapterId);
+
         var supplier = await _supplierRepository.GetByIdAsync(request.SupplierId)
             ?? throw new NotFoundException($"Supplier {request.SupplierId} not found.");
 
@@ -110,12 +125,10 @@ public class MaterialTicketService : IMaterialTicketService
         ticket.Discount = request.Discount;
         ticket.Subtotal = request.Quantity * request.UnitPrice;
         ticket.Total = ticket.Subtotal - (request.Discount ?? 0);
+        ticket.ChapterId = request.ChapterId;
         ticket.UpdatedAt = DateTime.UtcNow;
 
         await _ticketRepository.UpdateAsync(ticket);
-
-        var project = await _projectRepository.GetByIdAsync(ticket.ProjectId)
-            ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
 
         project.PendingExpenses += ticket.Total - previousTotal;
         project.UpdatedAt = DateTime.UtcNow;
@@ -168,6 +181,11 @@ public class MaterialTicketService : IMaterialTicketService
         project.MaterialsUsedCount = await _inventoryRepository.CountWithQuantityAsync(ticket.ProjectId);
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
+
+        if (ticket.ChapterId.HasValue)
+        {
+            await _projectChapterService.RecalculateActualCostAsync(ticket.ProjectId, ticket.ChapterId.Value);
+        }
 
         return MapToDto(ticket);
     }
@@ -263,6 +281,23 @@ public class MaterialTicketService : IMaterialTicketService
         Discount = ticket.Discount,
         Subtotal = ticket.Subtotal,
         Total = ticket.Total,
-        Status = ticket.Status
+        Status = ticket.Status,
+        ChapterId = ticket.ChapterId
     };
+
+    private async Task ValidateChapterAsync(int budgetId, int? chapterId)
+    {
+        if (!chapterId.HasValue)
+        {
+            return;
+        }
+
+        var budget = await _budgetRepository.GetByIdAsync(budgetId)
+            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+
+        if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
+        {
+            throw new ValidationAppException($"El capítulo {chapterId} no pertenece al presupuesto de este proyecto.");
+        }
+    }
 }

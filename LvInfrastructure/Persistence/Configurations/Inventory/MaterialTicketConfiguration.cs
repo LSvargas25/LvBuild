@@ -50,5 +50,11 @@ public class MaterialTicketConfiguration : IEntityTypeConfiguration<MaterialTick
             .HasForeignKey(t => t.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(t => t.CreatedByUserId);
+
+        builder.HasOne(t => t.Chapter)
+            .WithMany()
+            .HasForeignKey(t => t.ChapterId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(t => t.ChapterId);
     }
 }

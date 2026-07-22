@@ -20,6 +20,7 @@ public class ProjectService : IProjectService
     private readonly IBudgetRepository _budgetRepository;
     private readonly IBranchRepository _branchRepository;
     private readonly IWorkerRepository _workerRepository;
+    private readonly IProjectChapterRepository _projectChapterRepository;
     private readonly IValidator<CreateProjectDto> _createValidator;
     private readonly IValidator<UpdateEndDateDto> _updateEndDateValidator;
     private readonly IValidator<AssignWorkerDto> _assignWorkerValidator;
@@ -30,6 +31,7 @@ public class ProjectService : IProjectService
         IBudgetRepository budgetRepository,
         IBranchRepository branchRepository,
         IWorkerRepository workerRepository,
+        IProjectChapterRepository projectChapterRepository,
         IValidator<CreateProjectDto> createValidator,
         IValidator<UpdateEndDateDto> updateEndDateValidator,
         IValidator<AssignWorkerDto> assignWorkerValidator)
@@ -39,6 +41,7 @@ public class ProjectService : IProjectService
         _budgetRepository = budgetRepository;
         _branchRepository = branchRepository;
         _workerRepository = workerRepository;
+        _projectChapterRepository = projectChapterRepository;
         _createValidator = createValidator;
         _updateEndDateValidator = updateEndDateValidator;
         _assignWorkerValidator = assignWorkerValidator;
@@ -100,6 +103,29 @@ public class ProjectService : IProjectService
         };
 
         await _projectRepository.AddAsync(project);
+
+        // SUPUESTO (sección 16, confirmado por el cliente 2026-07-21): el reparto proporcional
+        // del precio total vendido solo aplica a proyectos Llave en Mano (TurnKey), donde sí
+        // existe un precio total fijo (Offer.TotalProjectPrice) que repartir entre capítulos
+        // según su peso en el presupuesto original. En Porcentaje no hay precio total fijo —
+        // AssignedSoldTotal queda en 0 y se asigna manualmente vía PUT .../assigned-sold-total.
+        foreach (var chapter in budget.Chapters)
+        {
+            var assignedSoldTotal = project.ProjectType == ProjectType.TurnKey && budget.TotalBudget > 0
+                ? (chapter.TotalChapter / budget.TotalBudget) * (offer.TotalProjectPrice ?? 0)
+                : 0;
+
+            await _projectChapterRepository.AddAsync(new LvDomain.Entities.Projects.ProjectChapter
+            {
+                ProjectId = project.Id,
+                ChapterId = chapter.Id,
+                AssignedSoldTotal = assignedSoldTotal,
+                ActualCostTotal = 0,
+                ChapterProfit = assignedSoldTotal,
+                IncidentCount = 0,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
 
         return MapToDto(project);
     }

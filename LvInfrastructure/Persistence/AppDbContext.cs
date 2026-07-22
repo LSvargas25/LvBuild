@@ -70,6 +70,8 @@ public class AppDbContext : DbContext
     public DbSet<IncidentMaterial> IncidentMaterials => Set<IncidentMaterial>();
     public DbSet<IncidentWorker> IncidentWorkers => Set<IncidentWorker>();
 
+    public DbSet<ProjectChapter> ProjectChapters => Set<ProjectChapter>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);

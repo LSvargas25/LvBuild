@@ -544,4 +544,80 @@ public class ProjectServiceTests
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
+
+    [Fact]
+    public async Task CreateProjectAsync_TurnKey_AutoCreatesProjectChaptersWithProportionalAssignedSoldTotal()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, $"director-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, $"gm-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var budget = await CreateBudgetAsync(context, customer.Id, branch.Id, creator.Id, BudgetStatus.ClientApproved);
+
+        var chapter1 = new BudgetChapter { BudgetId = budget.Id, Name = "Cimentación", Order = 1, TotalChapter = 400m, EstimatedWeeks = 4, CreatedAt = DateTime.UtcNow };
+        var chapter2 = new BudgetChapter { BudgetId = budget.Id, Name = "Estructura", Order = 2, TotalChapter = 600m, EstimatedWeeks = 6, CreatedAt = DateTime.UtcNow };
+        context.BudgetChapters.AddRange(chapter1, chapter2);
+        await context.SaveChangesAsync();
+
+        var offer = await CreateOfferAsync(context, budget.Id, customer.Id, creator.Id, OfferStatus.ClientAccepted); // OfferType.Turnkey, TotalProjectPrice = 100000m
+        var service = ServiceFactory.CreateProjectService(context);
+
+        var project = await service.CreateProjectAsync(BuildCreateDto(offer.Id, branch.Id), creator.Id);
+
+        var projectChapters = await context.ProjectChapters
+            .Where(pc => pc.ProjectId == project.Id)
+            .OrderBy(pc => pc.ChapterId)
+            .ToListAsync();
+
+        projectChapters.Should().HaveCount(2);
+        // budget.TotalBudget = 1000 (CreateBudgetAsync); weights 400/1000 and 600/1000 of TotalProjectPrice = 100000.
+        projectChapters.Should().ContainSingle(pc => pc.ChapterId == chapter1.Id && pc.AssignedSoldTotal == 40000m);
+        projectChapters.Should().ContainSingle(pc => pc.ChapterId == chapter2.Id && pc.AssignedSoldTotal == 60000m);
+    }
+
+    [Fact]
+    public async Task CreateProjectAsync_Percentage_AssignedSoldTotalStartsAtZero()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, $"director-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var creator = await TestUserFactory.CreateAsync(context, $"gm-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var customer = await CreateProjectCustomerAsync(context);
+        var branch = await CreateBranchAsync(context, director.Id);
+        var budget = await CreateBudgetAsync(context, customer.Id, branch.Id, creator.Id, BudgetStatus.ClientApproved);
+
+        var chapter = new BudgetChapter { BudgetId = budget.Id, Name = "Cimentación", Order = 1, TotalChapter = 400m, EstimatedWeeks = 4, CreatedAt = DateTime.UtcNow };
+        context.BudgetChapters.Add(chapter);
+        await context.SaveChangesAsync();
+
+        var offer = new Offer
+        {
+            BudgetId = budget.Id,
+            CustomerId = customer.Id,
+            OfferNumber = $"OF-TEST-{Guid.NewGuid():N}",
+            OfferType = OfferType.Percentage,
+            IssueDate = new DateTime(2026, 1, 10),
+            ValidityDays = 30,
+            WorkLocation = "San Jose Centro",
+            WorkScope = "Construccion de edificio de 3 niveles",
+            EstimatedStartDate = new DateTime(2026, 2, 1),
+            EstimatedDurationWeeks = 10,
+            EstimatedDeliveryDate = new DateTime(2026, 2, 1).AddDays(10 * 7),
+            PaymentTerms = "50% inicio, 50% entrega",
+            Warranties = "1 año estructural",
+            Exclusions = "No incluye mobiliario",
+            AgreedPercentage = 10m,
+            Status = OfferStatus.ClientAccepted,
+            CreatedByUserId = creator.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.Offers.Add(offer);
+        await context.SaveChangesAsync();
+
+        var service = ServiceFactory.CreateProjectService(context);
+        var project = await service.CreateProjectAsync(BuildCreateDto(offer.Id, branch.Id), creator.Id);
+
+        var projectChapters = await context.ProjectChapters.Where(pc => pc.ProjectId == project.Id).ToListAsync();
+        projectChapters.Should().ContainSingle(pc => pc.ChapterId == chapter.Id && pc.AssignedSoldTotal == 0m);
+    }
 }

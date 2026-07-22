@@ -8,6 +8,7 @@ public class UpdateSiteLogDtoValidator : AbstractValidator<UpdateSiteLogDto>
     public UpdateSiteLogDtoValidator()
     {
         RuleFor(x => x.TaskDescription).NotEmpty();
+        RuleFor(x => x.ChapterId).GreaterThan(0).When(x => x.ChapterId.HasValue);
 
         RuleForEach(x => x.Workers).ChildRules(worker =>
         {

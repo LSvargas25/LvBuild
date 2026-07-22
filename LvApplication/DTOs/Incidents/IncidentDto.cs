@@ -6,6 +6,7 @@ public class IncidentDto
 {
     public int Id { get; set; }
     public int ProjectId { get; set; }
+    public int? ChapterId { get; set; }
     public DateTime Date { get; set; }
     public string Description { get; set; } = string.Empty;
     public IncidentStatus Status { get; set; }

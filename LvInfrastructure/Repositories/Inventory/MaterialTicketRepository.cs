@@ -1,5 +1,6 @@
 using LvApplication.Services.Inventory;
 using LvDomain.Entities.Inventory;
+using LvDomain.Enums;
 using LvInfrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -31,6 +32,21 @@ public class MaterialTicketRepository : IMaterialTicketRepository
 
         return (items, totalCount);
     }
+
+    public async Task<decimal> SumAppliedTotalByChapterAsync(int projectId, int chapterId) =>
+        await _context.MaterialTickets
+            .Where(t => t.ProjectId == projectId && t.ChapterId == chapterId && t.Status == MaterialTicketStatus.Applied)
+            .SumAsync(t => (decimal?)t.Total) ?? 0m;
+
+    public Task<List<MaterialTicket>> GetAppliedInRangeAsync(int projectId, DateTime from, DateTime to) =>
+        _context.MaterialTickets
+            .Include(t => t.Supplier)
+            .Where(t => t.ProjectId == projectId
+                && t.Status == MaterialTicketStatus.Applied
+                && t.CreatedAt >= from
+                && t.CreatedAt < to.AddDays(1))
+            .OrderBy(t => t.CreatedAt)
+            .ToListAsync();
 
     public async Task AddAsync(MaterialTicket ticket)
     {

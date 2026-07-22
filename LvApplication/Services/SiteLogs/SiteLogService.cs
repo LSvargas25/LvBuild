@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.SiteLogs;
+using LvApplication.Services.Budgets;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Progress;
 using LvApplication.Services.Projects;
@@ -16,6 +17,7 @@ public class SiteLogService : ISiteLogService
     private readonly ISiteLogRepository _siteLogRepository;
     private readonly IProjectRepository _projectRepository;
     private readonly IProjectInventoryItemRepository _inventoryRepository;
+    private readonly IBudgetRepository _budgetRepository;
     private readonly IProjectProgressService _projectProgressService;
     private readonly IValidator<CreateSiteLogDto> _createValidator;
     private readonly IValidator<UpdateSiteLogDto> _updateValidator;
@@ -24,6 +26,7 @@ public class SiteLogService : ISiteLogService
         ISiteLogRepository siteLogRepository,
         IProjectRepository projectRepository,
         IProjectInventoryItemRepository inventoryRepository,
+        IBudgetRepository budgetRepository,
         IProjectProgressService projectProgressService,
         IValidator<CreateSiteLogDto> createValidator,
         IValidator<UpdateSiteLogDto> updateValidator)
@@ -31,6 +34,7 @@ public class SiteLogService : ISiteLogService
         _siteLogRepository = siteLogRepository;
         _projectRepository = projectRepository;
         _inventoryRepository = inventoryRepository;
+        _budgetRepository = budgetRepository;
         _projectProgressService = projectProgressService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
@@ -48,6 +52,8 @@ public class SiteLogService : ISiteLogService
             throw new ConflictException("Ya existe una bitácora para este proyecto en esa semana.");
         }
 
+        await ValidateChapterAsync(project.BudgetId, request.ChapterId);
+
         var siteLog = new SiteLog
         {
             ProjectId = project.Id,
@@ -56,6 +62,7 @@ public class SiteLogService : ISiteLogService
             TaskDescription = request.TaskDescription,
             PendingTasks = request.PendingTasks,
             Status = SiteLogStatus.Draft,
+            ChapterId = request.ChapterId,
             CreatedByUserId = createdByUserId,
             CreatedAt = DateTime.UtcNow
         };
@@ -77,6 +84,14 @@ public class SiteLogService : ISiteLogService
 
         EnsureEditable(siteLog);
 
+        if (request.ChapterId.HasValue)
+        {
+            var project = await _projectRepository.GetByIdAsync(siteLog.ProjectId)
+                ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
+            await ValidateChapterAsync(project.BudgetId, request.ChapterId);
+        }
+
+        siteLog.ChapterId = request.ChapterId;
         siteLog.TaskDescription = request.TaskDescription;
         siteLog.PendingTasks = request.PendingTasks;
         siteLog.UpdatedAt = DateTime.UtcNow;
@@ -304,6 +319,7 @@ public class SiteLogService : ISiteLogService
     {
         Id = siteLog.Id,
         ProjectId = siteLog.ProjectId,
+        ChapterId = siteLog.ChapterId,
         WeekStart = siteLog.WeekStart,
         WeekEnd = siteLog.WeekEnd,
         TaskDescription = siteLog.TaskDescription,
@@ -333,4 +349,20 @@ public class SiteLogService : ISiteLogService
             Description = e.Description
         }).ToList()
     };
+
+    private async Task ValidateChapterAsync(int budgetId, int? chapterId)
+    {
+        if (!chapterId.HasValue)
+        {
+            return;
+        }
+
+        var budget = await _budgetRepository.GetByIdAsync(budgetId)
+            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+
+        if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
+        {
+            throw new ValidationAppException($"El capítulo {chapterId} no pertenece al presupuesto de este proyecto.");
+        }
+    }
 }

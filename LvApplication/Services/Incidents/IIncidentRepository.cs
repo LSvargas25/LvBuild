@@ -7,6 +7,7 @@ public interface IIncidentRepository
     Task<Incident?> GetByIdAsync(int id);
     Task<(List<Incident> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize);
     Task<(List<Incident> Items, int TotalCount)> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize);
+    Task<(int Count, decimal TotalCost)> GetApprovedSummaryByChapterAsync(int projectId, int chapterId);
     Task AddAsync(Incident incident);
     Task UpdateAsync(Incident incident);
     Task DeleteAsync(Incident incident);

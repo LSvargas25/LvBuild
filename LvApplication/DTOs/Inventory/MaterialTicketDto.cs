@@ -19,4 +19,5 @@ public class MaterialTicketDto
     public decimal Subtotal { get; set; }
     public decimal Total { get; set; }
     public MaterialTicketStatus Status { get; set; }
+    public int? ChapterId { get; set; }
 }

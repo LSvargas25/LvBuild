@@ -1,4 +1,5 @@
 using LvApplication.Services.Payroll;
+using LvDomain.Enums;
 using LvInfrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -50,6 +51,11 @@ public class PayrollRepository : IPayrollRepository
 
         return (items, totalCount);
     }
+
+    public async Task<decimal> SumPaidTotalByChapterAsync(int projectId, int chapterId) =>
+        await _context.Payrolls
+            .Where(p => p.ProjectId == projectId && p.ChapterId == chapterId && p.Status == PayrollStatus.Paid)
+            .SumAsync(p => (decimal?)p.TotalPayroll) ?? 0m;
 
     public async Task AddAsync(LvDomain.Entities.Payroll.Payroll payroll)
     {
