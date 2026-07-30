@@ -1,6 +1,7 @@
 using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
+using LvApplication.Services.Commercial;
 using LvApplication.Services.Customers;
 using LvApplication.Services.Finance;
 using LvApplication.Services.Inventory;
@@ -16,6 +17,7 @@ using LvApplication.Services.Workers;
 using LvApplication.Validators.Auth;
 using LvApplication.Validators.Branches;
 using LvApplication.Validators.Budgets;
+using LvApplication.Validators.Commercial;
 using LvApplication.Validators.Customers;
 using LvApplication.Validators.Inventory;
 using LvApplication.Validators.Incidents;
@@ -32,6 +34,7 @@ using LvInfrastructure.Storage;
 using LvInfrastructure.Repositories.Auth;
 using LvInfrastructure.Repositories.Branches;
 using LvInfrastructure.Repositories.Budgets;
+using LvInfrastructure.Repositories.Commercial;
 using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
@@ -211,4 +214,37 @@ public static class ServiceFactory
             new ProjectRepository(context),
             new MaterialTicketRepository(context),
             new SiteLogRepository(context));
+
+    public static ProductService CreateProductService(AppDbContext context) =>
+        new(
+            new ProductRepository(context),
+            new CreateProductDtoValidator(),
+            new UpdateProductDtoValidator());
+
+    public static BranchInventoryService CreateBranchInventoryService(AppDbContext context) =>
+        new(new BranchInventoryRepository(context));
+
+    public static ProductIncorporationTicketService CreateProductIncorporationTicketService(AppDbContext context) =>
+        new(
+            new ProductIncorporationTicketRepository(context),
+            new BranchInventoryRepository(context),
+            new ProductRepository(context),
+            new CreateProductIncorporationTicketDtoValidator());
+
+    public static CashRegisterService CreateCashRegisterService(AppDbContext context) =>
+        new(
+            new CashRegisterRepository(context),
+            new OpenCashRegisterDtoValidator(),
+            new CloseCashRegisterDtoValidator());
+
+    public static InvoiceService CreateInvoiceService(AppDbContext context) =>
+        new(
+            new InvoiceRepository(context),
+            new BranchInventoryRepository(context),
+            new ProductRepository(context),
+            new CashRegisterRepository(context),
+            new CreateInvoiceDtoValidator(),
+            new UpdateInvoiceDraftDtoValidator(),
+            new IssueInvoiceDtoValidator(),
+            new CreateInvoicePaymentDtoValidator());
 }

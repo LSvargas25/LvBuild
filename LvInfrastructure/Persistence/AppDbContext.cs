@@ -1,6 +1,7 @@
 using LvDomain.Entities.Auth;
 using LvDomain.Entities.Branches;
 using LvDomain.Entities.Budgets;
+using LvDomain.Entities.Commercial;
 using LvDomain.Entities.Customers;
 using LvDomain.Entities.Inventory;
 using LvDomain.Entities.Materials;
@@ -71,6 +72,14 @@ public class AppDbContext : DbContext
     public DbSet<IncidentWorker> IncidentWorkers => Set<IncidentWorker>();
 
     public DbSet<ProjectChapter> ProjectChapters => Set<ProjectChapter>();
+
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<BranchInventory> BranchInventories => Set<BranchInventory>();
+    public DbSet<ProductIncorporationTicket> ProductIncorporationTickets => Set<ProductIncorporationTicket>();
+    public DbSet<CashRegister> CashRegisters => Set<CashRegister>();
+    public DbSet<Invoice> Invoices => Set<Invoice>();
+    public DbSet<InvoiceDetail> InvoiceDetails => Set<InvoiceDetail>();
+    public DbSet<InvoicePayment> InvoicePayments => Set<InvoicePayment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

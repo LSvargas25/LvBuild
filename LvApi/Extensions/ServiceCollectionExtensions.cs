@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
+using LvApplication.Services.Commercial;
 using LvApplication.Services.Customers;
 using LvApplication.Services.Finance;
 using LvApplication.Services.Incidents;
@@ -22,6 +23,7 @@ using LvInfrastructure.Storage;
 using LvInfrastructure.Repositories.Auth;
 using LvInfrastructure.Repositories.Branches;
 using LvInfrastructure.Repositories.Budgets;
+using LvInfrastructure.Repositories.Commercial;
 using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
@@ -67,6 +69,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProjectChapterRepository, ProjectChapterRepository>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IBranchInventoryRepository, BranchInventoryRepository>();
+        services.AddScoped<IProductIncorporationTicketRepository, ProductIncorporationTicketRepository>();
+        services.AddScoped<ICashRegisterRepository, CashRegisterRepository>();
+        services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+
         return services;
     }
 
@@ -94,6 +102,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IIncidentService, IncidentService>();
         services.AddScoped<IProjectChapterService, ProjectChapterService>();
         services.AddScoped<IProjectFinanceService, ProjectFinanceService>();
+
+        services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IBranchInventoryService, BranchInventoryService>();
+        services.AddScoped<IProductIncorporationTicketService, ProductIncorporationTicketService>();
+        services.AddScoped<ICashRegisterService, CashRegisterService>();
+        services.AddScoped<IInvoiceService, InvoiceService>();
 
         return services;
     }
