@@ -13,6 +13,7 @@ using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvApplication.Services.Storage;
 using LvApplication.Services.Suppliers;
+using LvApplication.Services.Warehouse;
 using LvApplication.Services.Workers;
 using LvApplication.Validators.Auth;
 using LvApplication.Validators.Branches;
@@ -26,6 +27,7 @@ using LvApplication.Validators.Payroll;
 using LvApplication.Validators.Projects;
 using LvApplication.Validators.SiteLogs;
 using LvApplication.Validators.Suppliers;
+using LvApplication.Validators.Warehouse;
 using LvApplication.Validators.Workers;
 using LvInfrastructure.Auth;
 using LvInfrastructure.Offers;
@@ -45,6 +47,7 @@ using LvInfrastructure.Repositories.Progress;
 using LvInfrastructure.Repositories.Projects;
 using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
+using LvInfrastructure.Repositories.Warehouse;
 using LvInfrastructure.Repositories.Workers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
@@ -98,7 +101,7 @@ public static class ServiceFactory
         new(new SupplierRepository(context), new CreateSupplierDtoValidator(), new UpdateSupplierDtoValidator());
 
     public static WorkerService CreateWorkerService(AppDbContext context) =>
-        new(new WorkerRepository(context), new CreateWorkerDtoValidator(), new UpdateWorkerDtoValidator());
+        new(new WorkerRepository(context), new CreateWorkerDtoValidator(new BranchRepository(context)), new UpdateWorkerDtoValidator(new BranchRepository(context)));
 
     public static BranchService CreateBranchService(AppDbContext context) =>
         new(
@@ -227,6 +230,7 @@ public static class ServiceFactory
     public static ProductIncorporationTicketService CreateProductIncorporationTicketService(AppDbContext context) =>
         new(
             new ProductIncorporationTicketRepository(context),
+            new BranchRepository(context),
             new BranchInventoryRepository(context),
             new ProductRepository(context),
             new CreateProductIncorporationTicketDtoValidator());
@@ -234,12 +238,14 @@ public static class ServiceFactory
     public static CashRegisterService CreateCashRegisterService(AppDbContext context) =>
         new(
             new CashRegisterRepository(context),
+            new BranchRepository(context),
             new OpenCashRegisterDtoValidator(),
             new CloseCashRegisterDtoValidator());
 
     public static InvoiceService CreateInvoiceService(AppDbContext context) =>
         new(
             new InvoiceRepository(context),
+            new BranchRepository(context),
             new BranchInventoryRepository(context),
             new ProductRepository(context),
             new CashRegisterRepository(context),
@@ -247,4 +253,14 @@ public static class ServiceFactory
             new UpdateInvoiceDraftDtoValidator(),
             new IssueInvoiceDtoValidator(),
             new CreateInvoicePaymentDtoValidator());
+
+    public static InventoryMovementService CreateInventoryMovementService(AppDbContext context) =>
+        new(
+            new InventoryMovementRepository(context),
+            new BranchRepository(context),
+            new ProjectRepository(context),
+            new ProductRepository(context),
+            new BranchInventoryRepository(context),
+            new ProjectInventoryItemRepository(context),
+            new CreateInventoryMovementDtoValidator());
 }

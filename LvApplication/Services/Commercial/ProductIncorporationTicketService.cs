@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Commercial;
+using LvApplication.Services.Branches;
 using LvDomain.Entities.Commercial;
 using LvDomain.Enums;
 
@@ -14,17 +15,20 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
     private const string BranchAdminRole = "BranchAdmin";
 
     private readonly IProductIncorporationTicketRepository _ticketRepository;
+    private readonly IBranchRepository _branchRepository;
     private readonly IBranchInventoryRepository _inventoryRepository;
     private readonly IProductRepository _productRepository;
     private readonly IValidator<CreateProductIncorporationTicketDto> _createValidator;
 
     public ProductIncorporationTicketService(
         IProductIncorporationTicketRepository ticketRepository,
+        IBranchRepository branchRepository,
         IBranchInventoryRepository inventoryRepository,
         IProductRepository productRepository,
         IValidator<CreateProductIncorporationTicketDto> createValidator)
     {
         _ticketRepository = ticketRepository;
+        _branchRepository = branchRepository;
         _inventoryRepository = inventoryRepository;
         _productRepository = productRepository;
         _createValidator = createValidator;
@@ -38,6 +42,14 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
     public async Task<ProductIncorporationTicketDto> CreateAsync(CreateProductIncorporationTicketDto request, int createdByUserId, IEnumerable<string> actingUserRoles)
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
+
+        var branch = await _branchRepository.GetByIdAsync(request.BranchId)
+            ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
+
+        if (branch.BranchType is not (BranchType.Commercial or BranchType.Warehouse))
+        {
+            throw new ValidationAppException("La sucursal debe ser de tipo Comercio o Bodega para incorporar productos.");
+        }
 
         var product = await _productRepository.GetByIdAsync(request.ProductId)
             ?? throw new NotFoundException($"Product {request.ProductId} not found.");

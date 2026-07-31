@@ -41,5 +41,11 @@ public class WorkerConfiguration : IEntityTypeConfiguration<Worker>
             .HasColumnType("decimal(18,2)");
 
         builder.HasIndex(w => w.PersonalId);
+
+        builder.HasOne(w => w.Branch)
+            .WithMany()
+            .HasForeignKey(w => w.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder.HasIndex(w => w.BranchId);
     }
 }

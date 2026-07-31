@@ -13,4 +13,5 @@ public class WorkerResponseDto
     public WorkerCategory Category { get; set; }
     public WorkerType Type { get; set; }
     public decimal HourlyRate { get; set; }
+    public int? BranchId { get; set; }
 }

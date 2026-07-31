@@ -1,4 +1,5 @@
 using LvDomain.Common;
+using LvDomain.Entities.Branches;
 using LvDomain.Enums;
 
 namespace LvDomain.Entities.Workers;
@@ -13,4 +14,7 @@ public class Worker : BaseEntity
     public WorkerCategory Category { get; set; }
     public WorkerType Type { get; set; }
     public decimal HourlyRate { get; set; }
+
+    public int? BranchId { get; set; }
+    public Branch? Branch { get; set; }
 }

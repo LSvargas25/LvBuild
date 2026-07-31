@@ -12,6 +12,7 @@ using LvDomain.Entities.Progress;
 using LvDomain.Entities.Projects;
 using LvDomain.Entities.SiteLogs;
 using LvDomain.Entities.Suppliers;
+using LvDomain.Entities.Warehouse;
 using LvDomain.Entities.Workers;
 using Microsoft.EntityFrameworkCore;
 
@@ -80,6 +81,8 @@ public class AppDbContext : DbContext
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceDetail> InvoiceDetails => Set<InvoiceDetail>();
     public DbSet<InvoicePayment> InvoicePayments => Set<InvoicePayment>();
+
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

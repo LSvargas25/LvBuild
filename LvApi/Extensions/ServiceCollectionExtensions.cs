@@ -15,6 +15,7 @@ using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvApplication.Services.Storage;
 using LvApplication.Services.Suppliers;
+using LvApplication.Services.Warehouse;
 using LvApplication.Services.Workers;
 using LvInfrastructure.Auth;
 using LvInfrastructure.Offers;
@@ -34,6 +35,7 @@ using LvInfrastructure.Repositories.Progress;
 using LvInfrastructure.Repositories.Projects;
 using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
+using LvInfrastructure.Repositories.Warehouse;
 using LvInfrastructure.Repositories.Workers;
 using Microsoft.EntityFrameworkCore;
 
@@ -74,6 +76,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductIncorporationTicketRepository, ProductIncorporationTicketRepository>();
         services.AddScoped<ICashRegisterRepository, CashRegisterRepository>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
+        services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();
 
         return services;
     }
@@ -108,6 +111,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProductIncorporationTicketService, ProductIncorporationTicketService>();
         services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
+        services.AddScoped<IInventoryMovementService, InventoryMovementService>();
 
         return services;
     }

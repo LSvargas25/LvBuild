@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Commercial;
+using LvApplication.Services.Branches;
 using LvDomain.Entities.Commercial;
 using LvDomain.Enums;
 
@@ -10,15 +11,18 @@ namespace LvApplication.Services.Commercial;
 public class CashRegisterService : ICashRegisterService
 {
     private readonly ICashRegisterRepository _cashRegisterRepository;
+    private readonly IBranchRepository _branchRepository;
     private readonly IValidator<OpenCashRegisterDto> _openValidator;
     private readonly IValidator<CloseCashRegisterDto> _closeValidator;
 
     public CashRegisterService(
         ICashRegisterRepository cashRegisterRepository,
+        IBranchRepository branchRepository,
         IValidator<OpenCashRegisterDto> openValidator,
         IValidator<CloseCashRegisterDto> closeValidator)
     {
         _cashRegisterRepository = cashRegisterRepository;
+        _branchRepository = branchRepository;
         _openValidator = openValidator;
         _closeValidator = closeValidator;
     }
@@ -26,6 +30,14 @@ public class CashRegisterService : ICashRegisterService
     public async Task<CashRegisterDto> OpenAsync(OpenCashRegisterDto request, int openedByUserId)
     {
         await _openValidator.ValidateAndThrowAppExceptionAsync(request);
+
+        var branch = await _branchRepository.GetByIdAsync(request.BranchId)
+            ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
+
+        if (branch.BranchType != BranchType.Commercial)
+        {
+            throw new ValidationAppException("Solo se puede abrir una caja en una sucursal de tipo Comercio.");
+        }
 
         var existingOpen = await _cashRegisterRepository.GetOpenByBranchAsync(request.BranchId);
         if (existingOpen is not null)

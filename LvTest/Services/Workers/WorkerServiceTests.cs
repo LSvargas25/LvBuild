@@ -1,13 +1,123 @@
 using FluentAssertions;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Workers;
+using LvDomain.Entities.Branches;
 using LvDomain.Enums;
+using LvInfrastructure.Persistence;
 using LvTest.Common;
 
 namespace LvTest.Services.Workers;
 
 public class WorkerServiceTests
 {
+    private static async Task<Branch> CreateBranchAsync(AppDbContext context, int operationsDirectorId, BranchType branchType)
+    {
+        var branch = new Branch
+        {
+            Name = "Bodega Central",
+            City = "San Jose",
+            Province = "San Jose",
+            Status = BranchStatus.Active,
+            BranchType = branchType,
+            OperationsDirectorId = operationsDirectorId,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.Branches.Add(branch);
+        await context.SaveChangesAsync();
+        return branch;
+    }
+
+    [Fact]
+    public async Task CreateAsync_StorageCategoryAssignedToWarehouseBranch_Succeeds()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "wdir1@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var branch = await CreateBranchAsync(context, director.Id, BranchType.Warehouse);
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var result = await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Bodeguero Uno",
+            Category = WorkerCategory.Storage,
+            Type = WorkerType.WarehouseKeeper,
+            HourlyRate = 8,
+            BranchId = branch.Id
+        });
+
+        result.BranchId.Should().Be(branch.Id);
+    }
+
+    [Fact]
+    public async Task CreateAsync_NonStorageCategoryAssignedToWarehouseBranch_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "wdir2@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var branch = await CreateBranchAsync(context, director.Id, BranchType.Warehouse);
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var act = async () => await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Vendedor Mal Asignado",
+            Category = WorkerCategory.Commercial,
+            Type = WorkerType.Salesperson,
+            HourlyRate = 8,
+            BranchId = branch.Id
+        });
+
+        var exception = await act.Should().ThrowAsync<ValidationAppException>();
+        exception.Which.Message.Should().Contain("Bodega deben tener categoría Almacenamiento");
+    }
+
+    [Fact]
+    public async Task CreateAsync_AnyCategoryAssignedToCommercialBranch_Succeeds()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "wdir3@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var branch = await CreateBranchAsync(context, director.Id, BranchType.Commercial);
+        var service = ServiceFactory.CreateWorkerService(context);
+
+        var result = await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Vendedor Comercio",
+            Category = WorkerCategory.Commercial,
+            Type = WorkerType.Salesperson,
+            HourlyRate = 8,
+            BranchId = branch.Id
+        });
+
+        result.BranchId.Should().Be(branch.Id);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_MismatchedCategoryForWarehouseBranch_ThrowsValidationException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var director = await TestUserFactory.CreateAsync(context, "wdir4@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var branch = await CreateBranchAsync(context, director.Id, BranchType.Warehouse);
+        var service = ServiceFactory.CreateWorkerService(context);
+        var created = await service.CreateAsync(new CreateWorkerDto
+        {
+            Name = "Bodeguero Dos",
+            Category = WorkerCategory.Storage,
+            Type = WorkerType.WarehouseKeeper,
+            HourlyRate = 8,
+            BranchId = branch.Id
+        });
+
+        var act = async () => await service.UpdateAsync(created.Id, new UpdateWorkerDto
+        {
+            Name = "Bodeguero Dos",
+            Status = ActiveStatus.Active,
+            Category = WorkerCategory.Commercial,
+            Type = WorkerType.Salesperson,
+            HourlyRate = 8,
+            BranchId = branch.Id
+        });
+
+        var exception = await act.Should().ThrowAsync<ValidationAppException>();
+        exception.Which.Message.Should().Contain("Bodega deben tener categoría Almacenamiento");
+    }
+
     [Fact]
     public async Task CreateAsync_OfficeEngineer_Succeeds()
     {

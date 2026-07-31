@@ -37,6 +37,7 @@ public class WorkerService : IWorkerService
             Category = request.Category,
             Type = request.Type,
             HourlyRate = request.HourlyRate,
+            BranchId = request.BranchId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -59,6 +60,7 @@ public class WorkerService : IWorkerService
         worker.Category = request.Category;
         worker.Type = request.Type;
         worker.HourlyRate = request.HourlyRate;
+        worker.BranchId = request.BranchId;
         worker.UpdatedAt = DateTime.UtcNow;
 
         await _workerRepository.UpdateAsync(worker);
@@ -101,6 +103,7 @@ public class WorkerService : IWorkerService
         Status = worker.Status,
         Category = worker.Category,
         Type = worker.Type,
-        HourlyRate = worker.HourlyRate
+        HourlyRate = worker.HourlyRate,
+        BranchId = worker.BranchId
     };
 }

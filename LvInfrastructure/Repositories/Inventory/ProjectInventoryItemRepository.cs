@@ -17,6 +17,9 @@ public class ProjectInventoryItemRepository : IProjectInventoryItemRepository
     public Task<ProjectInventoryItem?> GetByProjectAndMaterialAsync(int projectId, int materialId) =>
         _context.ProjectInventoryItems.FirstOrDefaultAsync(i => i.ProjectId == projectId && i.MaterialId == materialId);
 
+    public Task<ProjectInventoryItem?> GetByProjectAndProductAsync(int projectId, int productId) =>
+        _context.ProjectInventoryItems.FirstOrDefaultAsync(i => i.ProjectId == projectId && i.ProductId == productId);
+
     public Task<List<ProjectInventoryItem>> GetByProjectAsync(int projectId) =>
         _context.ProjectInventoryItems
             .Where(i => i.ProjectId == projectId)

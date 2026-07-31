@@ -83,6 +83,39 @@ public class InvoiceServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_BranchNotCommercial_ThrowsValidationAppException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(context, "invwh@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var warehouseBranch = new Branch
+        {
+            Name = "Bodega Central",
+            City = "San Jose",
+            Province = "San Jose",
+            Status = BranchStatus.Active,
+            BranchType = BranchType.Warehouse,
+            OperationsDirectorId = user.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.Branches.Add(warehouseBranch);
+        await context.SaveChangesAsync();
+        var register = await CreateOpenCashRegisterAsync(context, warehouseBranch.Id, user.Id);
+        var product = await CreateValidatedProductAsync(context, user.Id, "SKU-WH-1");
+        await CreateInventoryAsync(context, warehouseBranch.Id, product.Id, 10m);
+        var service = ServiceFactory.CreateInvoiceService(context);
+
+        var act = () => service.CreateAsync(new CreateInvoiceDto
+        {
+            BranchId = warehouseBranch.Id,
+            CashRegisterId = register.Id,
+            PaymentType = InvoicePaymentType.Credito,
+            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 } }
+        }, user.Id);
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
     public async Task CreateAsync_ResolvesUnitPriceFromProduct_AndComputesTotalsWithTax()
     {
         using var context = TestDbContextFactory.Create();

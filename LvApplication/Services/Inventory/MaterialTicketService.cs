@@ -260,6 +260,7 @@ public class MaterialTicketService : IMaterialTicketService
             Id = i.Id,
             ProjectId = i.ProjectId,
             MaterialId = i.MaterialId,
+            ProductId = i.ProductId,
             CurrentQuantity = i.CurrentQuantity,
             ReferenceUnitCost = i.ReferenceUnitCost
         }).ToList();

@@ -67,6 +67,58 @@ public class ProductIncorporationTicketServiceTests
     };
 
     [Fact]
+    public async Task CreateAsync_BranchNotCommercialOrWarehouse_ThrowsValidationAppException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(context, "pitoffice@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var officeBranch = new Branch
+        {
+            Name = "Oficina Central",
+            City = "San Jose",
+            Province = "San Jose",
+            Status = BranchStatus.Active,
+            BranchType = BranchType.Office,
+            OperationsDirectorId = user.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.Branches.Add(officeBranch);
+        await context.SaveChangesAsync();
+        var supplier = await CreateSupplierAsync(context);
+        var product = await CreateProductAsync(context, user.Id);
+        var service = ServiceFactory.CreateProductIncorporationTicketService(context);
+
+        var act = () => service.CreateAsync(BuildDto(officeBranch.Id, product.Id, supplier.Id), user.Id, new[] { "GeneralManager" });
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
+    public async Task CreateAsync_WarehouseBranch_Succeeds()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(context, "pitwh@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var warehouseBranch = new Branch
+        {
+            Name = "Bodega Central",
+            City = "San Jose",
+            Province = "San Jose",
+            Status = BranchStatus.Active,
+            BranchType = BranchType.Warehouse,
+            OperationsDirectorId = user.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.Branches.Add(warehouseBranch);
+        await context.SaveChangesAsync();
+        var supplier = await CreateSupplierAsync(context);
+        var product = await CreateProductAsync(context, user.Id);
+        var service = ServiceFactory.CreateProductIncorporationTicketService(context);
+
+        var result = await service.CreateAsync(BuildDto(warehouseBranch.Id, product.Id, supplier.Id), user.Id, new[] { "GeneralManager" });
+
+        result.Status.Should().Be(ProductIncorporationTicketStatus.Validated);
+    }
+
+    [Fact]
     public async Task CreateAsync_ByGeneralManager_ValidatesImmediatelyAndCreatesInventoryRow()
     {
         using var context = TestDbContextFactory.Create();

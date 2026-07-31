@@ -51,6 +51,30 @@ public class CashRegisterServiceTests
     }
 
     [Fact]
+    public async Task OpenAsync_BranchNotCommercial_ThrowsValidationAppException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(context, "gmwh@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var warehouseBranch = new Branch
+        {
+            Name = "Bodega Central",
+            City = "San Jose",
+            Province = "San Jose",
+            Status = BranchStatus.Active,
+            BranchType = BranchType.Warehouse,
+            OperationsDirectorId = user.Id,
+            CreatedAt = DateTime.UtcNow
+        };
+        context.Branches.Add(warehouseBranch);
+        await context.SaveChangesAsync();
+        var service = ServiceFactory.CreateCashRegisterService(context);
+
+        var act = () => service.OpenAsync(new OpenCashRegisterDto { BranchId = warehouseBranch.Id, OpeningBalance = 0m }, user.Id);
+
+        await act.Should().ThrowAsync<ValidationAppException>();
+    }
+
+    [Fact]
     public async Task OpenAsync_CreatesRegisterInOpenStatus()
     {
         using var context = TestDbContextFactory.Create();

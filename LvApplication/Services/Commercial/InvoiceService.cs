@@ -2,6 +2,7 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Commercial;
+using LvApplication.Services.Branches;
 using LvDomain.Entities.Commercial;
 using LvDomain.Enums;
 
@@ -12,6 +13,7 @@ public class InvoiceService : IInvoiceService
     private const decimal TaxRate = 0.13m;
 
     private readonly IInvoiceRepository _invoiceRepository;
+    private readonly IBranchRepository _branchRepository;
     private readonly IBranchInventoryRepository _inventoryRepository;
     private readonly IProductRepository _productRepository;
     private readonly ICashRegisterRepository _cashRegisterRepository;
@@ -22,6 +24,7 @@ public class InvoiceService : IInvoiceService
 
     public InvoiceService(
         IInvoiceRepository invoiceRepository,
+        IBranchRepository branchRepository,
         IBranchInventoryRepository inventoryRepository,
         IProductRepository productRepository,
         ICashRegisterRepository cashRegisterRepository,
@@ -31,6 +34,7 @@ public class InvoiceService : IInvoiceService
         IValidator<CreateInvoicePaymentDto> paymentValidator)
     {
         _invoiceRepository = invoiceRepository;
+        _branchRepository = branchRepository;
         _inventoryRepository = inventoryRepository;
         _productRepository = productRepository;
         _cashRegisterRepository = cashRegisterRepository;
@@ -43,6 +47,14 @@ public class InvoiceService : IInvoiceService
     public async Task<InvoiceDto> CreateAsync(CreateInvoiceDto request, int createdByUserId)
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
+
+        var branch = await _branchRepository.GetByIdAsync(request.BranchId)
+            ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
+
+        if (branch.BranchType != BranchType.Commercial)
+        {
+            throw new ValidationAppException("Solo se puede facturar en una sucursal de tipo Comercio.");
+        }
 
         var cashRegister = await _cashRegisterRepository.GetByIdAsync(request.CashRegisterId)
             ?? throw new NotFoundException($"CashRegister {request.CashRegisterId} not found.");
