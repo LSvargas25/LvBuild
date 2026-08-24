@@ -91,9 +91,8 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        var applicationAssembly = typeof(LvApplication.Common.Result<>).Assembly;
+        var applicationAssembly = typeof(LvApplication.Common.PagedResult<>).Assembly;
 
-        services.AddAutoMapper(cfg => { }, applicationAssembly);
         services.AddValidatorsFromAssembly(applicationAssembly);
 
         services.AddScoped<IAuthService, AuthService>();
