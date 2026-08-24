@@ -88,7 +88,11 @@ public class CustomerService : ICustomerService
     public async Task DeleteAsync(int id)
     {
         var customer = await _customerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Customer {id} not found.");
-        await _customerRepository.DeleteAsync(customer);
+
+        customer.Status = ActiveStatus.Inactive;
+        customer.UpdatedAt = DateTime.UtcNow;
+
+        await _customerRepository.UpdateAsync(customer);
     }
 
     private static CustomerResponseDto MapToDto(Customer customer) => new()

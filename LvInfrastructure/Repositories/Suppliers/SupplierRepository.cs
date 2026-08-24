@@ -41,10 +41,4 @@ public class SupplierRepository : ISupplierRepository
         _context.Suppliers.Update(supplier);
         await _context.SaveChangesAsync();
     }
-
-    public async Task DeleteAsync(Supplier supplier)
-    {
-        _context.Suppliers.Remove(supplier);
-        await _context.SaveChangesAsync();
-    }
 }

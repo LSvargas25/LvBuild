@@ -91,7 +91,7 @@ public class CustomerServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_ExistingId_RemovesCustomer()
+    public async Task DeleteAsync_ExistingId_SoftDeletesCustomer()
     {
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateCustomerService(context);
@@ -106,7 +106,8 @@ public class CustomerServiceTests
         await service.DeleteAsync(created.Id);
 
         var stored = await context.Customers.FindAsync(created.Id);
-        stored.Should().BeNull();
+        stored.Should().NotBeNull();
+        stored!.Status.Should().Be(ActiveStatus.Inactive);
     }
 
     [Fact]

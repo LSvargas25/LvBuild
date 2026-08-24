@@ -84,7 +84,11 @@ public class SupplierService : ISupplierService
     public async Task DeleteAsync(int id)
     {
         var supplier = await _supplierRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Supplier {id} not found.");
-        await _supplierRepository.DeleteAsync(supplier);
+
+        supplier.Status = ActiveStatus.Inactive;
+        supplier.UpdatedAt = DateTime.UtcNow;
+
+        await _supplierRepository.UpdateAsync(supplier);
     }
 
     private static SupplierResponseDto MapToDto(Supplier supplier) => new()

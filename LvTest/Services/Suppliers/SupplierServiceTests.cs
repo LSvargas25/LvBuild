@@ -83,7 +83,7 @@ public class SupplierServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_ExistingId_RemovesSupplier()
+    public async Task DeleteAsync_ExistingId_SoftDeletesSupplier()
     {
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateSupplierService(context);
@@ -97,7 +97,8 @@ public class SupplierServiceTests
         await service.DeleteAsync(created.Id);
 
         var stored = await context.Suppliers.FindAsync(created.Id);
-        stored.Should().BeNull();
+        stored.Should().NotBeNull();
+        stored!.Status.Should().Be(ActiveStatus.Inactive);
     }
 
     [Fact]

@@ -8,5 +8,4 @@ public interface ISupplierRepository
     Task<(List<Supplier> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize);
     Task AddAsync(Supplier supplier);
     Task UpdateAsync(Supplier supplier);
-    Task DeleteAsync(Supplier supplier);
 }
