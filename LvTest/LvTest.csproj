@@ -19,6 +19,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="FluentAssertions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Moq" Version="4.18.1" />
@@ -30,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LvApi\LvApi.csproj" />
     <ProjectReference Include="..\LvApplication\LvApplication.csproj" />
     <ProjectReference Include="..\LvDomain\LvDomain.csproj" />
     <ProjectReference Include="..\LvInfrastructure\LvInfrastructure.csproj" />
