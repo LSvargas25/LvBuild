@@ -8,8 +8,28 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File(
+            Path.Combine(context.HostingEnvironment.ContentRootPath, "Logs", "app-.log"),
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 30)
+        .WriteTo.File(
+            Path.Combine(context.HostingEnvironment.ContentRootPath, "Logs", "errors-.log"),
+            restrictedToMinimumLevel: LogEventLevel.Error,
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 90);
+});
 
 // TODO: confirmar que la empresa califica para la licencia Community de QuestPDF (umbral de ingresos anuales) antes de producción.
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
@@ -137,6 +157,8 @@ builder.Services.AddRateLimiter(options =>
 });
 
 var app = builder.Build();
+
+app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
