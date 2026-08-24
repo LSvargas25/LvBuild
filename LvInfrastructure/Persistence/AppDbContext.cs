@@ -6,6 +6,7 @@ using LvDomain.Entities.Customers;
 using LvDomain.Entities.Inventory;
 using LvDomain.Entities.Materials;
 using LvDomain.Entities.Incidents;
+using LvDomain.Entities.Notifications;
 using LvDomain.Entities.Offers;
 using LvDomain.Entities.Payroll;
 using LvDomain.Entities.Progress;
@@ -83,6 +84,8 @@ public class AppDbContext : DbContext
     public DbSet<InvoicePayment> InvoicePayments => Set<InvoicePayment>();
 
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
+
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

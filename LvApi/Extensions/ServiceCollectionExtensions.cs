@@ -8,6 +8,7 @@ using LvApplication.Services.Finance;
 using LvApplication.Services.Incidents;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Materials;
+using LvApplication.Services.Notifications;
 using LvApplication.Services.Offers;
 using LvApplication.Services.Payroll;
 using LvApplication.Services.Progress;
@@ -29,6 +30,7 @@ using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
 using LvInfrastructure.Repositories.Incidents;
+using LvInfrastructure.Repositories.Notifications;
 using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Payroll;
 using LvInfrastructure.Repositories.Progress;
@@ -82,6 +84,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();
 
+        services.AddScoped<INotificationRepository, NotificationRepository>();
+
         return services;
     }
 
@@ -116,6 +120,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ICashRegisterService, CashRegisterService>();
         services.AddScoped<IInvoiceService, InvoiceService>();
         services.AddScoped<IInventoryMovementService, InventoryMovementService>();
+
+        services.AddScoped<INotificationService, NotificationService>();
 
         return services;
     }

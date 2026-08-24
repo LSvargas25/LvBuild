@@ -6,6 +6,7 @@ using LvApplication.Services.Customers;
 using LvApplication.Services.Finance;
 using LvApplication.Services.Inventory;
 using LvApplication.Services.Incidents;
+using LvApplication.Services.Notifications;
 using LvApplication.Services.Offers;
 using LvApplication.Services.Payroll;
 using LvApplication.Services.Progress;
@@ -41,6 +42,7 @@ using LvInfrastructure.Repositories.Customers;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
 using LvInfrastructure.Repositories.Incidents;
+using LvInfrastructure.Repositories.Notifications;
 using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Payroll;
 using LvInfrastructure.Repositories.Progress;
@@ -249,10 +251,15 @@ public static class ServiceFactory
             new BranchInventoryRepository(context),
             new ProductRepository(context),
             new CashRegisterRepository(context),
+            new UserRepository(context),
+            CreateNotificationService(context),
             new CreateInvoiceDtoValidator(),
             new UpdateInvoiceDraftDtoValidator(),
             new IssueInvoiceDtoValidator(),
             new CreateInvoicePaymentDtoValidator());
+
+    public static NotificationService CreateNotificationService(AppDbContext context) =>
+        new(new NotificationRepository(context));
 
     public static InventoryMovementService CreateInventoryMovementService(AppDbContext context) =>
         new(

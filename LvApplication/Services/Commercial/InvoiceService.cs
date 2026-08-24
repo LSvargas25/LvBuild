@@ -2,7 +2,9 @@ using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Commercial;
+using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
+using LvApplication.Services.Notifications;
 using LvDomain.Entities.Commercial;
 using LvDomain.Enums;
 
@@ -11,12 +13,16 @@ namespace LvApplication.Services.Commercial;
 public class InvoiceService : IInvoiceService
 {
     private const decimal TaxRate = 0.13m;
+    private const decimal LowStockThreshold = 3m;
+    private static readonly string[] LowStockRecipientRoles = { "GeneralManager", "OperationsDirector" };
 
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IBranchRepository _branchRepository;
     private readonly IBranchInventoryRepository _inventoryRepository;
     private readonly IProductRepository _productRepository;
     private readonly ICashRegisterRepository _cashRegisterRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly INotificationService _notificationService;
     private readonly IValidator<CreateInvoiceDto> _createValidator;
     private readonly IValidator<UpdateInvoiceDraftDto> _updateDraftValidator;
     private readonly IValidator<IssueInvoiceDto> _issueValidator;
@@ -28,6 +34,8 @@ public class InvoiceService : IInvoiceService
         IBranchInventoryRepository inventoryRepository,
         IProductRepository productRepository,
         ICashRegisterRepository cashRegisterRepository,
+        IUserRepository userRepository,
+        INotificationService notificationService,
         IValidator<CreateInvoiceDto> createValidator,
         IValidator<UpdateInvoiceDraftDto> updateDraftValidator,
         IValidator<IssueInvoiceDto> issueValidator,
@@ -38,6 +46,8 @@ public class InvoiceService : IInvoiceService
         _inventoryRepository = inventoryRepository;
         _productRepository = productRepository;
         _cashRegisterRepository = cashRegisterRepository;
+        _userRepository = userRepository;
+        _notificationService = notificationService;
         _createValidator = createValidator;
         _updateDraftValidator = updateDraftValidator;
         _issueValidator = issueValidator;
@@ -166,12 +176,23 @@ public class InvoiceService : IInvoiceService
             }
         }
 
+        var lowStockProductIds = new List<int>();
         foreach (var detail in invoice.Details)
         {
             var inventory = inventoryByProduct[detail.ProductId];
             inventory.Quantity -= detail.Quantity;
             inventory.UpdatedAt = DateTime.UtcNow;
             await _inventoryRepository.UpdateAsync(inventory);
+
+            if (inventory.Quantity <= LowStockThreshold)
+            {
+                lowStockProductIds.Add(detail.ProductId);
+            }
+        }
+
+        if (lowStockProductIds.Count > 0)
+        {
+            await NotifyLowStockAsync(invoice.BranchId, lowStockProductIds);
         }
 
         var nextNumber = await _invoiceRepository.CountByBranchAsync(invoice.BranchId) + 1;
@@ -301,6 +322,32 @@ public class InvoiceService : IInvoiceService
             PageNumber = pageNumber,
             PageSize = pageSize
         };
+    }
+
+    private async Task NotifyLowStockAsync(int branchId, List<int> productIds)
+    {
+        var branch = await _branchRepository.GetByIdAsync(branchId);
+        var recipients = await _userRepository.GetByRoleNamesAsync(LowStockRecipientRoles);
+        var recipientIds = recipients.Select(u => u.Id).ToList();
+
+        if (branch?.BranchAdminId is int branchAdminId)
+        {
+            recipientIds.Add(branchAdminId);
+        }
+
+        if (recipientIds.Count == 0)
+            return;
+
+        foreach (var productId in productIds)
+        {
+            var product = await _productRepository.GetByIdAsync(productId);
+            var productLabel = product is null ? $"#{productId}" : $"{product.Name} ({product.Sku})";
+
+            await _notificationService.NotifyAsync(
+                recipientIds,
+                NotificationType.StockBajo,
+                $"Stock bajo en {branch?.Name ?? $"sucursal #{branchId}"}: {productLabel}.");
+        }
     }
 
     private async Task<List<InvoiceDetail>> BuildDetailLinesAsync(List<InvoiceDetailLineDto> lines)

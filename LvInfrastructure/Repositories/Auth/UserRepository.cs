@@ -40,6 +40,14 @@ public class UserRepository : IUserRepository
         return (users, totalCount);
     }
 
+    public async Task<List<User>> GetByRoleNamesAsync(IEnumerable<string> roleNames)
+    {
+        var names = roleNames.ToList();
+        return await UsersWithRoles
+            .Where(u => u.UserRoles.Any(ur => names.Contains(ur.Role.Name)))
+            .ToListAsync();
+    }
+
     public async Task AddAsync(User user)
     {
         _context.Users.Add(user);

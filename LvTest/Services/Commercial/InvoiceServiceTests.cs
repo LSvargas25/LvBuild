@@ -228,6 +228,32 @@ public class InvoiceServiceTests
     }
 
     [Fact]
+    public async Task IssueAsync_StockDropsToThresholdOrBelow_NotifiesGeneralManagerAndOperationsDirector()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (branch, register, userId) = await CreateContextAsync(context, "u-lowstock");
+        var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-LOW");
+        await CreateInventoryAsync(context, branch.Id, product.Id, 5m);
+        var service = ServiceFactory.CreateInvoiceService(context);
+        var draft = await service.CreateAsync(new CreateInvoiceDto
+        {
+            BranchId = branch.Id,
+            CashRegisterId = register.Id,
+            PaymentType = InvoicePaymentType.Credito,
+            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 3 } }
+        }, userId);
+
+        await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
+
+        var inventory = await context.BranchInventories.FirstAsync(i => i.BranchId == branch.Id && i.ProductId == product.Id);
+        inventory.Quantity.Should().Be(2m, "5 - 3 must fall at or below the 3-unit low-stock threshold");
+
+        var notification = await context.Notifications.SingleAsync(n => n.UserId == userId && n.Type == NotificationType.StockBajo);
+        notification.IsRead.Should().BeFalse();
+        notification.Message.Should().Contain(product.Sku);
+    }
+
+    [Fact]
     public async Task IssueAsync_InsufficientStockOnAnyLine_ThrowsAndDecrementsNothing()
     {
         using var context = TestDbContextFactory.Create();
