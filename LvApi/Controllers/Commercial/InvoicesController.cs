@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Commercial;
 using LvApplication.Services.Commercial;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Commercial;
 [ApiController]
 [Route("api/invoices")]
 [Authorize]
-public class InvoicesController : ControllerBase
+public class InvoicesController : ApiControllerBase
 {
     private readonly IInvoiceService _invoiceService;
 
@@ -76,11 +76,5 @@ public class InvoicesController : ControllerBase
     {
         var result = await _invoiceService.GetAllByBranchAsync(branchId, pageNumber, pageSize);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

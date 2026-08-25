@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Inventory;
 using LvApplication.Services.Inventory;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Inventory;
 [ApiController]
 [Route("api")]
 [Authorize]
-public class MaterialTicketsController : ControllerBase
+public class MaterialTicketsController : ApiControllerBase
 {
     private readonly IMaterialTicketService _materialTicketService;
 
@@ -81,11 +81,5 @@ public class MaterialTicketsController : ControllerBase
     {
         var result = await _materialTicketService.GetInventoryAsync(projectId);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

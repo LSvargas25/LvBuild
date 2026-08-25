@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Warehouse;
 using LvApplication.Services.Warehouse;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Warehouse;
 [ApiController]
 [Route("api/inventory-movements")]
 [Authorize]
-public class InventoryMovementsController : ControllerBase
+public class InventoryMovementsController : ApiControllerBase
 {
     private readonly IInventoryMovementService _movementService;
 
@@ -57,13 +57,4 @@ public class InventoryMovementsController : ControllerBase
         var result = await _movementService.GetAllByOriginBranchAsync(branchId, pageNumber, pageSize);
         return Ok(result);
     }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
-    }
-
-    private List<string> GetCurrentRoles() =>
-        User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
 }

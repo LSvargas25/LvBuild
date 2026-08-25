@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.DTOs.Auth;
 using LvApplication.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Auth;
 [ApiController]
 [Route("api/auth")]
 [Authorize]
-public class AuthController : ControllerBase
+public class AuthController : ApiControllerBase
 {
     private readonly IAuthService _authService;
 
@@ -94,11 +94,5 @@ public class AuthController : ControllerBase
             file.ContentType);
 
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

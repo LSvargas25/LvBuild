@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Budgets;
 using LvApplication.Services.Budgets;
@@ -11,7 +11,7 @@ namespace LvApi.Controllers.Budgets;
 [ApiController]
 [Route("api/budgets")]
 [Authorize]
-public class BudgetsController : ControllerBase
+public class BudgetsController : ApiControllerBase
 {
     private readonly IBudgetService _budgetService;
 
@@ -114,11 +114,5 @@ public class BudgetsController : ControllerBase
     {
         var result = await _budgetService.GetHistoryAsync(id);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

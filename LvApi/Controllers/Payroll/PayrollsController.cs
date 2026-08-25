@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Payroll;
 using LvApplication.Services.Payroll;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Payroll;
 [ApiController]
 [Route("api")]
 [Authorize]
-public class PayrollsController : ControllerBase
+public class PayrollsController : ApiControllerBase
 {
     private readonly IPayrollService _payrollService;
 
@@ -75,11 +75,5 @@ public class PayrollsController : ControllerBase
     {
         var result = await _payrollService.GetAllByProjectAsync(projectId, pageNumber, pageSize);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

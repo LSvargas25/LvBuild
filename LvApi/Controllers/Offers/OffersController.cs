@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Offers;
 using LvApplication.Services.Offers;
@@ -11,7 +11,7 @@ namespace LvApi.Controllers.Offers;
 [ApiController]
 [Route("api/offers")]
 [Authorize]
-public class OffersController : ControllerBase
+public class OffersController : ApiControllerBase
 {
     private readonly IOfferService _offerService;
 
@@ -90,11 +90,5 @@ public class OffersController : ControllerBase
     {
         var result = await _offerService.GetByIdAsync(id);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

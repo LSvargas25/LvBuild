@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Commercial;
 using LvApplication.Services.Commercial;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Commercial;
 [ApiController]
 [Route("api/product-incorporation-tickets")]
 [Authorize]
-public class ProductIncorporationTicketsController : ControllerBase
+public class ProductIncorporationTicketsController : ApiControllerBase
 {
     private readonly IProductIncorporationTicketService _ticketService;
 
@@ -56,13 +56,4 @@ public class ProductIncorporationTicketsController : ControllerBase
         var result = await _ticketService.GetAllByBranchAsync(branchId, pageNumber, pageSize);
         return Ok(result);
     }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
-    }
-
-    private List<string> GetCurrentRoles() =>
-        User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
 }

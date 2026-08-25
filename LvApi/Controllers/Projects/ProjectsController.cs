@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Projects;
 using LvApplication.Services.Projects;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Projects;
 [ApiController]
 [Route("api/projects")]
 [Authorize]
-public class ProjectsController : ControllerBase
+public class ProjectsController : ApiControllerBase
 {
     private readonly IProjectService _projectService;
 
@@ -78,11 +78,5 @@ public class ProjectsController : ControllerBase
     {
         var result = await _projectService.GetEndDateHistoryAsync(id);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

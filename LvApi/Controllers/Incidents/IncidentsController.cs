@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Incidents;
 using LvApplication.Services.Incidents;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Incidents;
 [ApiController]
 [Route("api")]
 [Authorize]
-public class IncidentsController : ControllerBase
+public class IncidentsController : ApiControllerBase
 {
     private readonly IIncidentService _incidentService;
 
@@ -75,11 +75,5 @@ public class IncidentsController : ControllerBase
     {
         var result = await _incidentService.GetAllByProjectAsync(projectId, pageNumber, pageSize);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

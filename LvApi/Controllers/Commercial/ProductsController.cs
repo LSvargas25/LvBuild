@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Commercial;
 using LvApplication.Services.Commercial;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Commercial;
 [ApiController]
 [Route("api/products")]
 [Authorize]
-public class ProductsController : ControllerBase
+public class ProductsController : ApiControllerBase
 {
     private readonly IProductService _productService;
 
@@ -73,13 +73,4 @@ public class ProductsController : ControllerBase
         var result = await _productService.GetAllAsync(pageNumber, pageSize, activeOnly);
         return Ok(result);
     }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
-    }
-
-    private List<string> GetCurrentRoles() =>
-        User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
 }

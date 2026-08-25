@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.Common;
 using LvApplication.DTOs.Notifications;
 using LvApplication.Services.Notifications;
@@ -10,7 +10,7 @@ namespace LvApi.Controllers.Notifications;
 [ApiController]
 [Route("api/notifications")]
 [Authorize]
-public class NotificationsController : ControllerBase
+public class NotificationsController : ApiControllerBase
 {
     private readonly INotificationService _notificationService;
 
@@ -31,11 +31,5 @@ public class NotificationsController : ControllerBase
     {
         await _notificationService.MarkAsReadAsync(id, GetCurrentUserId());
         return NoContent();
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }

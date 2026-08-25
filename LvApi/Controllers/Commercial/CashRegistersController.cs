@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using LvApi.Controllers;
 using LvApplication.DTOs.Commercial;
 using LvApplication.Services.Commercial;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +9,7 @@ namespace LvApi.Controllers.Commercial;
 [ApiController]
 [Route("api/cash-registers")]
 [Authorize]
-public class CashRegistersController : ControllerBase
+public class CashRegistersController : ApiControllerBase
 {
     private readonly ICashRegisterService _cashRegisterService;
 
@@ -45,11 +45,5 @@ public class CashRegistersController : ControllerBase
     {
         var result = await _cashRegisterService.GetByIdAsync(id);
         return Ok(result);
-    }
-
-    private int GetCurrentUserId()
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        return int.Parse(userIdClaim!.Value);
     }
 }
