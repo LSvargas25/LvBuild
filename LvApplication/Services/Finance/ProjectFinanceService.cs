@@ -16,21 +16,31 @@ public class ProjectFinanceService : IProjectFinanceService
     public ProjectFinanceService(
         IProjectRepository projectRepository,
         IMaterialTicketRepository ticketRepository,
-        ISiteLogRepository siteLogRepository)
+        ISiteLogRepository siteLogRepository
+    )
     {
         _projectRepository = projectRepository;
         _ticketRepository = ticketRepository;
         _siteLogRepository = siteLogRepository;
     }
 
-    public async Task<ProjectFinanceDto> GetFinanceAsync(int projectId, FinancePeriod period, DateTime date)
+    public async Task<ProjectFinanceDto> GetFinanceAsync(
+        int projectId,
+        FinancePeriod period,
+        DateTime date
+    )
     {
-        var project = await _projectRepository.GetByIdAsync(projectId)
+        var project =
+            await _projectRepository.GetByIdAsync(projectId)
             ?? throw new NotFoundException($"Project {projectId} not found.");
 
         var (periodStart, periodEnd) = ComputePeriodRange(period, date);
 
-        var tickets = await _ticketRepository.GetAppliedInRangeAsync(projectId, periodStart, periodEnd);
+        var tickets = await _ticketRepository.GetAppliedInRangeAsync(
+            projectId,
+            periodStart,
+            periodEnd
+        );
         var siteLogs = await _siteLogRepository.GetInRangeAsync(projectId, periodStart, periodEnd);
 
         return new ProjectFinanceDto
@@ -42,14 +52,16 @@ public class ProjectFinanceService : IProjectFinanceService
             CurrentDirectExpenses = project.CurrentDirectExpenses,
             PendingExpenses = project.PendingExpenses,
             TotalHoursWorked = siteLogs.SelectMany(s => s.Workers).Sum(w => w.HoursWorked),
-            Materials = tickets.Select(t => new ProjectFinanceMaterialDto
-            {
-                MaterialName = t.MaterialName,
-                SupplierName = t.Supplier.Name,
-                Quantity = t.Quantity,
-                Total = t.Total,
-                Date = t.CreatedAt
-            }).ToList()
+            Materials = tickets
+                .Select(t => new ProjectFinanceMaterialDto
+                {
+                    MaterialName = t.MaterialName,
+                    SupplierName = t.Supplier.Name,
+                    Quantity = t.Quantity,
+                    Total = t.Total,
+                    Date = t.CreatedAt,
+                })
+                .ToList(),
         };
     }
 
@@ -58,11 +70,18 @@ public class ProjectFinanceService : IProjectFinanceService
     //   SiteLog/Payroll).
     // - month: del primer al último día del mes calendario que contiene `date`.
     // - year: del 1 de enero al 31 de diciembre del año que contiene `date`.
-    private static (DateTime Start, DateTime End) ComputePeriodRange(FinancePeriod period, DateTime date) => period switch
-    {
-        FinancePeriod.Week => (date, date.AddDays(6)),
-        FinancePeriod.Month => (new DateTime(date.Year, date.Month, 1), new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1)),
-        FinancePeriod.Year => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 12, 31)),
-        _ => throw new ArgumentOutOfRangeException(nameof(period))
-    };
+    private static (DateTime Start, DateTime End) ComputePeriodRange(
+        FinancePeriod period,
+        DateTime date
+    ) =>
+        period switch
+        {
+            FinancePeriod.Week => (date, date.AddDays(6)),
+            FinancePeriod.Month => (
+                new DateTime(date.Year, date.Month, 1),
+                new DateTime(date.Year, date.Month, 1).AddMonths(1).AddDays(-1)
+            ),
+            FinancePeriod.Year => (new DateTime(date.Year, 1, 1), new DateTime(date.Year, 12, 31)),
+            _ => throw new ArgumentOutOfRangeException(nameof(period)),
+        };
 }

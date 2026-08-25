@@ -14,12 +14,14 @@ public class SiteLogEquipmentConfiguration : IEntityTypeConfiguration<SiteLogEqu
 
         builder.Property(e => e.Description).IsRequired().HasMaxLength(200);
 
-        builder.Property(e => e.EquipmentType)
+        builder
+            .Property(e => e.EquipmentType)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
-        builder.HasOne(e => e.SiteLog)
+        builder
+            .HasOne(e => e.SiteLog)
             .WithMany(s => s.Equipment)
             .HasForeignKey(e => e.SiteLogId)
             .OnDelete(DeleteBehavior.Cascade);

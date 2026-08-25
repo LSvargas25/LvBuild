@@ -41,17 +41,19 @@ public class CustomersControllerHttpTests
         await SeedUserAsync(factory, email, TestUserFactory.ProjectAdminRoleId);
         var client = factory.CreateClient();
 
-        var loginResponse = await client.PostAsJsonAsync("/api/auth/login", new LoginRequestDto
-        {
-            Email = email,
-            Password = SeedPassword
-        });
+        var loginResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequestDto { Email = email, Password = SeedPassword }
+        );
 
         loginResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
         loginResult!.AccessToken.Should().NotBeNullOrEmpty();
 
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            loginResult.AccessToken
+        );
         var meResponse = await client.GetAsync("/api/auth/me");
 
         meResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -64,16 +66,22 @@ public class CustomersControllerHttpTests
     {
         using var factory = new ApiWebApplicationFactory();
         var email = $"http-forbidden-{Guid.NewGuid():N}@example.com";
-        var customerId = await SeedUserAndCustomerAsync(factory, email, TestUserFactory.ProjectAdminRoleId);
+        var customerId = await SeedUserAndCustomerAsync(
+            factory,
+            email,
+            TestUserFactory.ProjectAdminRoleId
+        );
         var client = factory.CreateClient();
 
-        var loginResponse = await client.PostAsJsonAsync("/api/auth/login", new LoginRequestDto
-        {
-            Email = email,
-            Password = SeedPassword
-        });
+        var loginResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequestDto { Email = email, Password = SeedPassword }
+        );
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult!.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            loginResult!.AccessToken
+        );
 
         var deleteResponse = await client.DeleteAsync($"/api/customers/{customerId}");
 
@@ -85,16 +93,22 @@ public class CustomersControllerHttpTests
     {
         using var factory = new ApiWebApplicationFactory();
         var email = $"http-allowed-{Guid.NewGuid():N}@example.com";
-        var customerId = await SeedUserAndCustomerAsync(factory, email, TestUserFactory.GeneralManagerRoleId);
+        var customerId = await SeedUserAndCustomerAsync(
+            factory,
+            email,
+            TestUserFactory.GeneralManagerRoleId
+        );
         var client = factory.CreateClient();
 
-        var loginResponse = await client.PostAsJsonAsync("/api/auth/login", new LoginRequestDto
-        {
-            Email = email,
-            Password = SeedPassword
-        });
+        var loginResponse = await client.PostAsJsonAsync(
+            "/api/auth/login",
+            new LoginRequestDto { Email = email, Password = SeedPassword }
+        );
         var loginResult = await loginResponse.Content.ReadFromJsonAsync<LoginResponseDto>();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", loginResult!.AccessToken);
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
+            "Bearer",
+            loginResult!.AccessToken
+        );
 
         var deleteResponse = await client.DeleteAsync($"/api/customers/{customerId}");
 
@@ -107,7 +121,11 @@ public class CustomersControllerHttpTests
         stored!.Status.Should().Be(ActiveStatus.Inactive);
     }
 
-    private static async Task SeedUserAsync(ApiWebApplicationFactory factory, string email, int roleId)
+    private static async Task SeedUserAsync(
+        ApiWebApplicationFactory factory,
+        string email,
+        int roleId
+    )
     {
         using var scope = factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -115,7 +133,11 @@ public class CustomersControllerHttpTests
         await TestUserFactory.CreateAsync(context, email, SeedPassword, roleId);
     }
 
-    private static async Task<int> SeedUserAndCustomerAsync(ApiWebApplicationFactory factory, string email, int roleId)
+    private static async Task<int> SeedUserAndCustomerAsync(
+        ApiWebApplicationFactory factory,
+        string email,
+        int roleId
+    )
     {
         using var scope = factory.Services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -127,7 +149,7 @@ public class CustomersControllerHttpTests
             Name = "Cliente HTTP Test",
             CustomerType = CustomerType.Store,
             Status = ActiveStatus.Active,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Customers.Add(customer);
         await context.SaveChangesAsync();

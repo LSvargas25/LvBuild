@@ -4,5 +4,5 @@ public enum OfferStatus
 {
     Draft,
     SentToClient,
-    ClientAccepted
+    ClientAccepted,
 }

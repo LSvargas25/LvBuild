@@ -18,10 +18,22 @@ public class CashRegisterConfiguration : IEntityTypeConfiguration<CashRegister>
 
         builder.Property(c => c.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        builder.HasOne(c => c.Branch).WithMany().HasForeignKey(c => c.BranchId).OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(c => c.Branch)
+            .WithMany()
+            .HasForeignKey(c => c.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(c => c.BranchId);
 
-        builder.HasOne(c => c.OpenedByUser).WithMany().HasForeignKey(c => c.OpenedByUserId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(c => c.ClosedByUser).WithMany().HasForeignKey(c => c.ClosedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(c => c.OpenedByUser)
+            .WithMany()
+            .HasForeignKey(c => c.OpenedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(c => c.ClosedByUser)
+            .WithMany()
+            .HasForeignKey(c => c.ClosedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

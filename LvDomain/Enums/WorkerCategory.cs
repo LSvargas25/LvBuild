@@ -5,5 +5,5 @@ public enum WorkerCategory
     Office,
     Construction,
     Commercial,
-    Storage
+    Storage,
 }

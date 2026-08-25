@@ -12,25 +12,15 @@ public class OfferConfiguration : IEntityTypeConfiguration<Offer>
 
         builder.HasKey(o => o.Id);
 
-        builder.Property(o => o.OfferNumber)
-            .IsRequired()
-            .HasMaxLength(30);
+        builder.Property(o => o.OfferNumber).IsRequired().HasMaxLength(30);
 
         builder.HasIndex(o => o.OfferNumber).IsUnique();
 
-        builder.Property(o => o.OfferType)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
+        builder.Property(o => o.OfferType).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        builder.Property(o => o.Status)
-            .HasConversion<string>()
-            .HasMaxLength(30)
-            .IsRequired();
+        builder.Property(o => o.Status).HasConversion<string>().HasMaxLength(30).IsRequired();
 
-        builder.Property(o => o.PaymentFrequency)
-            .HasConversion<string>()
-            .HasMaxLength(30);
+        builder.Property(o => o.PaymentFrequency).HasConversion<string>().HasMaxLength(30);
 
         builder.Property(o => o.WorkLocation).IsRequired().HasMaxLength(300);
         builder.Property(o => o.WorkScope).IsRequired();
@@ -45,17 +35,20 @@ public class OfferConfiguration : IEntityTypeConfiguration<Offer>
         builder.Property(o => o.TotalProjectPrice).HasColumnType("decimal(18,2)");
         builder.Property(o => o.AgreedPercentage).HasColumnType("decimal(5,2)");
 
-        builder.HasOne(o => o.Budget)
+        builder
+            .HasOne(o => o.Budget)
             .WithMany()
             .HasForeignKey(o => o.BudgetId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(o => o.Customer)
+        builder
+            .HasOne(o => o.Customer)
             .WithMany()
             .HasForeignKey(o => o.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(o => o.CreatedByUser)
+        builder
+            .HasOne(o => o.CreatedByUser)
             .WithMany()
             .HasForeignKey(o => o.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);

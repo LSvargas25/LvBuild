@@ -14,7 +14,9 @@ public class BudgetActivity : BaseEntity
     public decimal EquipmentCost { get; set; }
     public decimal TotalActivity { get; set; }
 
-    public ICollection<BudgetActivityMaterial> Materials { get; set; } = new List<BudgetActivityMaterial>();
-    public ICollection<BudgetActivityEquipment> Equipment { get; set; } = new List<BudgetActivityEquipment>();
+    public ICollection<BudgetActivityMaterial> Materials { get; set; } =
+        new List<BudgetActivityMaterial>();
+    public ICollection<BudgetActivityEquipment> Equipment { get; set; } =
+        new List<BudgetActivityEquipment>();
     public ICollection<BudgetActivityLabor> Labor { get; set; } = new List<BudgetActivityLabor>();
 }

@@ -7,7 +7,6 @@ public class AssignWorkerDtoValidator : AbstractValidator<AssignWorkerDto>
 {
     public AssignWorkerDtoValidator()
     {
-        RuleFor(x => x.WorkerId)
-            .GreaterThan(0);
+        RuleFor(x => x.WorkerId).GreaterThan(0);
     }
 }

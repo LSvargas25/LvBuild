@@ -4,5 +4,5 @@ public enum InventoryMovementStatus
 {
     Sent,
     Accepted,
-    Denied
+    Denied,
 }

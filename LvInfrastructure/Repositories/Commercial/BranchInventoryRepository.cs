@@ -15,7 +15,9 @@ public class BranchInventoryRepository : IBranchInventoryRepository
     }
 
     public async Task<BranchInventory?> GetByBranchAndProductAsync(int branchId, int productId) =>
-        await _context.BranchInventories.FirstOrDefaultAsync(i => i.BranchId == branchId && i.ProductId == productId);
+        await _context.BranchInventories.FirstOrDefaultAsync(i =>
+            i.BranchId == branchId && i.ProductId == productId
+        );
 
     public async Task AddAsync(BranchInventory item)
     {
@@ -30,8 +32,8 @@ public class BranchInventoryRepository : IBranchInventoryRepository
     }
 
     public async Task<List<BranchInventory>> GetByBranchAsync(int branchId) =>
-        await _context.BranchInventories
-            .Include(i => i.Product)
+        await _context
+            .BranchInventories.Include(i => i.Product)
             .Where(i => i.BranchId == branchId)
             .OrderBy(i => i.Product.Name)
             .ToListAsync();

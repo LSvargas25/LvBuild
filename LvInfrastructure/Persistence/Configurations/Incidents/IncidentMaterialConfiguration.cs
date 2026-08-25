@@ -14,13 +14,15 @@ public class IncidentMaterialConfiguration : IEntityTypeConfiguration<IncidentMa
 
         builder.Property(m => m.Quantity).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(m => m.Incident)
+        builder
+            .HasOne(m => m.Incident)
             .WithMany(i => i.Materials)
             .HasForeignKey(m => m.IncidentId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(m => m.IncidentId);
 
-        builder.HasOne(m => m.Material)
+        builder
+            .HasOne(m => m.Material)
             .WithMany()
             .HasForeignKey(m => m.MaterialId)
             .OnDelete(DeleteBehavior.Restrict);

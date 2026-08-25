@@ -4,5 +4,5 @@ public enum BranchType
 {
     Office,
     Commercial,
-    Warehouse
+    Warehouse,
 }

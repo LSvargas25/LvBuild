@@ -14,12 +14,14 @@ public class BudgetActivityMaterialConfiguration : IEntityTypeConfiguration<Budg
 
         builder.Property(m => m.UnitPrice).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(m => m.Activity)
+        builder
+            .HasOne(m => m.Activity)
             .WithMany(a => a.Materials)
             .HasForeignKey(m => m.ActivityId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(m => m.Material)
+        builder
+            .HasOne(m => m.Material)
             .WithMany()
             .HasForeignKey(m => m.MaterialId)
             .OnDelete(DeleteBehavior.Restrict);

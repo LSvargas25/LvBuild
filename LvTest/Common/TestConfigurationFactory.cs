@@ -28,7 +28,7 @@ public static class TestConfigurationFactory
             ["Jwt:AccessTokenExpirationHours"] = "10",
             ["Jwt:RefreshTokenExpirationHours"] = "10",
             ["Security:MaxFailedLoginAttempts"] = "5",
-            ["Security:PasswordResetTokenExpirationMinutes"] = "30"
+            ["Security:PasswordResetTokenExpirationMinutes"] = "30",
         };
 
         if (overrides is not null)

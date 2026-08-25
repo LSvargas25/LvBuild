@@ -18,7 +18,7 @@ public class UserServiceTests
             Name = "Jane Doe",
             Email = "jane.doe@example.com",
             Password = "Password#123",
-            RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
+            RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
         };
 
         await userService.CreateUserAsync(first, new[] { "GeneralManager" });
@@ -28,10 +28,11 @@ public class UserServiceTests
             Name = "Jane Doe Duplicate",
             Email = "jane.doe@example.com",
             Password = "Password#456",
-            RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
+            RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
         };
 
-        var act = async () => await userService.CreateUserAsync(duplicate, new[] { "GeneralManager" });
+        var act = async () =>
+            await userService.CreateUserAsync(duplicate, new[] { "GeneralManager" });
 
         await act.Should().ThrowAsync<ConflictException>();
     }
@@ -42,13 +43,17 @@ public class UserServiceTests
         using var context = TestDbContextFactory.Create();
         var userService = ServiceFactory.CreateUserService(context);
 
-        var act = async () => await userService.CreateUserAsync(new CreateUserDto
-        {
-            Name = "Aspiring Manager",
-            Email = "aspiring.manager@example.com",
-            Password = "Password#123",
-            RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId }
-        }, new[] { "OperationsDirector" });
+        var act = async () =>
+            await userService.CreateUserAsync(
+                new CreateUserDto
+                {
+                    Name = "Aspiring Manager",
+                    Email = "aspiring.manager@example.com",
+                    Password = "Password#123",
+                    RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId },
+                },
+                new[] { "OperationsDirector" }
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -59,13 +64,16 @@ public class UserServiceTests
         using var context = TestDbContextFactory.Create();
         var userService = ServiceFactory.CreateUserService(context);
 
-        var result = await userService.CreateUserAsync(new CreateUserDto
-        {
-            Name = "New Manager",
-            Email = "new.manager@example.com",
-            Password = "Password#123",
-            RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId }
-        }, new[] { "GeneralManager" });
+        var result = await userService.CreateUserAsync(
+            new CreateUserDto
+            {
+                Name = "New Manager",
+                Email = "new.manager@example.com",
+                Password = "Password#123",
+                RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId },
+            },
+            new[] { "GeneralManager" }
+        );
 
         result.Roles.Should().Contain("GeneralManager");
     }
@@ -76,13 +84,16 @@ public class UserServiceTests
         using var context = TestDbContextFactory.Create();
         var userService = ServiceFactory.CreateUserService(context);
 
-        var result = await userService.CreateUserAsync(new CreateUserDto
-        {
-            Name = "New Project Admin",
-            Email = "new.projectadmin@example.com",
-            Password = "Password#123",
-            RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
-        }, new[] { "OperationsDirector" });
+        var result = await userService.CreateUserAsync(
+            new CreateUserDto
+            {
+                Name = "New Project Admin",
+                Email = "new.projectadmin@example.com",
+                Password = "Password#123",
+                RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+            },
+            new[] { "OperationsDirector" }
+        );
 
         result.Roles.Should().Contain("ProjectAdmin");
     }
@@ -93,13 +104,16 @@ public class UserServiceTests
         using var context = TestDbContextFactory.Create();
         var userService = ServiceFactory.CreateUserService(context);
 
-        var created = await userService.CreateUserAsync(new CreateUserDto
-        {
-            Name = "John Smith",
-            Email = "john.smith@example.com",
-            Password = "Password#123",
-            RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
-        }, new[] { "GeneralManager" });
+        var created = await userService.CreateUserAsync(
+            new CreateUserDto
+            {
+                Name = "John Smith",
+                Email = "john.smith@example.com",
+                Password = "Password#123",
+                RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+            },
+            new[] { "GeneralManager" }
+        );
 
         var result = await userService.GetByIdAsync(created.Id);
 
@@ -128,13 +142,16 @@ public class UserServiceTests
         // so only 4 more are created here to land on a round total of 5.
         for (var i = 1; i <= 4; i++)
         {
-            await userService.CreateUserAsync(new CreateUserDto
-            {
-                Name = $"User {i}",
-                Email = $"pagination-user-{i}@example.com",
-                Password = "Password#123",
-                RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId }
-            }, new[] { "GeneralManager" });
+            await userService.CreateUserAsync(
+                new CreateUserDto
+                {
+                    Name = $"User {i}",
+                    Email = $"pagination-user-{i}@example.com",
+                    Password = "Password#123",
+                    RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+                },
+                new[] { "GeneralManager" }
+            );
         }
 
         var firstPage = await userService.GetAllAsync(pageNumber: 1, pageSize: 2);

@@ -7,10 +7,8 @@ public class BudgetChapterDtoValidator : AbstractValidator<BudgetChapterDto>
 {
     public BudgetChapterDtoValidator()
     {
-        RuleFor(x => x.Name)
-            .NotEmpty();
+        RuleFor(x => x.Name).NotEmpty();
 
-        RuleForEach(x => x.Activities)
-            .SetValidator(new BudgetActivityDtoValidator());
+        RuleForEach(x => x.Activities).SetValidator(new BudgetActivityDtoValidator());
     }
 }

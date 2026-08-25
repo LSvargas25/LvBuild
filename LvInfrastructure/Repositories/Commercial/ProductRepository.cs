@@ -32,7 +32,11 @@ public class ProductRepository : IProductRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(List<Product> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, bool activeOnly)
+    public async Task<(List<Product> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        bool activeOnly
+    )
     {
         var query = _context.Products.AsQueryable();
         if (activeOnly)

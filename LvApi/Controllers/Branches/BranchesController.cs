@@ -35,7 +35,10 @@ public class BranchesController : ControllerBase
 
     [Authorize(Roles = "GeneralManager")]
     [HttpPost("{id:int}/assign-operations-director")]
-    public async Task<ActionResult<BranchResponseDto>> AssignOperationsDirector(int id, AssignOperationsDirectorDto request)
+    public async Task<ActionResult<BranchResponseDto>> AssignOperationsDirector(
+        int id,
+        AssignOperationsDirectorDto request
+    )
     {
         var result = await _branchService.AssignOperationsDirectorAsync(id, request);
         return Ok(result);
@@ -64,7 +67,10 @@ public class BranchesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<BranchResponseDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<PagedResult<BranchResponseDto>>> GetAll(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
         var (userId, roles) = GetCurrentUser();
         var result = await _branchService.GetAllAsync(pageNumber, pageSize, userId, roles);

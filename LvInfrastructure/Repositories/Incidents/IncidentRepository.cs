@@ -15,14 +15,16 @@ public class IncidentRepository : IIncidentRepository
         _context = context;
     }
 
-    private IQueryable<Incident> IncidentsWithChildren => _context.Incidents
-        .Include(i => i.Materials)
-        .Include(i => i.Workers);
+    private IQueryable<Incident> IncidentsWithChildren =>
+        _context.Incidents.Include(i => i.Materials).Include(i => i.Workers);
 
     public Task<Incident?> GetByIdAsync(int id) =>
         IncidentsWithChildren.FirstOrDefaultAsync(i => i.Id == id);
 
-    public async Task<(List<Incident> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(List<Incident> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize
+    )
     {
         var totalCount = await _context.Incidents.CountAsync();
 
@@ -35,7 +37,11 @@ public class IncidentRepository : IIncidentRepository
         return (items, totalCount);
     }
 
-    public async Task<(List<Incident> Items, int TotalCount)> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<(List<Incident> Items, int TotalCount)> GetPagedByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
         var query = _context.Incidents.Where(i => i.ProjectId == projectId);
 
@@ -51,10 +57,16 @@ public class IncidentRepository : IIncidentRepository
         return (items, totalCount);
     }
 
-    public async Task<(int Count, decimal TotalCost)> GetApprovedSummaryByChapterAsync(int projectId, int chapterId)
+    public async Task<(int Count, decimal TotalCost)> GetApprovedSummaryByChapterAsync(
+        int projectId,
+        int chapterId
+    )
     {
-        var matching = _context.Incidents
-            .Where(i => i.ProjectId == projectId && i.ChapterId == chapterId && i.Status == IncidentStatus.Approved);
+        var matching = _context.Incidents.Where(i =>
+            i.ProjectId == projectId
+            && i.ChapterId == chapterId
+            && i.Status == IncidentStatus.Approved
+        );
 
         var count = await matching.CountAsync();
         var totalCost = await matching.SumAsync(i => (decimal?)i.TotalCost) ?? 0m;

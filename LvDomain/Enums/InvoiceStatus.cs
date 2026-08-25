@@ -4,5 +4,5 @@ public enum InvoiceStatus
 {
     Draft,
     Issued,
-    Cancelled
+    Cancelled,
 }

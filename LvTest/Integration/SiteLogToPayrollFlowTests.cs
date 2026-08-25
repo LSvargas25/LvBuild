@@ -29,16 +29,28 @@ public class SiteLogToPayrollFlowTests
         await using var context = await SqlServerTestDbContextFactory.CreateAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
-        var director = await TestUserFactory.CreateAsync(context, $"director-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var manager = await TestUserFactory.CreateAsync(context, $"gm-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
-        var projectAdmin = await TestUserFactory.CreateAsync(context, $"pa-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            $"director-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var manager = await TestUserFactory.CreateAsync(
+            context,
+            $"gm-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
+        var projectAdmin = await TestUserFactory.CreateAsync(
+            context,
+            $"pa-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
 
         var customer = new Customer
         {
             Name = "Cliente Integracion Planilla",
             CustomerType = CustomerType.Project,
             Status = ActiveStatus.Active,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Customers.Add(customer);
 
@@ -50,7 +62,7 @@ public class SiteLogToPayrollFlowTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Office,
             OperationsDirectorId = director.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
@@ -65,7 +77,7 @@ public class SiteLogToPayrollFlowTests
             IndirectCostsTotal = 50,
             TotalBudget = 1000,
             CreatedByUserId = manager.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Budgets.Add(budget);
         await context.SaveChangesAsync();
@@ -89,18 +101,21 @@ public class SiteLogToPayrollFlowTests
             TotalProjectPrice = 100000m,
             Status = OfferStatus.ClientAccepted,
             CreatedByUserId = manager.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Offers.Add(offer);
         await context.SaveChangesAsync();
 
         var projectService = ServiceFactory.CreateProjectService(context);
-        var project = await projectService.CreateProjectAsync(new CreateProjectDto
-        {
-            OfferId = offer.Id,
-            BranchId = branch.Id,
-            StartDate = new DateTime(2026, 3, 1)
-        }, manager.Id);
+        var project = await projectService.CreateProjectAsync(
+            new CreateProjectDto
+            {
+                OfferId = offer.Id,
+                BranchId = branch.Id,
+                StartDate = new DateTime(2026, 3, 1),
+            },
+            manager.Id
+        );
 
         var worker = new Worker
         {
@@ -109,22 +124,25 @@ public class SiteLogToPayrollFlowTests
             Category = WorkerCategory.Construction,
             Type = WorkerType.Laborer,
             HourlyRate = 5m,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Workers.Add(worker);
         await context.SaveChangesAsync();
 
         var siteLogService = ServiceFactory.CreateSiteLogService(context);
-        var siteLog = await siteLogService.CreateAsync(new CreateSiteLogDto
-        {
-            ProjectId = project.Id,
-            WeekStart = new DateTime(2026, 3, 2),
-            WeekEnd = new DateTime(2026, 3, 8),
-            TaskDescription = "Semana de integracion",
-            Workers = new List<SiteLogWorkerDto>(),
-            Materials = new List<SiteLogMaterialDto>(),
-            Equipment = new List<SiteLogEquipmentDto>()
-        }, projectAdmin.Id);
+        var siteLog = await siteLogService.CreateAsync(
+            new CreateSiteLogDto
+            {
+                ProjectId = project.Id,
+                WeekStart = new DateTime(2026, 3, 2),
+                WeekEnd = new DateTime(2026, 3, 8),
+                TaskDescription = "Semana de integracion",
+                Workers = new List<SiteLogWorkerDto>(),
+                Materials = new List<SiteLogMaterialDto>(),
+                Equipment = new List<SiteLogEquipmentDto>(),
+            },
+            projectAdmin.Id
+        );
 
         await siteLogService.SubmitToReviewAsync(siteLog.Id);
         var approvedSiteLog = await siteLogService.ApproveAsync(siteLog.Id, manager.Id);
@@ -134,35 +152,42 @@ public class SiteLogToPayrollFlowTests
         const decimal hourlyRate = 5m;
         var finalAmount = hoursWorked * hourlyRate;
 
-        var payroll = await payrollService.CreateAsync(new CreatePayrollDto
-        {
-            SiteLogId = approvedSiteLog.Id,
-            Details = new List<PayrollDetailDto>
+        var payroll = await payrollService.CreateAsync(
+            new CreatePayrollDto
             {
-                new()
+                SiteLogId = approvedSiteLog.Id,
+                Details = new List<PayrollDetailDto>
                 {
-                    WorkerId = worker.Id,
-                    Date = new DateTime(2026, 3, 2),
-                    HoursWorked = hoursWorked,
-                    HourlyRate = hourlyRate,
-                    PaymentType = PayrollPaymentType.Full,
-                    Payments = new List<PayrollDetailPaymentDto>
+                    new()
                     {
-                        new() { PaymentMethod = PaymentMethod.Transfer, Amount = finalAmount }
-                    }
-                }
-            }
-        }, projectAdmin.Id);
+                        WorkerId = worker.Id,
+                        Date = new DateTime(2026, 3, 2),
+                        HoursWorked = hoursWorked,
+                        HourlyRate = hourlyRate,
+                        PaymentType = PayrollPaymentType.Full,
+                        Payments = new List<PayrollDetailPaymentDto>
+                        {
+                            new() { PaymentMethod = PaymentMethod.Transfer, Amount = finalAmount },
+                        },
+                    },
+                },
+            },
+            projectAdmin.Id
+        );
 
         var paid = await payrollService.MarkAsPaidAsync(payroll.Id);
 
         paid.Status.Should().Be(PayrollStatus.Paid);
 
         context.ChangeTracker.Clear();
-        var reloadedProject = await context.Projects.AsNoTracking().FirstAsync(p => p.Id == project.Id);
+        var reloadedProject = await context
+            .Projects.AsNoTracking()
+            .FirstAsync(p => p.Id == project.Id);
         reloadedProject.CurrentDirectExpenses.Should().Be(finalAmount);
 
-        var reloadedSiteLog = await context.SiteLogs.AsNoTracking().FirstAsync(s => s.Id == siteLog.Id);
+        var reloadedSiteLog = await context
+            .SiteLogs.AsNoTracking()
+            .FirstAsync(s => s.Id == siteLog.Id);
         reloadedSiteLog.TotalPayroll.Should().Be(finalAmount);
 
         await transaction.RollbackAsync();

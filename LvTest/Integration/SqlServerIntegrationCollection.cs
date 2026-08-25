@@ -7,6 +7,4 @@ namespace LvTest.Integration;
 /// shared local instance instead of xUnit's default cross-class parallelism.
 /// </summary>
 [CollectionDefinition("SqlServerIntegration", DisableParallelization = true)]
-public class SqlServerIntegrationCollection
-{
-}
+public class SqlServerIntegrationCollection { }

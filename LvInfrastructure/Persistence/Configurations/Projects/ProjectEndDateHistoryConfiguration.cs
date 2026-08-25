@@ -12,17 +12,17 @@ public class ProjectEndDateHistoryConfiguration : IEntityTypeConfiguration<Proje
 
         builder.HasKey(h => h.Id);
 
-        builder.Property(h => h.Reason)
-            .IsRequired()
-            .HasMaxLength(500);
+        builder.Property(h => h.Reason).IsRequired().HasMaxLength(500);
 
-        builder.HasOne(h => h.Project)
+        builder
+            .HasOne(h => h.Project)
             .WithMany(p => p.EndDateHistory)
             .HasForeignKey(h => h.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(h => h.ProjectId);
 
-        builder.HasOne(h => h.User)
+        builder
+            .HasOne(h => h.User)
             .WithMany()
             .HasForeignKey(h => h.UserId)
             .OnDelete(DeleteBehavior.Restrict);

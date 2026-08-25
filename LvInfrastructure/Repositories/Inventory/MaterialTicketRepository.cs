@@ -18,7 +18,11 @@ public class MaterialTicketRepository : IMaterialTicketRepository
     public Task<MaterialTicket?> GetByIdAsync(int id) =>
         _context.MaterialTickets.FirstOrDefaultAsync(t => t.Id == id);
 
-    public async Task<(List<MaterialTicket> Items, int TotalCount)> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<(List<MaterialTicket> Items, int TotalCount)> GetPagedByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
         var query = _context.MaterialTickets.Where(t => t.ProjectId == projectId);
 
@@ -34,17 +38,28 @@ public class MaterialTicketRepository : IMaterialTicketRepository
     }
 
     public async Task<decimal> SumAppliedTotalByChapterAsync(int projectId, int chapterId) =>
-        await _context.MaterialTickets
-            .Where(t => t.ProjectId == projectId && t.ChapterId == chapterId && t.Status == MaterialTicketStatus.Applied)
-            .SumAsync(t => (decimal?)t.Total) ?? 0m;
+        await _context
+            .MaterialTickets.Where(t =>
+                t.ProjectId == projectId
+                && t.ChapterId == chapterId
+                && t.Status == MaterialTicketStatus.Applied
+            )
+            .SumAsync(t => (decimal?)t.Total)
+        ?? 0m;
 
-    public Task<List<MaterialTicket>> GetAppliedInRangeAsync(int projectId, DateTime from, DateTime to) =>
-        _context.MaterialTickets
-            .Include(t => t.Supplier)
-            .Where(t => t.ProjectId == projectId
+    public Task<List<MaterialTicket>> GetAppliedInRangeAsync(
+        int projectId,
+        DateTime from,
+        DateTime to
+    ) =>
+        _context
+            .MaterialTickets.Include(t => t.Supplier)
+            .Where(t =>
+                t.ProjectId == projectId
                 && t.Status == MaterialTicketStatus.Applied
                 && t.CreatedAt >= from
-                && t.CreatedAt < to.AddDays(1))
+                && t.CreatedAt < to.AddDays(1)
+            )
             .OrderBy(t => t.CreatedAt)
             .ToListAsync();
 

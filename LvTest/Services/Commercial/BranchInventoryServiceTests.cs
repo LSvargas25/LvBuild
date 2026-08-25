@@ -9,7 +9,10 @@ namespace LvTest.Services.Commercial;
 
 public class BranchInventoryServiceTests
 {
-    private static async Task<Branch> CreateBranchAsync(LvInfrastructure.Persistence.AppDbContext context, int operationsDirectorId)
+    private static async Task<Branch> CreateBranchAsync(
+        LvInfrastructure.Persistence.AppDbContext context,
+        int operationsDirectorId
+    )
     {
         var branch = new Branch
         {
@@ -19,14 +22,19 @@ public class BranchInventoryServiceTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Commercial,
             OperationsDirectorId = operationsDirectorId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
         return branch;
     }
 
-    private static async Task<Product> CreateValidatedProductAsync(LvInfrastructure.Persistence.AppDbContext context, int createdByUserId, string sku, string name = "Producto")
+    private static async Task<Product> CreateValidatedProductAsync(
+        LvInfrastructure.Persistence.AppDbContext context,
+        int createdByUserId,
+        string sku,
+        string name = "Producto"
+    )
     {
         var product = new Product
         {
@@ -39,7 +47,7 @@ public class BranchInventoryServiceTests
             CreatedByUserId = createdByUserId,
             ValidatedByUserId = createdByUserId,
             ValidatedDate = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Products.Add(product);
         await context.SaveChangesAsync();
@@ -50,16 +58,62 @@ public class BranchInventoryServiceTests
     public async Task GetByBranchAsync_ReturnsOnlyRowsForThatBranch_WithProductInfo()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "do@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "do@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
         var branchA = await CreateBranchAsync(context, director.Id);
         var branchB = await CreateBranchAsync(context, director.Id);
-        var productX = await CreateValidatedProductAsync(context, director.Id, "SKU-X", "Producto X");
-        var productY = await CreateValidatedProductAsync(context, director.Id, "SKU-Y", "Producto Y");
-        var productZ = await CreateValidatedProductAsync(context, director.Id, "SKU-Z", "Producto Z");
+        var productX = await CreateValidatedProductAsync(
+            context,
+            director.Id,
+            "SKU-X",
+            "Producto X"
+        );
+        var productY = await CreateValidatedProductAsync(
+            context,
+            director.Id,
+            "SKU-Y",
+            "Producto Y"
+        );
+        var productZ = await CreateValidatedProductAsync(
+            context,
+            director.Id,
+            "SKU-Z",
+            "Producto Z"
+        );
 
-        context.BranchInventories.Add(new BranchInventory { BranchId = branchA.Id, ProductId = productY.Id, Quantity = 5, MinimumStock = 1, CreatedAt = DateTime.UtcNow });
-        context.BranchInventories.Add(new BranchInventory { BranchId = branchA.Id, ProductId = productX.Id, Quantity = 10, MinimumStock = 2, CreatedAt = DateTime.UtcNow });
-        context.BranchInventories.Add(new BranchInventory { BranchId = branchB.Id, ProductId = productZ.Id, Quantity = 3, MinimumStock = 0, CreatedAt = DateTime.UtcNow });
+        context.BranchInventories.Add(
+            new BranchInventory
+            {
+                BranchId = branchA.Id,
+                ProductId = productY.Id,
+                Quantity = 5,
+                MinimumStock = 1,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
+        context.BranchInventories.Add(
+            new BranchInventory
+            {
+                BranchId = branchA.Id,
+                ProductId = productX.Id,
+                Quantity = 10,
+                MinimumStock = 2,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
+        context.BranchInventories.Add(
+            new BranchInventory
+            {
+                BranchId = branchB.Id,
+                ProductId = productZ.Id,
+                Quantity = 3,
+                MinimumStock = 0,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
         await context.SaveChangesAsync();
 
         var service = ServiceFactory.CreateBranchInventoryService(context);

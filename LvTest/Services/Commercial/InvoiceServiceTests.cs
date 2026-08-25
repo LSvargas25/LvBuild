@@ -13,7 +13,10 @@ namespace LvTest.Services.Commercial;
 
 public class InvoiceServiceTests
 {
-    private static async Task<Branch> CreateBranchAsync(AppDbContext context, int operationsDirectorId)
+    private static async Task<Branch> CreateBranchAsync(
+        AppDbContext context,
+        int operationsDirectorId
+    )
     {
         var branch = new Branch
         {
@@ -23,14 +26,18 @@ public class InvoiceServiceTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Commercial,
             OperationsDirectorId = operationsDirectorId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
         return branch;
     }
 
-    private static async Task<CashRegister> CreateOpenCashRegisterAsync(AppDbContext context, int branchId, int openedByUserId)
+    private static async Task<CashRegister> CreateOpenCashRegisterAsync(
+        AppDbContext context,
+        int branchId,
+        int openedByUserId
+    )
     {
         var register = new CashRegister
         {
@@ -39,14 +46,19 @@ public class InvoiceServiceTests
             OpeningDate = DateTime.UtcNow,
             OpeningBalance = 0m,
             Status = CashRegisterStatus.Open,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.CashRegisters.Add(register);
         await context.SaveChangesAsync();
         return register;
     }
 
-    private static async Task<Product> CreateValidatedProductAsync(AppDbContext context, int createdByUserId, string sku, decimal unitPrice = 1000m)
+    private static async Task<Product> CreateValidatedProductAsync(
+        AppDbContext context,
+        int createdByUserId,
+        string sku,
+        decimal unitPrice = 1000m
+    )
     {
         var product = new Product
         {
@@ -59,24 +71,44 @@ public class InvoiceServiceTests
             CreatedByUserId = createdByUserId,
             ValidatedByUserId = createdByUserId,
             ValidatedDate = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Products.Add(product);
         await context.SaveChangesAsync();
         return product;
     }
 
-    private static async Task<BranchInventory> CreateInventoryAsync(AppDbContext context, int branchId, int productId, decimal quantity)
+    private static async Task<BranchInventory> CreateInventoryAsync(
+        AppDbContext context,
+        int branchId,
+        int productId,
+        decimal quantity
+    )
     {
-        var inventory = new BranchInventory { BranchId = branchId, ProductId = productId, Quantity = quantity, MinimumStock = 0, CreatedAt = DateTime.UtcNow };
+        var inventory = new BranchInventory
+        {
+            BranchId = branchId,
+            ProductId = productId,
+            Quantity = quantity,
+            MinimumStock = 0,
+            CreatedAt = DateTime.UtcNow,
+        };
         context.BranchInventories.Add(inventory);
         await context.SaveChangesAsync();
         return inventory;
     }
 
-    private static async Task<(Branch Branch, CashRegister CashRegister, int UserId)> CreateContextAsync(AppDbContext context, string emailPrefix)
+    private static async Task<(
+        Branch Branch,
+        CashRegister CashRegister,
+        int UserId
+    )> CreateContextAsync(AppDbContext context, string emailPrefix)
     {
-        var user = await TestUserFactory.CreateAsync(context, $"{emailPrefix}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            $"{emailPrefix}@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
         var branch = await CreateBranchAsync(context, user.Id);
         var register = await CreateOpenCashRegisterAsync(context, branch.Id, user.Id);
         return (branch, register, user.Id);
@@ -86,7 +118,11 @@ public class InvoiceServiceTests
     public async Task CreateAsync_BranchNotCommercial_ThrowsValidationAppException()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "invwh@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "invwh@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
         var warehouseBranch = new Branch
         {
             Name = "Bodega Central",
@@ -95,7 +131,7 @@ public class InvoiceServiceTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Warehouse,
             OperationsDirectorId = user.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(warehouseBranch);
         await context.SaveChangesAsync();
@@ -104,13 +140,20 @@ public class InvoiceServiceTests
         await CreateInventoryAsync(context, warehouseBranch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
 
-        var act = () => service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = warehouseBranch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 } }
-        }, user.Id);
+        var act = () =>
+            service.CreateAsync(
+                new CreateInvoiceDto
+                {
+                    BranchId = warehouseBranch.Id,
+                    CashRegisterId = register.Id,
+                    PaymentType = InvoicePaymentType.Credito,
+                    Details = new()
+                    {
+                        new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 },
+                    },
+                },
+                user.Id
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -124,13 +167,19 @@ public class InvoiceServiceTests
         await CreateInventoryAsync(context, branch.Id, product.Id, 50m);
         var service = ServiceFactory.CreateInvoiceService(context);
 
-        var result = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 3 } }
-        }, userId);
+        var result = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 3 },
+                },
+            },
+            userId
+        );
 
         result.Status.Should().Be(InvoiceStatus.Draft);
         result.InvoiceNumber.Should().BeNull();
@@ -154,19 +203,26 @@ public class InvoiceServiceTests
             Status = ProductStatus.PendingValidation,
             ActiveStatus = true,
             CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Products.Add(product);
         await context.SaveChangesAsync();
         var service = ServiceFactory.CreateInvoiceService(context);
 
-        var act = () => service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 } }
-        }, userId);
+        var act = () =>
+            service.CreateAsync(
+                new CreateInvoiceDto
+                {
+                    BranchId = branch.Id,
+                    CashRegisterId = register.Id,
+                    PaymentType = InvoicePaymentType.Credito,
+                    Details = new()
+                    {
+                        new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 },
+                    },
+                },
+                userId
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -180,27 +236,44 @@ public class InvoiceServiceTests
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
 
-        var draft1 = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 } }
-        }, userId);
+        var draft1 = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 },
+                },
+            },
+            userId
+        );
 
-        var draft2 = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 } }
-        }, userId);
+        var draft2 = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 },
+                },
+            },
+            userId
+        );
 
         draft1.InvoiceNumber.Should().BeNull();
         draft2.InvoiceNumber.Should().BeNull();
         draft1.Id.Should().NotBe(draft2.Id);
-        (await context.Invoices.CountAsync(i => i.BranchId == branch.Id && i.Status == InvoiceStatus.Draft))
-            .Should().Be(2);
+        (
+            await context.Invoices.CountAsync(i =>
+                i.BranchId == branch.Id && i.Status == InvoiceStatus.Draft
+            )
+        )
+            .Should()
+            .Be(2);
     }
 
     [Fact]
@@ -211,19 +284,27 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-3");
         await CreateInventoryAsync(context, branch.Id, product.Id, 20m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 5 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 5 },
+                },
+            },
+            userId
+        );
 
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
         issued.Status.Should().Be(InvoiceStatus.Issued);
         issued.InvoiceNumber.Should().NotBeNullOrEmpty();
-        var inventory = await context.BranchInventories.FirstAsync(i => i.BranchId == branch.Id && i.ProductId == product.Id);
+        var inventory = await context.BranchInventories.FirstAsync(i =>
+            i.BranchId == branch.Id && i.ProductId == product.Id
+        );
         inventory.Quantity.Should().Be(15m);
     }
 
@@ -235,20 +316,32 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-LOW");
         await CreateInventoryAsync(context, branch.Id, product.Id, 5m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 3 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 3 },
+                },
+            },
+            userId
+        );
 
         await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
-        var inventory = await context.BranchInventories.FirstAsync(i => i.BranchId == branch.Id && i.ProductId == product.Id);
-        inventory.Quantity.Should().Be(2m, "5 - 3 must fall at or below the 3-unit low-stock threshold");
+        var inventory = await context.BranchInventories.FirstAsync(i =>
+            i.BranchId == branch.Id && i.ProductId == product.Id
+        );
+        inventory
+            .Quantity.Should()
+            .Be(2m, "5 - 3 must fall at or below the 3-unit low-stock threshold");
 
-        var notification = await context.Notifications.SingleAsync(n => n.UserId == userId && n.Type == NotificationType.StockBajo);
+        var notification = await context.Notifications.SingleAsync(n =>
+            n.UserId == userId && n.Type == NotificationType.StockBajo
+        );
         notification.IsRead.Should().BeFalse();
         notification.Message.Should().Contain(product.Sku);
     }
@@ -263,22 +356,27 @@ public class InvoiceServiceTests
         await CreateInventoryAsync(context, branch.Id, productA.Id, 10m);
         await CreateInventoryAsync(context, branch.Id, productB.Id, 1m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new()
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
             {
-                new InvoiceDetailLineDto { ProductId = productA.Id, Quantity = 3 },
-                new InvoiceDetailLineDto { ProductId = productB.Id, Quantity = 5 }
-            }
-        }, userId);
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = productA.Id, Quantity = 3 },
+                    new InvoiceDetailLineDto { ProductId = productB.Id, Quantity = 5 },
+                },
+            },
+            userId
+        );
 
         var act = () => service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
         await act.Should().ThrowAsync<ValidationAppException>();
-        var inventoryA = await context.BranchInventories.FirstAsync(i => i.BranchId == branch.Id && i.ProductId == productA.Id);
+        var inventoryA = await context.BranchInventories.FirstAsync(i =>
+            i.BranchId == branch.Id && i.ProductId == productA.Id
+        );
         inventoryA.Quantity.Should().Be(10m);
     }
 
@@ -290,16 +388,26 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-5");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var invoiceService = ServiceFactory.CreateInvoiceService(context);
-        var draft = await invoiceService.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await invoiceService.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
 
         var cashRegisterService = ServiceFactory.CreateCashRegisterService(context);
-        await cashRegisterService.CloseAsync(register.Id, new CloseCashRegisterDto { ClosingBalance = 0m }, userId);
+        await cashRegisterService.CloseAsync(
+            register.Id,
+            new CloseCashRegisterDto { ClosingBalance = 0m },
+            userId
+        );
 
         var act = () => invoiceService.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
@@ -314,18 +422,36 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-6");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Contado,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Contado,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
 
-        var act = () => service.IssueAsync(draft.Id, new IssueInvoiceDto
-        {
-            Payments = new() { new CreateInvoicePaymentDto { PaymentMethod = InvoicePaymentMethod.Efectivo, Amount = 100m } }
-        }, userId);
+        var act = () =>
+            service.IssueAsync(
+                draft.Id,
+                new IssueInvoiceDto
+                {
+                    Payments = new()
+                    {
+                        new CreateInvoicePaymentDto
+                        {
+                            PaymentMethod = InvoicePaymentMethod.Efectivo,
+                            Amount = 100m,
+                        },
+                    },
+                },
+                userId
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -338,18 +464,35 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-7");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Contado,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Contado,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
 
-        var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto
-        {
-            Payments = new() { new CreateInvoicePaymentDto { PaymentMethod = InvoicePaymentMethod.Efectivo, Amount = draft.Total } }
-        }, userId);
+        var issued = await service.IssueAsync(
+            draft.Id,
+            new IssueInvoiceDto
+            {
+                Payments = new()
+                {
+                    new CreateInvoicePaymentDto
+                    {
+                        PaymentMethod = InvoicePaymentMethod.Efectivo,
+                        Amount = draft.Total,
+                    },
+                },
+            },
+            userId
+        );
 
         issued.Status.Should().Be(InvoiceStatus.Issued);
         issued.IsFullyPaid.Should().BeTrue();
@@ -364,13 +507,19 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-8");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
 
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
@@ -386,20 +535,42 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-9");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
         var half = issued.Total / 2;
-        var afterFirst = await service.AddPaymentAsync(issued.Id, new CreateInvoicePaymentDto { PaymentMethod = InvoicePaymentMethod.Sinpe, Amount = half }, userId);
+        var afterFirst = await service.AddPaymentAsync(
+            issued.Id,
+            new CreateInvoicePaymentDto
+            {
+                PaymentMethod = InvoicePaymentMethod.Sinpe,
+                Amount = half,
+            },
+            userId
+        );
         afterFirst.IsFullyPaid.Should().BeFalse();
 
-        var afterSecond = await service.AddPaymentAsync(issued.Id, new CreateInvoicePaymentDto { PaymentMethod = InvoicePaymentMethod.Sinpe, Amount = issued.Total - half }, userId);
+        var afterSecond = await service.AddPaymentAsync(
+            issued.Id,
+            new CreateInvoicePaymentDto
+            {
+                PaymentMethod = InvoicePaymentMethod.Sinpe,
+                Amount = issued.Total - half,
+            },
+            userId
+        );
         afterSecond.IsFullyPaid.Should().BeTrue();
         afterSecond.Balance.Should().Be(0m);
     }
@@ -412,16 +583,31 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-10");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
-        var act = () => service.AddPaymentAsync(issued.Id, new CreateInvoicePaymentDto { PaymentMethod = InvoicePaymentMethod.Tarjeta, Amount = issued.Total + 1m }, userId);
+        var act = () =>
+            service.AddPaymentAsync(
+                issued.Id,
+                new CreateInvoicePaymentDto
+                {
+                    PaymentMethod = InvoicePaymentMethod.Tarjeta,
+                    Amount = issued.Total + 1m,
+                },
+                userId
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -434,19 +620,27 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-11");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 4 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 4 },
+                },
+            },
+            userId
+        );
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
         var cancelled = await service.CancelAsync(issued.Id);
 
         cancelled.Status.Should().Be(InvoiceStatus.Cancelled);
-        var inventory = await context.BranchInventories.FirstAsync(i => i.BranchId == branch.Id && i.ProductId == product.Id);
+        var inventory = await context.BranchInventories.FirstAsync(i =>
+            i.BranchId == branch.Id && i.ProductId == product.Id
+        );
         inventory.Quantity.Should().Be(10m);
     }
 
@@ -458,15 +652,29 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-12");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
-        await service.AddPaymentAsync(issued.Id, new CreateInvoicePaymentDto { PaymentMethod = InvoicePaymentMethod.Sinpe, Amount = 10m }, userId);
+        await service.AddPaymentAsync(
+            issued.Id,
+            new CreateInvoicePaymentDto
+            {
+                PaymentMethod = InvoicePaymentMethod.Sinpe,
+                Amount = 10m,
+            },
+            userId
+        );
 
         var act = () => service.CancelAsync(issued.Id);
 
@@ -481,17 +689,34 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-13");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Contado,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
-        var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto
-        {
-            Payments = new() { new CreateInvoicePaymentDto { PaymentMethod = InvoicePaymentMethod.Efectivo, Amount = draft.Total } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Contado,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
+        var issued = await service.IssueAsync(
+            draft.Id,
+            new IssueInvoiceDto
+            {
+                Payments = new()
+                {
+                    new CreateInvoicePaymentDto
+                    {
+                        PaymentMethod = InvoicePaymentMethod.Efectivo,
+                        Amount = draft.Total,
+                    },
+                },
+            },
+            userId
+        );
 
         var act = () => service.CancelAsync(issued.Id);
 
@@ -506,13 +731,19 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-14");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), userId);
 
         var act = () => service.DeleteAsync(issued.Id);
@@ -528,13 +759,19 @@ public class InvoiceServiceTests
         var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-15");
         await CreateInventoryAsync(context, branch.Id, product.Id, 10m);
         var service = ServiceFactory.CreateInvoiceService(context);
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 } }
-        }, userId);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 2 },
+                },
+            },
+            userId
+        );
 
         await service.DeleteAsync(draft.Id);
 

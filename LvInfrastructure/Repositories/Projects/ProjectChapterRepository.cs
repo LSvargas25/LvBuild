@@ -18,10 +18,15 @@ public class ProjectChapterRepository : IProjectChapterRepository
         _context.ProjectChapters.FirstOrDefaultAsync(c => c.Id == id);
 
     public Task<ProjectChapter?> GetByProjectAndChapterAsync(int projectId, int chapterId) =>
-        _context.ProjectChapters.FirstOrDefaultAsync(c => c.ProjectId == projectId && c.ChapterId == chapterId);
+        _context.ProjectChapters.FirstOrDefaultAsync(c =>
+            c.ProjectId == projectId && c.ChapterId == chapterId
+        );
 
     public Task<List<ProjectChapter>> GetByProjectAsync(int projectId) =>
-        _context.ProjectChapters.Where(c => c.ProjectId == projectId).OrderBy(c => c.ChapterId).ToListAsync();
+        _context
+            .ProjectChapters.Where(c => c.ProjectId == projectId)
+            .OrderBy(c => c.ChapterId)
+            .ToListAsync();
 
     public async Task AddAsync(ProjectChapter chapter)
     {

@@ -1,5 +1,3 @@
 namespace LvApplication.DTOs.Budgets;
 
-public class SubmitForReviewDto
-{
-}
+public class SubmitForReviewDto { }

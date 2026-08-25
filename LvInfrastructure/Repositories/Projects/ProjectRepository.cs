@@ -22,7 +22,10 @@ public class ProjectRepository : IProjectRepository
     public Task<Project?> GetByOfferIdAsync(int offerId) =>
         ProjectsWithWorkers.FirstOrDefaultAsync(p => p.OfferId == offerId);
 
-    public async Task<(List<Project> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(List<Project> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize
+    )
     {
         var totalCount = await _context.Projects.CountAsync();
 
@@ -54,8 +57,8 @@ public class ProjectRepository : IProjectRepository
     }
 
     public Task<List<ProjectEndDateHistory>> GetEndDateHistoryAsync(int projectId) =>
-        _context.ProjectEndDateHistories
-            .Where(h => h.ProjectId == projectId)
+        _context
+            .ProjectEndDateHistories.Where(h => h.ProjectId == projectId)
             .OrderBy(h => h.ChangedAt)
             .ToListAsync();
 }

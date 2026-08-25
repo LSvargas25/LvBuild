@@ -28,7 +28,10 @@ public class ProjectsController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<ProjectDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<PagedResult<ProjectDto>>> GetAll(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _projectService.GetAllAsync(pageNumber, pageSize);
         return Ok(result);

@@ -7,11 +7,8 @@ public class CreateSupplierDtoValidator : AbstractValidator<CreateSupplierDto>
 {
     public CreateSupplierDtoValidator()
     {
-        RuleFor(x => x.Name)
-            .NotEmpty();
+        RuleFor(x => x.Name).NotEmpty();
 
-        RuleFor(x => x.Email)
-            .EmailAddress()
-            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+        RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
     }
 }

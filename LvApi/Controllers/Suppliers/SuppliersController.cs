@@ -40,7 +40,10 @@ public class SuppliersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<SupplierResponseDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<PagedResult<SupplierResponseDto>>> GetAll(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _supplierService.GetAllAsync(pageNumber, pageSize);
         return Ok(result);

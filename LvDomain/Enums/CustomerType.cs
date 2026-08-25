@@ -4,5 +4,5 @@ public enum CustomerType
 {
     Project,
     Commercial,
-    Store
+    Store,
 }

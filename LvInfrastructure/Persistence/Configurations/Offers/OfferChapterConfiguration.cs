@@ -12,13 +12,12 @@ public class OfferChapterConfiguration : IEntityTypeConfiguration<OfferChapter>
 
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.ChapterName)
-            .IsRequired()
-            .HasMaxLength(150);
+        builder.Property(c => c.ChapterName).IsRequired().HasMaxLength(150);
 
         builder.Property(c => c.ApproxMaterialQuantity).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(c => c.Offer)
+        builder
+            .HasOne(c => c.Offer)
             .WithMany(o => o.Chapters)
             .HasForeignKey(c => c.OfferId)
             .OnDelete(DeleteBehavior.Cascade);

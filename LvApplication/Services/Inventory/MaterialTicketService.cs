@@ -32,7 +32,8 @@ public class MaterialTicketService : IMaterialTicketService
         IMaterialCatalogRepository materialCatalogRepository,
         IProjectChapterService projectChapterService,
         IValidator<CreateMaterialTicketDto> createValidator,
-        IValidator<UpdateMaterialTicketDto> updateValidator)
+        IValidator<UpdateMaterialTicketDto> updateValidator
+    )
     {
         _ticketRepository = ticketRepository;
         _inventoryRepository = inventoryRepository;
@@ -45,19 +46,26 @@ public class MaterialTicketService : IMaterialTicketService
         _updateValidator = updateValidator;
     }
 
-    public async Task<MaterialTicketDto> CreateAsync(int projectId, CreateMaterialTicketDto request, int createdByUserId)
+    public async Task<MaterialTicketDto> CreateAsync(
+        int projectId,
+        CreateMaterialTicketDto request,
+        int createdByUserId
+    )
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var project = await _projectRepository.GetByIdAsync(projectId)
+        var project =
+            await _projectRepository.GetByIdAsync(projectId)
             ?? throw new NotFoundException($"Project {projectId} not found.");
 
         await ValidateChapterAsync(project.BudgetId, request.ChapterId);
 
-        var supplier = await _supplierRepository.GetByIdAsync(request.SupplierId)
+        var supplier =
+            await _supplierRepository.GetByIdAsync(request.SupplierId)
             ?? throw new NotFoundException($"Supplier {request.SupplierId} not found.");
 
-        var material = await _materialCatalogRepository.GetByIdAsync(request.MaterialId)
+        var material =
+            await _materialCatalogRepository.GetByIdAsync(request.MaterialId)
             ?? throw new NotFoundException($"Material {request.MaterialId} not found.");
 
         var subtotal = request.Quantity * request.UnitPrice;
@@ -79,7 +87,7 @@ public class MaterialTicketService : IMaterialTicketService
             Total = total,
             Status = MaterialTicketStatus.Review,
             ChapterId = request.ChapterId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _ticketRepository.AddAsync(ticket);
@@ -95,22 +103,27 @@ public class MaterialTicketService : IMaterialTicketService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
             throw new ValidationAppException("Solo se puede editar un ticket en estado Revisión.");
         }
 
-        var project = await _projectRepository.GetByIdAsync(ticket.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(ticket.ProjectId)
             ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
 
         await ValidateChapterAsync(project.BudgetId, request.ChapterId);
 
-        var supplier = await _supplierRepository.GetByIdAsync(request.SupplierId)
+        var supplier =
+            await _supplierRepository.GetByIdAsync(request.SupplierId)
             ?? throw new NotFoundException($"Supplier {request.SupplierId} not found.");
 
-        var material = await _materialCatalogRepository.GetByIdAsync(request.MaterialId)
+        var material =
+            await _materialCatalogRepository.GetByIdAsync(request.MaterialId)
             ?? throw new NotFoundException($"Material {request.MaterialId} not found.");
 
         var previousTotal = ticket.Total;
@@ -139,7 +152,9 @@ public class MaterialTicketService : IMaterialTicketService
 
     public async Task<MaterialTicketDto> ApplyAsync(int id)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
@@ -150,13 +165,17 @@ public class MaterialTicketService : IMaterialTicketService
         ticket.UpdatedAt = DateTime.UtcNow;
         await _ticketRepository.UpdateAsync(ticket);
 
-        var project = await _projectRepository.GetByIdAsync(ticket.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(ticket.ProjectId)
             ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
 
         project.PendingExpenses -= ticket.Total;
         project.CurrentDirectExpenses += ticket.Total;
 
-        var inventoryItem = await _inventoryRepository.GetByProjectAndMaterialAsync(ticket.ProjectId, ticket.MaterialId);
+        var inventoryItem = await _inventoryRepository.GetByProjectAndMaterialAsync(
+            ticket.ProjectId,
+            ticket.MaterialId
+        );
 
         if (inventoryItem is null)
         {
@@ -166,7 +185,7 @@ public class MaterialTicketService : IMaterialTicketService
                 MaterialId = ticket.MaterialId,
                 CurrentQuantity = ticket.Quantity,
                 ReferenceUnitCost = ticket.UnitPrice,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
             await _inventoryRepository.AddAsync(inventoryItem);
         }
@@ -178,13 +197,18 @@ public class MaterialTicketService : IMaterialTicketService
             await _inventoryRepository.UpdateAsync(inventoryItem);
         }
 
-        project.MaterialsUsedCount = await _inventoryRepository.CountWithQuantityAsync(ticket.ProjectId);
+        project.MaterialsUsedCount = await _inventoryRepository.CountWithQuantityAsync(
+            ticket.ProjectId
+        );
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
 
         if (ticket.ChapterId.HasValue)
         {
-            await _projectChapterService.RecalculateActualCostAsync(ticket.ProjectId, ticket.ChapterId.Value);
+            await _projectChapterService.RecalculateActualCostAsync(
+                ticket.ProjectId,
+                ticket.ChapterId.Value
+            );
         }
 
         return MapToDto(ticket);
@@ -192,18 +216,23 @@ public class MaterialTicketService : IMaterialTicketService
 
     public async Task<MaterialTicketDto> ArchiveAsync(int id)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
-            throw new ValidationAppException("Solo se puede archivar un ticket en estado Revisión.");
+            throw new ValidationAppException(
+                "Solo se puede archivar un ticket en estado Revisión."
+            );
         }
 
         ticket.Status = MaterialTicketStatus.Archived;
         ticket.UpdatedAt = DateTime.UtcNow;
         await _ticketRepository.UpdateAsync(ticket);
 
-        var project = await _projectRepository.GetByIdAsync(ticket.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(ticket.ProjectId)
             ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
 
         project.PendingExpenses -= ticket.Total;
@@ -215,14 +244,19 @@ public class MaterialTicketService : IMaterialTicketService
 
     public async Task DeleteAsync(int id)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
-            throw new ValidationAppException("Solo se puede eliminar un ticket en estado Revisión; una vez aplicado o archivado queda como registro histórico.");
+            throw new ValidationAppException(
+                "Solo se puede eliminar un ticket en estado Revisión; una vez aplicado o archivado queda como registro histórico."
+            );
         }
 
-        var project = await _projectRepository.GetByIdAsync(ticket.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(ticket.ProjectId)
             ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
 
         project.PendingExpenses -= ticket.Total;
@@ -234,20 +268,30 @@ public class MaterialTicketService : IMaterialTicketService
 
     public async Task<MaterialTicketDto> GetByIdAsync(int id)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
         return MapToDto(ticket);
     }
 
-    public async Task<PagedResult<MaterialTicketDto>> GetAllByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<PagedResult<MaterialTicketDto>> GetAllByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _ticketRepository.GetPagedByProjectAsync(projectId, pageNumber, pageSize);
+        var (items, totalCount) = await _ticketRepository.GetPagedByProjectAsync(
+            projectId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<MaterialTicketDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
@@ -255,36 +299,39 @@ public class MaterialTicketService : IMaterialTicketService
     {
         var items = await _inventoryRepository.GetByProjectAsync(projectId);
 
-        return items.Select(i => new ProjectInventoryItemDto
-        {
-            Id = i.Id,
-            ProjectId = i.ProjectId,
-            MaterialId = i.MaterialId,
-            ProductId = i.ProductId,
-            CurrentQuantity = i.CurrentQuantity,
-            ReferenceUnitCost = i.ReferenceUnitCost
-        }).ToList();
+        return items
+            .Select(i => new ProjectInventoryItemDto
+            {
+                Id = i.Id,
+                ProjectId = i.ProjectId,
+                MaterialId = i.MaterialId,
+                ProductId = i.ProductId,
+                CurrentQuantity = i.CurrentQuantity,
+                ReferenceUnitCost = i.ReferenceUnitCost,
+            })
+            .ToList();
     }
 
-    private static MaterialTicketDto MapToDto(MaterialTicket ticket) => new()
-    {
-        Id = ticket.Id,
-        ProjectId = ticket.ProjectId,
-        SupplierId = ticket.SupplierId,
-        MaterialId = ticket.MaterialId,
-        CreatedByUserId = ticket.CreatedByUserId,
-        CreatedAt = ticket.CreatedAt,
-        Description = ticket.Description,
-        InvoicePhotoPath = ticket.InvoicePhotoPath,
-        MaterialName = ticket.MaterialName,
-        Quantity = ticket.Quantity,
-        UnitPrice = ticket.UnitPrice,
-        Discount = ticket.Discount,
-        Subtotal = ticket.Subtotal,
-        Total = ticket.Total,
-        Status = ticket.Status,
-        ChapterId = ticket.ChapterId
-    };
+    private static MaterialTicketDto MapToDto(MaterialTicket ticket) =>
+        new()
+        {
+            Id = ticket.Id,
+            ProjectId = ticket.ProjectId,
+            SupplierId = ticket.SupplierId,
+            MaterialId = ticket.MaterialId,
+            CreatedByUserId = ticket.CreatedByUserId,
+            CreatedAt = ticket.CreatedAt,
+            Description = ticket.Description,
+            InvoicePhotoPath = ticket.InvoicePhotoPath,
+            MaterialName = ticket.MaterialName,
+            Quantity = ticket.Quantity,
+            UnitPrice = ticket.UnitPrice,
+            Discount = ticket.Discount,
+            Subtotal = ticket.Subtotal,
+            Total = ticket.Total,
+            Status = ticket.Status,
+            ChapterId = ticket.ChapterId,
+        };
 
     private async Task ValidateChapterAsync(int budgetId, int? chapterId)
     {
@@ -293,12 +340,15 @@ public class MaterialTicketService : IMaterialTicketService
             return;
         }
 
-        var budget = await _budgetRepository.GetByIdAsync(budgetId)
+        var budget =
+            await _budgetRepository.GetByIdAsync(budgetId)
             ?? throw new NotFoundException($"Budget {budgetId} not found.");
 
         if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
         {
-            throw new ValidationAppException($"El capítulo {chapterId} no pertenece al presupuesto de este proyecto.");
+            throw new ValidationAppException(
+                $"El capítulo {chapterId} no pertenece al presupuesto de este proyecto."
+            );
         }
     }
 }

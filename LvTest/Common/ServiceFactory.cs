@@ -4,8 +4,8 @@ using LvApplication.Services.Budgets;
 using LvApplication.Services.Commercial;
 using LvApplication.Services.Customers;
 using LvApplication.Services.Finance;
-using LvApplication.Services.Inventory;
 using LvApplication.Services.Incidents;
+using LvApplication.Services.Inventory;
 using LvApplication.Services.Notifications;
 using LvApplication.Services.Offers;
 using LvApplication.Services.Payroll;
@@ -21,8 +21,8 @@ using LvApplication.Validators.Branches;
 using LvApplication.Validators.Budgets;
 using LvApplication.Validators.Commercial;
 using LvApplication.Validators.Customers;
-using LvApplication.Validators.Inventory;
 using LvApplication.Validators.Incidents;
+using LvApplication.Validators.Inventory;
 using LvApplication.Validators.Offers;
 using LvApplication.Validators.Payroll;
 using LvApplication.Validators.Projects;
@@ -33,15 +33,14 @@ using LvApplication.Validators.Workers;
 using LvInfrastructure.Auth;
 using LvInfrastructure.Offers;
 using LvInfrastructure.Persistence;
-using LvInfrastructure.Storage;
 using LvInfrastructure.Repositories.Auth;
 using LvInfrastructure.Repositories.Branches;
 using LvInfrastructure.Repositories.Budgets;
 using LvInfrastructure.Repositories.Commercial;
 using LvInfrastructure.Repositories.Customers;
+using LvInfrastructure.Repositories.Incidents;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
-using LvInfrastructure.Repositories.Incidents;
 using LvInfrastructure.Repositories.Notifications;
 using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Payroll;
@@ -51,6 +50,7 @@ using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
 using LvInfrastructure.Repositories.Warehouse;
 using LvInfrastructure.Repositories.Workers;
+using LvInfrastructure.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -63,17 +63,21 @@ public static class ServiceFactory
         AppDbContext context,
         IConfiguration? configuration = null,
         IFileStorageService? fileStorageService = null,
-        IHostEnvironment? hostEnvironment = null)
+        IHostEnvironment? hostEnvironment = null
+    )
     {
         string? storagePath = null;
 
         if (configuration is null)
         {
-            storagePath = Path.Combine(Path.GetTempPath(), "LvTestStorage", Guid.NewGuid().ToString());
-            configuration = TestConfigurationFactory.Create(new Dictionary<string, string?>
-            {
-                ["Storage:WebRootPath"] = storagePath
-            });
+            storagePath = Path.Combine(
+                Path.GetTempPath(),
+                "LvTestStorage",
+                Guid.NewGuid().ToString()
+            );
+            configuration = TestConfigurationFactory.Create(
+                new Dictionary<string, string?> { ["Storage:WebRootPath"] = storagePath }
+            );
         }
 
         return new AuthService(
@@ -90,27 +94,41 @@ public static class ServiceFactory
             new ForgotPasswordRequestDtoValidator(),
             new ResetPasswordRequestDtoValidator(),
             new UpdateProfileDtoValidator(),
-            new ChangePasswordDtoValidator());
+            new ChangePasswordDtoValidator()
+        );
     }
 
     public static UserService CreateUserService(AppDbContext context) =>
         new(new UserRepository(context), new CreateUserDtoValidator());
 
     public static CustomerService CreateCustomerService(AppDbContext context) =>
-        new(new CustomerRepository(context), new CreateCustomerDtoValidator(), new UpdateCustomerDtoValidator());
+        new(
+            new CustomerRepository(context),
+            new CreateCustomerDtoValidator(),
+            new UpdateCustomerDtoValidator()
+        );
 
     public static SupplierService CreateSupplierService(AppDbContext context) =>
-        new(new SupplierRepository(context), new CreateSupplierDtoValidator(), new UpdateSupplierDtoValidator());
+        new(
+            new SupplierRepository(context),
+            new CreateSupplierDtoValidator(),
+            new UpdateSupplierDtoValidator()
+        );
 
     public static WorkerService CreateWorkerService(AppDbContext context) =>
-        new(new WorkerRepository(context), new CreateWorkerDtoValidator(new BranchRepository(context)), new UpdateWorkerDtoValidator(new BranchRepository(context)));
+        new(
+            new WorkerRepository(context),
+            new CreateWorkerDtoValidator(new BranchRepository(context)),
+            new UpdateWorkerDtoValidator(new BranchRepository(context))
+        );
 
     public static BranchService CreateBranchService(AppDbContext context) =>
         new(
             new BranchRepository(context),
             new UserRepository(context),
             new CreateBranchDtoValidator(),
-            new UpdateBranchDtoValidator());
+            new UpdateBranchDtoValidator()
+        );
 
     public static BudgetService CreateBudgetService(AppDbContext context) =>
         new(
@@ -118,14 +136,24 @@ public static class ServiceFactory
             new CreateBudgetDtoValidator(new CustomerRepository(context)),
             new UpdateBudgetDtoValidator(new CustomerRepository(context)),
             new RequestCorrectionDtoValidator(),
-            new CancelBudgetDtoValidator());
+            new CancelBudgetDtoValidator()
+        );
 
-    public static OfferService CreateOfferService(AppDbContext context, string? pdfOutputFolder = null, string? logoPath = null)
+    public static OfferService CreateOfferService(
+        AppDbContext context,
+        string? pdfOutputFolder = null,
+        string? logoPath = null
+    )
     {
         var overrides = new Dictionary<string, string?>
         {
-            ["Storage:GeneratedOffersPath"] = pdfOutputFolder
-                ?? Path.Combine(Path.GetTempPath(), "LvTestGeneratedOffers", Guid.NewGuid().ToString())
+            ["Storage:GeneratedOffersPath"] =
+                pdfOutputFolder
+                ?? Path.Combine(
+                    Path.GetTempPath(),
+                    "LvTestGeneratedOffers",
+                    Guid.NewGuid().ToString()
+                ),
         };
 
         if (logoPath is not null)
@@ -141,7 +169,8 @@ public static class ServiceFactory
             CreateBudgetService(context),
             new OfferPdfGenerator(configuration),
             new CreateOfferDtoValidator(),
-            new UpdateOfferDtoValidator());
+            new UpdateOfferDtoValidator()
+        );
     }
 
     public static ProjectChapterService CreateProjectChapterService(AppDbContext context) =>
@@ -149,7 +178,8 @@ public static class ServiceFactory
             new ProjectChapterRepository(context),
             new MaterialTicketRepository(context),
             new PayrollRepository(context),
-            new IncidentRepository(context));
+            new IncidentRepository(context)
+        );
 
     public static ProjectService CreateProjectService(AppDbContext context) =>
         new(
@@ -161,7 +191,8 @@ public static class ServiceFactory
             new ProjectChapterRepository(context),
             new CreateProjectDtoValidator(),
             new UpdateEndDateDtoValidator(),
-            new AssignWorkerDtoValidator());
+            new AssignWorkerDtoValidator()
+        );
 
     public static MaterialTicketService CreateMaterialTicketService(AppDbContext context) =>
         new(
@@ -173,14 +204,16 @@ public static class ServiceFactory
             new MaterialCatalogRepository(context),
             CreateProjectChapterService(context),
             new CreateMaterialTicketDtoValidator(),
-            new UpdateMaterialTicketDtoValidator());
+            new UpdateMaterialTicketDtoValidator()
+        );
 
     public static ProjectProgressService CreateProjectProgressService(AppDbContext context) =>
         new(
             new ProjectProgressRepository(context),
             new SiteLogRepository(context),
             new ProjectRepository(context),
-            new OfferRepository(context));
+            new OfferRepository(context)
+        );
 
     public static SiteLogService CreateSiteLogService(AppDbContext context) =>
         new(
@@ -190,7 +223,8 @@ public static class ServiceFactory
             new BudgetRepository(context),
             CreateProjectProgressService(context),
             new CreateSiteLogDtoValidator(),
-            new UpdateSiteLogDtoValidator());
+            new UpdateSiteLogDtoValidator()
+        );
 
     public static PayrollService CreatePayrollService(AppDbContext context) =>
         new(
@@ -201,7 +235,8 @@ public static class ServiceFactory
             CreateProjectService(context),
             CreateProjectChapterService(context),
             new CreatePayrollDtoValidator(),
-            new UpdatePayrollDtoValidator());
+            new UpdatePayrollDtoValidator()
+        );
 
     public static IncidentService CreateIncidentService(AppDbContext context) =>
         new(
@@ -212,37 +247,44 @@ public static class ServiceFactory
             new WorkerRepository(context),
             CreateProjectChapterService(context),
             new CreateIncidentDtoValidator(),
-            new UpdateIncidentDtoValidator());
+            new UpdateIncidentDtoValidator()
+        );
 
     public static ProjectFinanceService CreateProjectFinanceService(AppDbContext context) =>
         new(
             new ProjectRepository(context),
             new MaterialTicketRepository(context),
-            new SiteLogRepository(context));
+            new SiteLogRepository(context)
+        );
 
     public static ProductService CreateProductService(AppDbContext context) =>
         new(
             new ProductRepository(context),
             new CreateProductDtoValidator(),
-            new UpdateProductDtoValidator());
+            new UpdateProductDtoValidator()
+        );
 
     public static BranchInventoryService CreateBranchInventoryService(AppDbContext context) =>
         new(new BranchInventoryRepository(context));
 
-    public static ProductIncorporationTicketService CreateProductIncorporationTicketService(AppDbContext context) =>
+    public static ProductIncorporationTicketService CreateProductIncorporationTicketService(
+        AppDbContext context
+    ) =>
         new(
             new ProductIncorporationTicketRepository(context),
             new BranchRepository(context),
             new BranchInventoryRepository(context),
             new ProductRepository(context),
-            new CreateProductIncorporationTicketDtoValidator());
+            new CreateProductIncorporationTicketDtoValidator()
+        );
 
     public static CashRegisterService CreateCashRegisterService(AppDbContext context) =>
         new(
             new CashRegisterRepository(context),
             new BranchRepository(context),
             new OpenCashRegisterDtoValidator(),
-            new CloseCashRegisterDtoValidator());
+            new CloseCashRegisterDtoValidator()
+        );
 
     public static InvoiceService CreateInvoiceService(AppDbContext context) =>
         new(
@@ -256,7 +298,8 @@ public static class ServiceFactory
             new CreateInvoiceDtoValidator(),
             new UpdateInvoiceDraftDtoValidator(),
             new IssueInvoiceDtoValidator(),
-            new CreateInvoicePaymentDtoValidator());
+            new CreateInvoicePaymentDtoValidator()
+        );
 
     public static NotificationService CreateNotificationService(AppDbContext context) =>
         new(new NotificationRepository(context));
@@ -269,5 +312,6 @@ public static class ServiceFactory
             new ProductRepository(context),
             new BranchInventoryRepository(context),
             new ProjectInventoryItemRepository(context),
-            new CreateInventoryMovementDtoValidator());
+            new CreateInventoryMovementDtoValidator()
+        );
 }

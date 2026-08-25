@@ -7,8 +7,6 @@ public class ForgotPasswordRequestDtoValidator : AbstractValidator<ForgotPasswor
 {
     public ForgotPasswordRequestDtoValidator()
     {
-        RuleFor(x => x.Email)
-            .NotEmpty()
-            .EmailAddress();
+        RuleFor(x => x.Email).NotEmpty().EmailAddress();
     }
 }

@@ -21,7 +21,8 @@ public class JwtTokenService : ITokenService
     public AccessTokenResult GenerateAccessToken(User user, IEnumerable<string> roles)
     {
         var jwtSection = _configuration.GetSection("Jwt");
-        var key = jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+        var key =
+            jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
         var issuer = jwtSection["Issuer"];
         var audience = jwtSection["Audience"];
         var expirationHours = jwtSection.GetValue<double?>("AccessTokenExpirationHours") ?? 10;
@@ -33,7 +34,7 @@ public class JwtTokenService : ITokenService
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
             new(ClaimTypes.Name, user.Name),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
@@ -46,15 +47,12 @@ public class JwtTokenService : ITokenService
             audience: audience,
             claims: claims,
             expires: expiresAt,
-            signingCredentials: credentials);
+            signingCredentials: credentials
+        );
 
         var tokenValue = new JwtSecurityTokenHandler().WriteToken(token);
 
-        return new AccessTokenResult
-        {
-            Token = tokenValue,
-            ExpiresAt = expiresAt
-        };
+        return new AccessTokenResult { Token = tokenValue, ExpiresAt = expiresAt };
     }
 
     public string GenerateRefreshToken()
@@ -65,7 +63,8 @@ public class JwtTokenService : ITokenService
 
     public DateTime GetRefreshTokenExpiresAt()
     {
-        var expirationHours = _configuration.GetSection("Jwt").GetValue<double?>("RefreshTokenExpirationHours") ?? 10;
+        var expirationHours =
+            _configuration.GetSection("Jwt").GetValue<double?>("RefreshTokenExpirationHours") ?? 10;
         return DateTime.UtcNow.AddHours(expirationHours);
     }
 }

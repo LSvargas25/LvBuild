@@ -29,7 +29,8 @@ public class SiteLogService : ISiteLogService
         IBudgetRepository budgetRepository,
         IProjectProgressService projectProgressService,
         IValidator<CreateSiteLogDto> createValidator,
-        IValidator<UpdateSiteLogDto> updateValidator)
+        IValidator<UpdateSiteLogDto> updateValidator
+    )
     {
         _siteLogRepository = siteLogRepository;
         _projectRepository = projectRepository;
@@ -44,7 +45,8 @@ public class SiteLogService : ISiteLogService
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var project = await _projectRepository.GetByIdAsync(request.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(request.ProjectId)
             ?? throw new NotFoundException($"Project {request.ProjectId} not found.");
 
         if (await _siteLogRepository.ExistsForProjectAndWeekAsync(project.Id, request.WeekStart))
@@ -64,7 +66,7 @@ public class SiteLogService : ISiteLogService
             Status = SiteLogStatus.Draft,
             ChapterId = request.ChapterId,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         SyncWorkers(siteLog, request.Workers);
@@ -80,13 +82,16 @@ public class SiteLogService : ISiteLogService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var siteLog = await _siteLogRepository.GetByIdAsync(id) ?? throw new NotFoundException($"SiteLog {id} not found.");
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"SiteLog {id} not found.");
 
         EnsureEditable(siteLog);
 
         if (request.ChapterId.HasValue)
         {
-            var project = await _projectRepository.GetByIdAsync(siteLog.ProjectId)
+            var project =
+                await _projectRepository.GetByIdAsync(siteLog.ProjectId)
                 ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
             await ValidateChapterAsync(project.BudgetId, request.ChapterId);
         }
@@ -107,11 +112,15 @@ public class SiteLogService : ISiteLogService
 
     public async Task<SiteLogDto> SubmitToReviewAsync(int id)
     {
-        var siteLog = await _siteLogRepository.GetByIdAsync(id) ?? throw new NotFoundException($"SiteLog {id} not found.");
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"SiteLog {id} not found.");
 
         if (siteLog.Status != SiteLogStatus.Draft)
         {
-            throw new ValidationAppException("Solo se puede enviar a revisión una bitácora en Borrador.");
+            throw new ValidationAppException(
+                "Solo se puede enviar a revisión una bitácora en Borrador."
+            );
         }
 
         siteLog.Status = SiteLogStatus.Review;
@@ -123,11 +132,15 @@ public class SiteLogService : ISiteLogService
 
     public async Task<SiteLogDto> RevertToDraftAsync(int id, RevertToDraftDto request)
     {
-        var siteLog = await _siteLogRepository.GetByIdAsync(id) ?? throw new NotFoundException($"SiteLog {id} not found.");
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"SiteLog {id} not found.");
 
         if (siteLog.Status != SiteLogStatus.Review)
         {
-            throw new ValidationAppException("Solo se puede devolver a Borrador una bitácora en Revisión.");
+            throw new ValidationAppException(
+                "Solo se puede devolver a Borrador una bitácora en Revisión."
+            );
         }
 
         siteLog.Status = SiteLogStatus.Draft;
@@ -139,28 +152,41 @@ public class SiteLogService : ISiteLogService
 
     public async Task<SiteLogDto> ApproveAsync(int id, int approvedByUserId)
     {
-        var siteLog = await _siteLogRepository.GetByIdAsync(id) ?? throw new NotFoundException($"SiteLog {id} not found.");
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"SiteLog {id} not found.");
 
         if (siteLog.Status != SiteLogStatus.Review)
         {
-            throw new ValidationAppException("Solo se puede aprobar una bitácora en estado Revisión.");
+            throw new ValidationAppException(
+                "Solo se puede aprobar una bitácora en estado Revisión."
+            );
         }
 
-        var project = await _projectRepository.GetByIdAsync(siteLog.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(siteLog.ProjectId)
             ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
 
         // First pass: validate every material against inventory before mutating anything,
         // so a shortfall on one material rejects the whole approval instead of leaving
         // the inventory partially consumed.
-        var consumptions = new List<(SiteLogMaterial SiteLogMaterial, ProjectInventoryItem InventoryItem)>();
+        var consumptions =
+            new List<(SiteLogMaterial SiteLogMaterial, ProjectInventoryItem InventoryItem)>();
         foreach (var siteLogMaterial in siteLog.Materials)
         {
-            var inventoryItem = await _inventoryRepository.GetByProjectAndMaterialAsync(siteLog.ProjectId, siteLogMaterial.MaterialId);
+            var inventoryItem = await _inventoryRepository.GetByProjectAndMaterialAsync(
+                siteLog.ProjectId,
+                siteLogMaterial.MaterialId
+            );
 
-            if (inventoryItem is null || inventoryItem.CurrentQuantity - siteLogMaterial.QuantityUsed < 0)
+            if (
+                inventoryItem is null
+                || inventoryItem.CurrentQuantity - siteLogMaterial.QuantityUsed < 0
+            )
             {
                 throw new ValidationAppException(
-                    $"No hay suficiente inventario del material {siteLogMaterial.MaterialId} para aprobar esta bitácora.");
+                    $"No hay suficiente inventario del material {siteLogMaterial.MaterialId} para aprobar esta bitácora."
+                );
             }
 
             consumptions.Add((siteLogMaterial, inventoryItem));
@@ -195,11 +221,15 @@ public class SiteLogService : ISiteLogService
 
     public async Task DeleteAsync(int id)
     {
-        var siteLog = await _siteLogRepository.GetByIdAsync(id) ?? throw new NotFoundException($"SiteLog {id} not found.");
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"SiteLog {id} not found.");
 
         if (siteLog.Status != SiteLogStatus.Draft)
         {
-            throw new ValidationAppException("Solo se puede eliminar una bitácora en estado Borrador.");
+            throw new ValidationAppException(
+                "Solo se puede eliminar una bitácora en estado Borrador."
+            );
         }
 
         await _siteLogRepository.DeleteAsync(siteLog);
@@ -207,7 +237,9 @@ public class SiteLogService : ISiteLogService
 
     public async Task<SiteLogDto> GetByIdAsync(int id)
     {
-        var siteLog = await _siteLogRepository.GetByIdAsync(id) ?? throw new NotFoundException($"SiteLog {id} not found.");
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"SiteLog {id} not found.");
         return MapToDto(siteLog);
     }
 
@@ -220,26 +252,36 @@ public class SiteLogService : ISiteLogService
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
-    public async Task<PagedResult<SiteLogDto>> GetAllByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<PagedResult<SiteLogDto>> GetAllByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _siteLogRepository.GetPagedByProjectAsync(projectId, pageNumber, pageSize);
+        var (items, totalCount) = await _siteLogRepository.GetPagedByProjectAsync(
+            projectId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<SiteLogDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
     public async Task UpdateTotalPayrollAsync(int siteLogId, decimal amount)
     {
-        var siteLog = await _siteLogRepository.GetByIdAsync(siteLogId) ?? throw new NotFoundException($"SiteLog {siteLogId} not found.");
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(siteLogId)
+            ?? throw new NotFoundException($"SiteLog {siteLogId} not found.");
 
         siteLog.TotalPayroll = amount;
         siteLog.UpdatedAt = DateTime.UtcNow;
@@ -280,7 +322,9 @@ public class SiteLogService : ISiteLogService
     private static void SyncMaterials(SiteLog siteLog, List<SiteLogMaterialDto> materialDtos)
     {
         var incomingMaterialIds = materialDtos.Select(m => m.MaterialId).ToHashSet();
-        var toRemove = siteLog.Materials.Where(m => !incomingMaterialIds.Contains(m.MaterialId)).ToList();
+        var toRemove = siteLog
+            .Materials.Where(m => !incomingMaterialIds.Contains(m.MaterialId))
+            .ToList();
         foreach (var material in toRemove)
         {
             siteLog.Materials.Remove(material);
@@ -291,7 +335,11 @@ public class SiteLogService : ISiteLogService
             var material = siteLog.Materials.FirstOrDefault(m => m.MaterialId == dto.MaterialId);
             if (material is null)
             {
-                material = new SiteLogMaterial { MaterialId = dto.MaterialId, CreatedAt = DateTime.UtcNow };
+                material = new SiteLogMaterial
+                {
+                    MaterialId = dto.MaterialId,
+                    CreatedAt = DateTime.UtcNow,
+                };
                 siteLog.Materials.Add(material);
             }
 
@@ -306,49 +354,58 @@ public class SiteLogService : ISiteLogService
 
         foreach (var dto in equipmentDtos)
         {
-            siteLog.Equipment.Add(new SiteLogEquipment
-            {
-                EquipmentType = dto.EquipmentType,
-                Description = dto.Description,
-                CreatedAt = DateTime.UtcNow
-            });
+            siteLog.Equipment.Add(
+                new SiteLogEquipment
+                {
+                    EquipmentType = dto.EquipmentType,
+                    Description = dto.Description,
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
         }
     }
 
-    private static SiteLogDto MapToDto(SiteLog siteLog) => new()
-    {
-        Id = siteLog.Id,
-        ProjectId = siteLog.ProjectId,
-        ChapterId = siteLog.ChapterId,
-        WeekStart = siteLog.WeekStart,
-        WeekEnd = siteLog.WeekEnd,
-        TaskDescription = siteLog.TaskDescription,
-        PendingTasks = siteLog.PendingTasks,
-        TotalPayroll = siteLog.TotalPayroll,
-        TotalMaterials = siteLog.TotalMaterials,
-        ProgressPercentage = siteLog.ProgressPercentage,
-        Status = siteLog.Status,
-        CreatedByUserId = siteLog.CreatedByUserId,
-        ApprovedByUserId = siteLog.ApprovedByUserId,
-        Workers = siteLog.Workers.Select(w => new SiteLogWorkerResponseDto
+    private static SiteLogDto MapToDto(SiteLog siteLog) =>
+        new()
         {
-            Id = w.Id,
-            WorkerId = w.WorkerId,
-            HoursWorked = w.HoursWorked
-        }).ToList(),
-        Materials = siteLog.Materials.Select(m => new SiteLogMaterialResponseDto
-        {
-            Id = m.Id,
-            MaterialId = m.MaterialId,
-            QuantityUsed = m.QuantityUsed
-        }).ToList(),
-        Equipment = siteLog.Equipment.Select(e => new SiteLogEquipmentResponseDto
-        {
-            Id = e.Id,
-            EquipmentType = e.EquipmentType,
-            Description = e.Description
-        }).ToList()
-    };
+            Id = siteLog.Id,
+            ProjectId = siteLog.ProjectId,
+            ChapterId = siteLog.ChapterId,
+            WeekStart = siteLog.WeekStart,
+            WeekEnd = siteLog.WeekEnd,
+            TaskDescription = siteLog.TaskDescription,
+            PendingTasks = siteLog.PendingTasks,
+            TotalPayroll = siteLog.TotalPayroll,
+            TotalMaterials = siteLog.TotalMaterials,
+            ProgressPercentage = siteLog.ProgressPercentage,
+            Status = siteLog.Status,
+            CreatedByUserId = siteLog.CreatedByUserId,
+            ApprovedByUserId = siteLog.ApprovedByUserId,
+            Workers = siteLog
+                .Workers.Select(w => new SiteLogWorkerResponseDto
+                {
+                    Id = w.Id,
+                    WorkerId = w.WorkerId,
+                    HoursWorked = w.HoursWorked,
+                })
+                .ToList(),
+            Materials = siteLog
+                .Materials.Select(m => new SiteLogMaterialResponseDto
+                {
+                    Id = m.Id,
+                    MaterialId = m.MaterialId,
+                    QuantityUsed = m.QuantityUsed,
+                })
+                .ToList(),
+            Equipment = siteLog
+                .Equipment.Select(e => new SiteLogEquipmentResponseDto
+                {
+                    Id = e.Id,
+                    EquipmentType = e.EquipmentType,
+                    Description = e.Description,
+                })
+                .ToList(),
+        };
 
     private async Task ValidateChapterAsync(int budgetId, int? chapterId)
     {
@@ -357,12 +414,15 @@ public class SiteLogService : ISiteLogService
             return;
         }
 
-        var budget = await _budgetRepository.GetByIdAsync(budgetId)
+        var budget =
+            await _budgetRepository.GetByIdAsync(budgetId)
             ?? throw new NotFoundException($"Budget {budgetId} not found.");
 
         if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
         {
-            throw new ValidationAppException($"El capítulo {chapterId} no pertenece al presupuesto de este proyecto.");
+            throw new ValidationAppException(
+                $"El capítulo {chapterId} no pertenece al presupuesto de este proyecto."
+            );
         }
     }
 }

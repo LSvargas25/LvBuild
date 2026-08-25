@@ -54,7 +54,10 @@ public class OffersController : ApiControllerBase
 
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("{id:int}/revert-to-draft")]
-    public async Task<ActionResult<OfferResponseDto>> RevertToDraft(int id, RevertToDraftDto request)
+    public async Task<ActionResult<OfferResponseDto>> RevertToDraft(
+        int id,
+        RevertToDraftDto request
+    )
     {
         var result = await _offerService.RevertToDraftAsync(id);
         return Ok(result);
@@ -79,7 +82,8 @@ public class OffersController : ApiControllerBase
     public async Task<ActionResult<PagedResult<OfferResponseDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] OfferStatus? status = null)
+        [FromQuery] OfferStatus? status = null
+    )
     {
         var result = await _offerService.GetAllAsync(pageNumber, pageSize, status);
         return Ok(result);

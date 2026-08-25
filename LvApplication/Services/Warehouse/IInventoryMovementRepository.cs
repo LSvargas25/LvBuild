@@ -8,5 +8,9 @@ public interface IInventoryMovementRepository
     Task AddAsync(InventoryMovement movement);
     Task UpdateAsync(InventoryMovement movement);
     Task DeleteAsync(InventoryMovement movement);
-    Task<(List<InventoryMovement> Items, int TotalCount)> GetPagedByOriginBranchAsync(int branchId, int pageNumber, int pageSize);
+    Task<(List<InventoryMovement> Items, int TotalCount)> GetPagedByOriginBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    );
 }

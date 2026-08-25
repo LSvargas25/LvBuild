@@ -19,29 +19,58 @@ public class ProjectFinanceServiceTests
 {
     private static async Task<Customer> CreateProjectCustomerAsync(AppDbContext context)
     {
-        var customer = new Customer { Name = "Project Customer", CustomerType = CustomerType.Project, Status = ActiveStatus.Active, CreatedAt = DateTime.UtcNow };
+        var customer = new Customer
+        {
+            Name = "Project Customer",
+            CustomerType = CustomerType.Project,
+            Status = ActiveStatus.Active,
+            CreatedAt = DateTime.UtcNow,
+        };
         context.Customers.Add(customer);
         await context.SaveChangesAsync();
         return customer;
     }
 
-    private static async Task<Branch> CreateBranchAsync(AppDbContext context, int operationsDirectorId)
+    private static async Task<Branch> CreateBranchAsync(
+        AppDbContext context,
+        int operationsDirectorId
+    )
     {
-        var branch = new Branch { Name = "Test Branch", City = "San Jose", Province = "San Jose", Status = BranchStatus.Active, BranchType = BranchType.Office, OperationsDirectorId = operationsDirectorId, CreatedAt = DateTime.UtcNow };
+        var branch = new Branch
+        {
+            Name = "Test Branch",
+            City = "San Jose",
+            Province = "San Jose",
+            Status = BranchStatus.Active,
+            BranchType = BranchType.Office,
+            OperationsDirectorId = operationsDirectorId,
+            CreatedAt = DateTime.UtcNow,
+        };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
         return branch;
     }
 
-    private static async Task<Supplier> CreateSupplierAsync(AppDbContext context, string name = "Proveedor Test")
+    private static async Task<Supplier> CreateSupplierAsync(
+        AppDbContext context,
+        string name = "Proveedor Test"
+    )
     {
-        var supplier = new Supplier { Name = name, Status = ActiveStatus.Active, CreatedAt = DateTime.UtcNow };
+        var supplier = new Supplier
+        {
+            Name = name,
+            Status = ActiveStatus.Active,
+            CreatedAt = DateTime.UtcNow,
+        };
         context.Suppliers.Add(supplier);
         await context.SaveChangesAsync();
         return supplier;
     }
 
-    private static async Task<MaterialCatalog> CreateMaterialAsync(AppDbContext context, string name = "Cemento")
+    private static async Task<MaterialCatalog> CreateMaterialAsync(
+        AppDbContext context,
+        string name = "Cemento"
+    )
     {
         var material = new MaterialCatalog { Name = name, CreatedAt = DateTime.UtcNow };
         context.MaterialCatalogs.Add(material);
@@ -49,11 +78,27 @@ public class ProjectFinanceServiceTests
         return material;
     }
 
-    private static async Task<(ProjectDto Project, int ManagerId, int ProjectAdminId)> CreateActiveProjectAsync(AppDbContext context)
+    private static async Task<(
+        ProjectDto Project,
+        int ManagerId,
+        int ProjectAdminId
+    )> CreateActiveProjectAsync(AppDbContext context)
     {
-        var director = await TestUserFactory.CreateAsync(context, $"director-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var manager = await TestUserFactory.CreateAsync(context, $"gm-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
-        var projectAdmin = await TestUserFactory.CreateAsync(context, $"pa-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            $"director-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var manager = await TestUserFactory.CreateAsync(
+            context,
+            $"gm-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
+        var projectAdmin = await TestUserFactory.CreateAsync(
+            context,
+            $"pa-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
 
@@ -67,7 +112,7 @@ public class ProjectFinanceServiceTests
             IndirectCostsTotal = 50,
             TotalBudget = 1000,
             CreatedByUserId = manager.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Budgets.Add(budget);
         await context.SaveChangesAsync();
@@ -91,18 +136,21 @@ public class ProjectFinanceServiceTests
             TotalProjectPrice = 100000m,
             Status = OfferStatus.ClientAccepted,
             CreatedByUserId = manager.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Offers.Add(offer);
         await context.SaveChangesAsync();
 
         var projectService = ServiceFactory.CreateProjectService(context);
-        var project = await projectService.CreateProjectAsync(new CreateProjectDto
-        {
-            OfferId = offer.Id,
-            BranchId = branch.Id,
-            StartDate = new DateTime(2026, 3, 1)
-        }, manager.Id);
+        var project = await projectService.CreateProjectAsync(
+            new CreateProjectDto
+            {
+                OfferId = offer.Id,
+                BranchId = branch.Id,
+                StartDate = new DateTime(2026, 3, 1),
+            },
+            manager.Id
+        );
 
         return (project, manager.Id, projectAdmin.Id);
     }
@@ -116,13 +164,17 @@ public class ProjectFinanceServiceTests
         var material = await CreateMaterialAsync(context, "Cemento");
 
         var ticketService = ServiceFactory.CreateMaterialTicketService(context);
-        var ticket = await ticketService.CreateAsync(project.Id, new CreateMaterialTicketDto
-        {
-            SupplierId = supplier.Id,
-            MaterialId = material.Id,
-            Quantity = 10,
-            UnitPrice = 5
-        }, projectAdminId); // Total = 50
+        var ticket = await ticketService.CreateAsync(
+            project.Id,
+            new CreateMaterialTicketDto
+            {
+                SupplierId = supplier.Id,
+                MaterialId = material.Id,
+                Quantity = 10,
+                UnitPrice = 5,
+            },
+            projectAdminId
+        ); // Total = 50
         await ticketService.ApplyAsync(ticket.Id);
 
         // MaterialTicket.CreatedAt is stamped with the real DateTime.UtcNow at creation time
@@ -133,24 +185,40 @@ public class ProjectFinanceServiceTests
         await context.SaveChangesAsync();
 
         var siteLogService = ServiceFactory.CreateSiteLogService(context);
-        await siteLogService.CreateAsync(new CreateSiteLogDto
-        {
-            ProjectId = project.Id,
-            WeekStart = new DateTime(2026, 3, 2),
-            WeekEnd = new DateTime(2026, 3, 8),
-            TaskDescription = "Semana de trabajo",
-            Workers = new List<SiteLogWorkerDto> { new() { WorkerId = 1, HoursWorked = 40 } }
-        }, projectAdminId);
+        await siteLogService.CreateAsync(
+            new CreateSiteLogDto
+            {
+                ProjectId = project.Id,
+                WeekStart = new DateTime(2026, 3, 2),
+                WeekEnd = new DateTime(2026, 3, 8),
+                TaskDescription = "Semana de trabajo",
+                Workers = new List<SiteLogWorkerDto>
+                {
+                    new() { WorkerId = 1, HoursWorked = 40 },
+                },
+            },
+            projectAdminId
+        );
         // WorkerId=1 with no Worker row is fine here — SiteLog doesn't validate Worker existence
         // (matching the pre-existing SyncWorkers behavior, unchanged by this plan).
 
         var service = ServiceFactory.CreateProjectFinanceService(context);
 
-        var finance = await service.GetFinanceAsync(project.Id, FinancePeriod.Week, new DateTime(2026, 3, 2));
+        var finance = await service.GetFinanceAsync(
+            project.Id,
+            FinancePeriod.Week,
+            new DateTime(2026, 3, 2)
+        );
 
         finance.PeriodStart.Should().Be(new DateTime(2026, 3, 2));
         finance.PeriodEnd.Should().Be(new DateTime(2026, 3, 8));
-        finance.Materials.Should().ContainSingle(m => m.MaterialName == "Cemento" && m.SupplierName == "Ferretería Central" && m.Total == 50m);
+        finance
+            .Materials.Should()
+            .ContainSingle(m =>
+                m.MaterialName == "Cemento"
+                && m.SupplierName == "Ferretería Central"
+                && m.Total == 50m
+            );
         finance.TotalHoursWorked.Should().Be(40m);
     }
 
@@ -161,26 +229,42 @@ public class ProjectFinanceServiceTests
         var (project, _, projectAdminId) = await CreateActiveProjectAsync(context);
 
         var siteLogService = ServiceFactory.CreateSiteLogService(context);
-        await siteLogService.CreateAsync(new CreateSiteLogDto
-        {
-            ProjectId = project.Id,
-            WeekStart = new DateTime(2026, 3, 2),
-            WeekEnd = new DateTime(2026, 3, 8),
-            TaskDescription = "Semana 1",
-            Workers = new List<SiteLogWorkerDto> { new() { WorkerId = 1, HoursWorked = 40 } }
-        }, projectAdminId);
-        await siteLogService.CreateAsync(new CreateSiteLogDto
-        {
-            ProjectId = project.Id,
-            WeekStart = new DateTime(2026, 3, 9),
-            WeekEnd = new DateTime(2026, 3, 15),
-            TaskDescription = "Semana 2",
-            Workers = new List<SiteLogWorkerDto> { new() { WorkerId = 1, HoursWorked = 35 } }
-        }, projectAdminId);
+        await siteLogService.CreateAsync(
+            new CreateSiteLogDto
+            {
+                ProjectId = project.Id,
+                WeekStart = new DateTime(2026, 3, 2),
+                WeekEnd = new DateTime(2026, 3, 8),
+                TaskDescription = "Semana 1",
+                Workers = new List<SiteLogWorkerDto>
+                {
+                    new() { WorkerId = 1, HoursWorked = 40 },
+                },
+            },
+            projectAdminId
+        );
+        await siteLogService.CreateAsync(
+            new CreateSiteLogDto
+            {
+                ProjectId = project.Id,
+                WeekStart = new DateTime(2026, 3, 9),
+                WeekEnd = new DateTime(2026, 3, 15),
+                TaskDescription = "Semana 2",
+                Workers = new List<SiteLogWorkerDto>
+                {
+                    new() { WorkerId = 1, HoursWorked = 35 },
+                },
+            },
+            projectAdminId
+        );
 
         var service = ServiceFactory.CreateProjectFinanceService(context);
 
-        var finance = await service.GetFinanceAsync(project.Id, FinancePeriod.Month, new DateTime(2026, 3, 15));
+        var finance = await service.GetFinanceAsync(
+            project.Id,
+            FinancePeriod.Month,
+            new DateTime(2026, 3, 15)
+        );
 
         finance.PeriodStart.Should().Be(new DateTime(2026, 3, 1));
         finance.PeriodEnd.Should().Be(new DateTime(2026, 3, 31));
@@ -194,26 +278,42 @@ public class ProjectFinanceServiceTests
         var (project, _, projectAdminId) = await CreateActiveProjectAsync(context);
 
         var siteLogService = ServiceFactory.CreateSiteLogService(context);
-        await siteLogService.CreateAsync(new CreateSiteLogDto
-        {
-            ProjectId = project.Id,
-            WeekStart = new DateTime(2026, 3, 2),
-            WeekEnd = new DateTime(2026, 3, 8),
-            TaskDescription = "Semana de marzo",
-            Workers = new List<SiteLogWorkerDto> { new() { WorkerId = 1, HoursWorked = 40 } }
-        }, projectAdminId);
-        await siteLogService.CreateAsync(new CreateSiteLogDto
-        {
-            ProjectId = project.Id,
-            WeekStart = new DateTime(2026, 9, 7),
-            WeekEnd = new DateTime(2026, 9, 13),
-            TaskDescription = "Semana de septiembre",
-            Workers = new List<SiteLogWorkerDto> { new() { WorkerId = 1, HoursWorked = 20 } }
-        }, projectAdminId);
+        await siteLogService.CreateAsync(
+            new CreateSiteLogDto
+            {
+                ProjectId = project.Id,
+                WeekStart = new DateTime(2026, 3, 2),
+                WeekEnd = new DateTime(2026, 3, 8),
+                TaskDescription = "Semana de marzo",
+                Workers = new List<SiteLogWorkerDto>
+                {
+                    new() { WorkerId = 1, HoursWorked = 40 },
+                },
+            },
+            projectAdminId
+        );
+        await siteLogService.CreateAsync(
+            new CreateSiteLogDto
+            {
+                ProjectId = project.Id,
+                WeekStart = new DateTime(2026, 9, 7),
+                WeekEnd = new DateTime(2026, 9, 13),
+                TaskDescription = "Semana de septiembre",
+                Workers = new List<SiteLogWorkerDto>
+                {
+                    new() { WorkerId = 1, HoursWorked = 20 },
+                },
+            },
+            projectAdminId
+        );
 
         var service = ServiceFactory.CreateProjectFinanceService(context);
 
-        var finance = await service.GetFinanceAsync(project.Id, FinancePeriod.Year, new DateTime(2026, 6, 1));
+        var finance = await service.GetFinanceAsync(
+            project.Id,
+            FinancePeriod.Year,
+            new DateTime(2026, 6, 1)
+        );
 
         finance.PeriodStart.Should().Be(new DateTime(2026, 1, 1));
         finance.PeriodEnd.Should().Be(new DateTime(2026, 12, 31));

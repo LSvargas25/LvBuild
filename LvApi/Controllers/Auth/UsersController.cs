@@ -38,7 +38,10 @@ public class UsersController : ControllerBase
 
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpGet]
-    public async Task<ActionResult<PagedResult<UserResponseDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<PagedResult<UserResponseDto>>> GetAll(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _userService.GetAllAsync(pageNumber, pageSize);
         return Ok(result);

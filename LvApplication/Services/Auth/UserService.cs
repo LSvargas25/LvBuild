@@ -22,13 +22,21 @@ public class UserService : IUserService
         _createValidator = createValidator;
     }
 
-    public async Task<UserResponseDto> CreateUserAsync(CreateUserDto request, IEnumerable<string> actingUserRoles)
+    public async Task<UserResponseDto> CreateUserAsync(
+        CreateUserDto request,
+        IEnumerable<string> actingUserRoles
+    )
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        if (request.RoleIds.Contains(GeneralManagerRoleId) && !actingUserRoles.Contains(GeneralManagerRoleName))
+        if (
+            request.RoleIds.Contains(GeneralManagerRoleId)
+            && !actingUserRoles.Contains(GeneralManagerRoleName)
+        )
         {
-            throw new ValidationAppException("Solo un Gerente General puede asignar el rol de Gerente General a un nuevo usuario.");
+            throw new ValidationAppException(
+                "Solo un Gerente General puede asignar el rol de Gerente General a un nuevo usuario."
+            );
         }
 
         if (await _userRepository.EmailExistsAsync(request.Email))
@@ -42,7 +50,7 @@ public class UserService : IUserService
             Email = request.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Status = UserStatus.Active,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         foreach (var roleId in request.RoleIds.Distinct())
@@ -58,7 +66,9 @@ public class UserService : IUserService
 
     public async Task<UserResponseDto> GetByIdAsync(int id)
     {
-        var user = await _userRepository.GetByIdAsync(id) ?? throw new NotFoundException($"User {id} not found.");
+        var user =
+            await _userRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"User {id} not found.");
         return MapToDto(user);
     }
 
@@ -71,17 +81,18 @@ public class UserService : IUserService
             Items = users.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
-    private static UserResponseDto MapToDto(User user) => new()
-    {
-        Id = user.Id,
-        Name = user.Name,
-        Email = user.Email,
-        Status = user.Status.ToString(),
-        Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
-        LastLoginAt = user.LastLoginAt
-    };
+    private static UserResponseDto MapToDto(User user) =>
+        new()
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Status = user.Status.ToString(),
+            Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+            LastLoginAt = user.LastLoginAt,
+        };
 }

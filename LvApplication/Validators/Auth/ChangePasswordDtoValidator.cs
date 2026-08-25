@@ -7,10 +7,8 @@ public class ChangePasswordDtoValidator : AbstractValidator<ChangePasswordDto>
 {
     public ChangePasswordDtoValidator()
     {
-        RuleFor(x => x.CurrentPassword)
-            .NotEmpty();
+        RuleFor(x => x.CurrentPassword).NotEmpty();
 
-        RuleFor(x => x.NewPassword)
-            .MustBeAValidNewPassword();
+        RuleFor(x => x.NewPassword).MustBeAValidNewPassword();
     }
 }

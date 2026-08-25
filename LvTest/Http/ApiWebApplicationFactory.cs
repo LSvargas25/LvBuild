@@ -30,7 +30,10 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
         // variables, unlike those hooks, are read synchronously by WebApplication.CreateBuilder
         // itself, so this is the only override point that actually lands in time - and it
         // mirrors exactly how production is meant to supply these values anyway.
-        Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", "Server=(local);Database=Unused;Trusted_Connection=True;");
+        Environment.SetEnvironmentVariable(
+            "ConnectionStrings__DefaultConnection",
+            "Server=(local);Database=Unused;Trusted_Connection=True;"
+        );
         Environment.SetEnvironmentVariable("Jwt__Key", TestJwtKey);
         Environment.SetEnvironmentVariable("Jwt__Issuer", TestJwtIssuer);
         Environment.SetEnvironmentVariable("Jwt__Audience", TestJwtAudience);
@@ -49,15 +52,22 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
             // alongside UseInMemoryDatabase below and EF throws on the two providers.
             // Stripping every descriptor generic over AppDbContext clears all of that.
             var toRemove = services
-                .Where(d => d.ServiceType == typeof(AppDbContext)
+                .Where(d =>
+                    d.ServiceType == typeof(AppDbContext)
                     || d.ServiceType == typeof(DbContextOptions<AppDbContext>)
-                    || (d.ServiceType.IsGenericType && d.ServiceType.GetGenericArguments().Contains(typeof(AppDbContext))))
+                    || (
+                        d.ServiceType.IsGenericType
+                        && d.ServiceType.GetGenericArguments().Contains(typeof(AppDbContext))
+                    )
+                )
                 .ToList();
 
             foreach (var d in toRemove)
                 services.Remove(d);
 
-            services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase(_databaseName));
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseInMemoryDatabase(_databaseName)
+            );
         });
     }
 }

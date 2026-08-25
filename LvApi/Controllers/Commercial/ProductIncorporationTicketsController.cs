@@ -20,17 +20,31 @@ public class ProductIncorporationTicketsController : ApiControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult<ProductIncorporationTicketDto>> Create(CreateProductIncorporationTicketDto request)
+    public async Task<ActionResult<ProductIncorporationTicketDto>> Create(
+        CreateProductIncorporationTicketDto request
+    )
     {
-        var result = await _ticketService.CreateAsync(request, GetCurrentUserId(), GetCurrentRoles());
+        var result = await _ticketService.CreateAsync(
+            request,
+            GetCurrentUserId(),
+            GetCurrentRoles()
+        );
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [Authorize(Roles = "GeneralManager,OperationsDirector,BranchAdmin")]
     [HttpPost("{id:int}/validate")]
-    public async Task<ActionResult<ProductIncorporationTicketDto>> Validate(int id, ValidateProductIncorporationTicketDto request)
+    public async Task<ActionResult<ProductIncorporationTicketDto>> Validate(
+        int id,
+        ValidateProductIncorporationTicketDto request
+    )
     {
-        var result = await _ticketService.ValidateAsync(id, request.Approve, GetCurrentUserId(), GetCurrentRoles());
+        var result = await _ticketService.ValidateAsync(
+            id,
+            request.Approve,
+            GetCurrentUserId(),
+            GetCurrentRoles()
+        );
         return Ok(result);
     }
 
@@ -51,7 +65,10 @@ public class ProductIncorporationTicketsController : ApiControllerBase
 
     [HttpGet("~/api/branches/{branchId:int}/product-incorporation-tickets")]
     public async Task<ActionResult<PagedResult<ProductIncorporationTicketDto>>> GetAllByBranch(
-        int branchId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        int branchId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _ticketService.GetAllByBranchAsync(branchId, pageNumber, pageSize);
         return Ok(result);

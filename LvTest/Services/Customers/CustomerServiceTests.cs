@@ -14,15 +14,17 @@ public class CustomerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateCustomerService(context);
 
-        var result = await service.CreateAsync(new CreateCustomerDto
-        {
-            Name = "Acme Corp",
-            CustomerType = CustomerType.Commercial,
-            City = "San Jose",
-            PhoneNumber = "8888-0000",
-            PersonalId = "1-2345-6789",
-            Email = "acme@example.com"
-        });
+        var result = await service.CreateAsync(
+            new CreateCustomerDto
+            {
+                Name = "Acme Corp",
+                CustomerType = CustomerType.Commercial,
+                City = "San Jose",
+                PhoneNumber = "8888-0000",
+                PersonalId = "1-2345-6789",
+                Email = "acme@example.com",
+            }
+        );
 
         result.Id.Should().BeGreaterThan(0);
         result.Name.Should().Be("Acme Corp");
@@ -38,13 +40,15 @@ public class CustomerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateCustomerService(context);
 
-        var created = await service.CreateAsync(new CreateCustomerDto
-        {
-            Name = "Beta Corp",
-            CustomerType = CustomerType.Store,
-            City = "Alajuela",
-            Email = "beta@example.com"
-        });
+        var created = await service.CreateAsync(
+            new CreateCustomerDto
+            {
+                Name = "Beta Corp",
+                CustomerType = CustomerType.Store,
+                City = "Alajuela",
+                Email = "beta@example.com",
+            }
+        );
 
         var result = await service.GetByIdAsync(created.Id);
 
@@ -69,20 +73,25 @@ public class CustomerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateCustomerService(context);
 
-        var created = await service.CreateAsync(new CreateCustomerDto
-        {
-            Name = "Gamma Corp",
-            CustomerType = CustomerType.Project,
-            City = "Heredia"
-        });
+        var created = await service.CreateAsync(
+            new CreateCustomerDto
+            {
+                Name = "Gamma Corp",
+                CustomerType = CustomerType.Project,
+                City = "Heredia",
+            }
+        );
 
-        var updated = await service.UpdateAsync(created.Id, new UpdateCustomerDto
-        {
-            Name = "Gamma Corp Updated",
-            CustomerType = CustomerType.Commercial,
-            Status = ActiveStatus.Inactive,
-            City = "Cartago"
-        });
+        var updated = await service.UpdateAsync(
+            created.Id,
+            new UpdateCustomerDto
+            {
+                Name = "Gamma Corp Updated",
+                CustomerType = CustomerType.Commercial,
+                Status = ActiveStatus.Inactive,
+                City = "Cartago",
+            }
+        );
 
         updated.Name.Should().Be("Gamma Corp Updated");
         updated.CustomerType.Should().Be(CustomerType.Commercial);
@@ -96,12 +105,14 @@ public class CustomerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateCustomerService(context);
 
-        var created = await service.CreateAsync(new CreateCustomerDto
-        {
-            Name = "Delta Corp",
-            CustomerType = CustomerType.Store,
-            City = "Limon"
-        });
+        var created = await service.CreateAsync(
+            new CreateCustomerDto
+            {
+                Name = "Delta Corp",
+                CustomerType = CustomerType.Store,
+                City = "Limon",
+            }
+        );
 
         await service.DeleteAsync(created.Id);
 
@@ -118,12 +129,14 @@ public class CustomerServiceTests
 
         for (var i = 1; i <= 5; i++)
         {
-            await service.CreateAsync(new CreateCustomerDto
-            {
-                Name = $"Customer {i}",
-                CustomerType = CustomerType.Store,
-                City = "San Jose"
-            });
+            await service.CreateAsync(
+                new CreateCustomerDto
+                {
+                    Name = $"Customer {i}",
+                    CustomerType = CustomerType.Store,
+                    City = "San Jose",
+                }
+            );
         }
 
         var firstPage = await service.GetAllAsync(pageNumber: 1, pageSize: 2);

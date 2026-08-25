@@ -3,7 +3,8 @@ using LvApplication.DTOs.Commercial;
 
 namespace LvApplication.Validators.Commercial;
 
-public class CreateProductIncorporationTicketDtoValidator : AbstractValidator<CreateProductIncorporationTicketDto>
+public class CreateProductIncorporationTicketDtoValidator
+    : AbstractValidator<CreateProductIncorporationTicketDto>
 {
     public CreateProductIncorporationTicketDtoValidator()
     {

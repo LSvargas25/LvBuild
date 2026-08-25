@@ -72,7 +72,10 @@ public class InvoicesController : ApiControllerBase
 
     [HttpGet("~/api/branches/{branchId:int}/invoices")]
     public async Task<ActionResult<PagedResult<InvoiceDto>>> GetAllByBranch(
-        int branchId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        int branchId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _invoiceService.GetAllByBranchAsync(branchId, pageNumber, pageSize);
         return Ok(result);

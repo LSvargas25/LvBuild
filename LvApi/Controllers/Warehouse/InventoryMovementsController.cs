@@ -29,9 +29,17 @@ public class InventoryMovementsController : ApiControllerBase
 
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("{id:int}/validate")]
-    public async Task<ActionResult<InventoryMovementDto>> Validate(int id, ValidateInventoryMovementDto request)
+    public async Task<ActionResult<InventoryMovementDto>> Validate(
+        int id,
+        ValidateInventoryMovementDto request
+    )
     {
-        var result = await _movementService.ValidateAsync(id, request.Approve, GetCurrentUserId(), GetCurrentRoles());
+        var result = await _movementService.ValidateAsync(
+            id,
+            request.Approve,
+            GetCurrentUserId(),
+            GetCurrentRoles()
+        );
         return Ok(result);
     }
 
@@ -52,9 +60,16 @@ public class InventoryMovementsController : ApiControllerBase
 
     [HttpGet("~/api/branches/{branchId:int}/inventory-movements")]
     public async Task<ActionResult<PagedResult<InventoryMovementDto>>> GetAllByOriginBranch(
-        int branchId, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+        int branchId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
-        var result = await _movementService.GetAllByOriginBranchAsync(branchId, pageNumber, pageSize);
+        var result = await _movementService.GetAllByOriginBranchAsync(
+            branchId,
+            pageNumber,
+            pageSize
+        );
         return Ok(result);
     }
 }

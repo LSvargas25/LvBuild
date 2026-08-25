@@ -21,15 +21,14 @@ using LvApplication.Services.Workers;
 using LvInfrastructure.Auth;
 using LvInfrastructure.Offers;
 using LvInfrastructure.Persistence;
-using LvInfrastructure.Storage;
 using LvInfrastructure.Repositories.Auth;
 using LvInfrastructure.Repositories.Branches;
 using LvInfrastructure.Repositories.Budgets;
 using LvInfrastructure.Repositories.Commercial;
 using LvInfrastructure.Repositories.Customers;
+using LvInfrastructure.Repositories.Incidents;
 using LvInfrastructure.Repositories.Inventory;
 using LvInfrastructure.Repositories.Materials;
-using LvInfrastructure.Repositories.Incidents;
 using LvInfrastructure.Repositories.Notifications;
 using LvInfrastructure.Repositories.Offers;
 using LvInfrastructure.Repositories.Payroll;
@@ -39,20 +38,25 @@ using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
 using LvInfrastructure.Repositories.Warehouse;
 using LvInfrastructure.Repositories.Workers;
+using LvInfrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 
 namespace LvApi.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructureServices(
+        this IServiceCollection services,
+        IConfiguration configuration
+    )
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
+            throw new InvalidOperationException(
+                "ConnectionStrings:DefaultConnection is not configured."
+            );
 
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connectionString));
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
@@ -79,7 +83,10 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IBranchInventoryRepository, BranchInventoryRepository>();
-        services.AddScoped<IProductIncorporationTicketRepository, ProductIncorporationTicketRepository>();
+        services.AddScoped<
+            IProductIncorporationTicketRepository,
+            ProductIncorporationTicketRepository
+        >();
         services.AddScoped<ICashRegisterRepository, CashRegisterRepository>();
         services.AddScoped<IInvoiceRepository, InvoiceRepository>();
         services.AddScoped<IInventoryMovementRepository, InventoryMovementRepository>();

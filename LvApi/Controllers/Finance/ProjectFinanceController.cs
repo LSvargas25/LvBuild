@@ -19,7 +19,11 @@ public class ProjectFinanceController : ControllerBase
     }
 
     [HttpGet("projects/{projectId:int}/finance")]
-    public async Task<ActionResult<ProjectFinanceDto>> GetFinance(int projectId, [FromQuery] FinancePeriod period, [FromQuery] DateTime date)
+    public async Task<ActionResult<ProjectFinanceDto>> GetFinance(
+        int projectId,
+        [FromQuery] FinancePeriod period,
+        [FromQuery] DateTime date
+    )
     {
         var result = await _financeService.GetFinanceAsync(projectId, period, date);
         return Ok(result);

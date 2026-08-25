@@ -20,9 +20,16 @@ public class NotificationsController : ApiControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<PagedResult<NotificationDto>>> GetMine([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 20)
+    public async Task<ActionResult<PagedResult<NotificationDto>>> GetMine(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20
+    )
     {
-        var result = await _notificationService.GetMyNotificationsAsync(GetCurrentUserId(), pageNumber, pageSize);
+        var result = await _notificationService.GetMyNotificationsAsync(
+            GetCurrentUserId(),
+            pageNumber,
+            pageSize
+        );
         return Ok(result);
     }
 

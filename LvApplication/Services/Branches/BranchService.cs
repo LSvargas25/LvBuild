@@ -24,7 +24,8 @@ public class BranchService : IBranchService
         IBranchRepository branchRepository,
         IUserRepository userRepository,
         IValidator<CreateBranchDto> createValidator,
-        IValidator<UpdateBranchDto> updateValidator)
+        IValidator<UpdateBranchDto> updateValidator
+    )
     {
         _branchRepository = branchRepository;
         _userRepository = userRepository;
@@ -36,16 +37,28 @@ public class BranchService : IBranchService
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        await EnsureUserHasRoleAsync(request.OperationsDirectorId, OperationsDirectorRole, "Director de Operaciones");
+        await EnsureUserHasRoleAsync(
+            request.OperationsDirectorId,
+            OperationsDirectorRole,
+            "Director de Operaciones"
+        );
 
         if (request.BranchAdminId.HasValue)
         {
-            await EnsureUserHasRoleAsync(request.BranchAdminId.Value, BranchAdminRole, "Administrador de Sucursal");
+            await EnsureUserHasRoleAsync(
+                request.BranchAdminId.Value,
+                BranchAdminRole,
+                "Administrador de Sucursal"
+            );
         }
 
         if (request.BusinessManagerId.HasValue)
         {
-            await EnsureUserHasRoleAsync(request.BusinessManagerId.Value, BusinessManagerRole, "Gerente de Negocio");
+            await EnsureUserHasRoleAsync(
+                request.BusinessManagerId.Value,
+                BusinessManagerRole,
+                "Gerente de Negocio"
+            );
         }
 
         var branch = new Branch
@@ -60,7 +73,7 @@ public class BranchService : IBranchService
             OperationsDirectorId = request.OperationsDirectorId,
             BranchAdminId = request.BranchAdminId,
             BusinessManagerId = request.BusinessManagerId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         branch.Indicator = new BranchIndicator
@@ -72,7 +85,7 @@ public class BranchService : IBranchService
             TotalWorkers = 0,
             TotalMaterials = 0,
             LastUpdatedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _branchRepository.AddAsync(branch);
@@ -84,16 +97,26 @@ public class BranchService : IBranchService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var branch = await _branchRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Branch {id} not found.");
+        var branch =
+            await _branchRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Branch {id} not found.");
 
         if (request.BranchAdminId.HasValue)
         {
-            await EnsureUserHasRoleAsync(request.BranchAdminId.Value, BranchAdminRole, "Administrador de Sucursal");
+            await EnsureUserHasRoleAsync(
+                request.BranchAdminId.Value,
+                BranchAdminRole,
+                "Administrador de Sucursal"
+            );
         }
 
         if (request.BusinessManagerId.HasValue)
         {
-            await EnsureUserHasRoleAsync(request.BusinessManagerId.Value, BusinessManagerRole, "Gerente de Negocio");
+            await EnsureUserHasRoleAsync(
+                request.BusinessManagerId.Value,
+                BusinessManagerRole,
+                "Gerente de Negocio"
+            );
         }
 
         branch.Name = request.Name;
@@ -111,11 +134,20 @@ public class BranchService : IBranchService
         return MapToDto(branch);
     }
 
-    public async Task<BranchResponseDto> AssignOperationsDirectorAsync(int id, AssignOperationsDirectorDto request)
+    public async Task<BranchResponseDto> AssignOperationsDirectorAsync(
+        int id,
+        AssignOperationsDirectorDto request
+    )
     {
-        var branch = await _branchRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Branch {id} not found.");
+        var branch =
+            await _branchRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Branch {id} not found.");
 
-        await EnsureUserHasRoleAsync(request.OperationsDirectorId, OperationsDirectorRole, "Director de Operaciones");
+        await EnsureUserHasRoleAsync(
+            request.OperationsDirectorId,
+            OperationsDirectorRole,
+            "Director de Operaciones"
+        );
 
         branch.OperationsDirectorId = request.OperationsDirectorId;
         branch.UpdatedAt = DateTime.UtcNow;
@@ -127,7 +159,9 @@ public class BranchService : IBranchService
 
     public async Task<BranchResponseDto> ActivateAsync(int id)
     {
-        var branch = await _branchRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Branch {id} not found.");
+        var branch =
+            await _branchRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Branch {id} not found.");
 
         branch.Status = BranchStatus.Active;
         branch.UpdatedAt = DateTime.UtcNow;
@@ -139,7 +173,9 @@ public class BranchService : IBranchService
 
     public async Task<BranchResponseDto> DeactivateAsync(int id)
     {
-        var branch = await _branchRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Branch {id} not found.");
+        var branch =
+            await _branchRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Branch {id} not found.");
 
         branch.Status = BranchStatus.Inactive;
         branch.UpdatedAt = DateTime.UtcNow;
@@ -151,7 +187,9 @@ public class BranchService : IBranchService
 
     public async Task DeleteAsync(int id, bool isGeneralManager)
     {
-        var branch = await _branchRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Branch {id} not found.");
+        var branch =
+            await _branchRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Branch {id} not found.");
 
         if (isGeneralManager)
         {
@@ -164,9 +202,15 @@ public class BranchService : IBranchService
         await _branchRepository.UpdateAsync(branch);
     }
 
-    public async Task<BranchResponseDto> GetByIdAsync(int id, int currentUserId, IEnumerable<string> currentUserRoles)
+    public async Task<BranchResponseDto> GetByIdAsync(
+        int id,
+        int currentUserId,
+        IEnumerable<string> currentUserRoles
+    )
     {
-        var branch = await _branchRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Branch {id} not found.");
+        var branch =
+            await _branchRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Branch {id} not found.");
 
         if (!IsGeneralManager(currentUserRoles) && branch.OperationsDirectorId != currentUserId)
         {
@@ -176,58 +220,76 @@ public class BranchService : IBranchService
         return MapToDto(branch);
     }
 
-    public async Task<PagedResult<BranchResponseDto>> GetAllAsync(int pageNumber, int pageSize, int currentUserId, IEnumerable<string> currentUserRoles)
+    public async Task<PagedResult<BranchResponseDto>> GetAllAsync(
+        int pageNumber,
+        int pageSize,
+        int currentUserId,
+        IEnumerable<string> currentUserRoles
+    )
     {
-        var operationsDirectorFilter = IsGeneralManager(currentUserRoles) ? (int?)null : currentUserId;
+        var operationsDirectorFilter = IsGeneralManager(currentUserRoles)
+            ? (int?)null
+            : currentUserId;
 
-        var (items, totalCount) = await _branchRepository.GetPagedAsync(pageNumber, pageSize, operationsDirectorFilter);
+        var (items, totalCount) = await _branchRepository.GetPagedAsync(
+            pageNumber,
+            pageSize,
+            operationsDirectorFilter
+        );
 
         return new PagedResult<BranchResponseDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
     private static bool IsGeneralManager(IEnumerable<string> roles) =>
         roles.Contains(GeneralManagerRole);
 
-    private async Task EnsureUserHasRoleAsync(int userId, string expectedRole, string fieldDescription)
+    private async Task EnsureUserHasRoleAsync(
+        int userId,
+        string expectedRole,
+        string fieldDescription
+    )
     {
         var user = await _userRepository.GetByIdAsync(userId);
 
         if (user is null || !user.UserRoles.Any(ur => ur.Role.Name == expectedRole))
         {
-            throw new ValidationAppException($"El usuario asignado como {fieldDescription} no tiene el rol {expectedRole}.");
+            throw new ValidationAppException(
+                $"El usuario asignado como {fieldDescription} no tiene el rol {expectedRole}."
+            );
         }
     }
 
-    private static BranchResponseDto MapToDto(Branch branch) => new()
-    {
-        Id = branch.Id,
-        Name = branch.Name,
-        PhoneNumber = branch.PhoneNumber,
-        Email = branch.Email,
-        City = branch.City,
-        Province = branch.Province,
-        Status = branch.Status,
-        BranchType = branch.BranchType,
-        OperationsDirectorId = branch.OperationsDirectorId,
-        BranchAdminId = branch.BranchAdminId,
-        BusinessManagerId = branch.BusinessManagerId,
-        Indicator = branch.Indicator is null
-            ? null
-            : new BranchIndicatorDto
-            {
-                Profit = branch.Indicator.Profit,
-                Losses = branch.Indicator.Losses,
-                DirectExpenses = branch.Indicator.DirectExpenses,
-                IndirectExpenses = branch.Indicator.IndirectExpenses,
-                TotalWorkers = branch.Indicator.TotalWorkers,
-                TotalMaterials = branch.Indicator.TotalMaterials,
-                LastUpdatedAt = branch.Indicator.LastUpdatedAt
-            }
-    };
+    private static BranchResponseDto MapToDto(Branch branch) =>
+        new()
+        {
+            Id = branch.Id,
+            Name = branch.Name,
+            PhoneNumber = branch.PhoneNumber,
+            Email = branch.Email,
+            City = branch.City,
+            Province = branch.Province,
+            Status = branch.Status,
+            BranchType = branch.BranchType,
+            OperationsDirectorId = branch.OperationsDirectorId,
+            BranchAdminId = branch.BranchAdminId,
+            BusinessManagerId = branch.BusinessManagerId,
+            Indicator = branch.Indicator is null
+                ? null
+                : new BranchIndicatorDto
+                {
+                    Profit = branch.Indicator.Profit,
+                    Losses = branch.Indicator.Losses,
+                    DirectExpenses = branch.Indicator.DirectExpenses,
+                    IndirectExpenses = branch.Indicator.IndirectExpenses,
+                    TotalWorkers = branch.Indicator.TotalWorkers,
+                    TotalMaterials = branch.Indicator.TotalMaterials,
+                    LastUpdatedAt = branch.Indicator.LastUpdatedAt,
+                },
+        };
 }

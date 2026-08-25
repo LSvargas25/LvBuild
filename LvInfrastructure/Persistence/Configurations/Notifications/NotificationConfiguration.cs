@@ -15,7 +15,8 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(n => n.Message).IsRequired().HasMaxLength(500);
         builder.Property(n => n.IsRead).IsRequired();
 
-        builder.HasOne(n => n.User)
+        builder
+            .HasOne(n => n.User)
             .WithMany()
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Restrict);

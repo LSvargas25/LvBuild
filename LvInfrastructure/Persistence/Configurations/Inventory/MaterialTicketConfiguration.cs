@@ -22,36 +22,38 @@ public class MaterialTicketConfiguration : IEntityTypeConfiguration<MaterialTick
         builder.Property(t => t.Subtotal).HasColumnType("decimal(18,2)");
         builder.Property(t => t.Total).HasColumnType("decimal(18,2)");
 
-        builder.Property(t => t.Status)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
+        builder.Property(t => t.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        builder.HasOne(t => t.Project)
+        builder
+            .HasOne(t => t.Project)
             .WithMany()
             .HasForeignKey(t => t.ProjectId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(t => t.ProjectId);
 
-        builder.HasOne(t => t.Supplier)
+        builder
+            .HasOne(t => t.Supplier)
             .WithMany()
             .HasForeignKey(t => t.SupplierId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(t => t.SupplierId);
 
-        builder.HasOne(t => t.Material)
+        builder
+            .HasOne(t => t.Material)
             .WithMany()
             .HasForeignKey(t => t.MaterialId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(t => t.MaterialId);
 
-        builder.HasOne(t => t.CreatedByUser)
+        builder
+            .HasOne(t => t.CreatedByUser)
             .WithMany()
             .HasForeignKey(t => t.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(t => t.CreatedByUserId);
 
-        builder.HasOne(t => t.Chapter)
+        builder
+            .HasOne(t => t.Chapter)
             .WithMany()
             .HasForeignKey(t => t.ChapterId)
             .OnDelete(DeleteBehavior.Restrict);

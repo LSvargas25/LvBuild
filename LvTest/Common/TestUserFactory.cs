@@ -18,7 +18,8 @@ public static class TestUserFactory
         string password = "Password#123",
         int? roleId = null,
         UserStatus status = UserStatus.Active,
-        int failedLoginAttempts = 0)
+        int failedLoginAttempts = 0
+    )
     {
         var user = new User
         {
@@ -27,7 +28,7 @@ public static class TestUserFactory
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
             Status = status,
             FailedLoginAttempts = failedLoginAttempts,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         if (roleId.HasValue)

@@ -17,12 +17,15 @@ public class SupplierRepository : ISupplierRepository
     public Task<Supplier?> GetByIdAsync(int id) =>
         _context.Suppliers.FirstOrDefaultAsync(s => s.Id == id);
 
-    public async Task<(List<Supplier> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(List<Supplier> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize
+    )
     {
         var totalCount = await _context.Suppliers.CountAsync();
 
-        var items = await _context.Suppliers
-            .OrderBy(s => s.Id)
+        var items = await _context
+            .Suppliers.OrderBy(s => s.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

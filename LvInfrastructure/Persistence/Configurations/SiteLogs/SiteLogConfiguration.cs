@@ -18,23 +18,23 @@ public class SiteLogConfiguration : IEntityTypeConfiguration<SiteLog>
         builder.Property(s => s.TotalMaterials).HasColumnType("decimal(18,2)");
         builder.Property(s => s.ProgressPercentage).HasColumnType("decimal(5,2)");
 
-        builder.Property(s => s.Status)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
+        builder.Property(s => s.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        builder.HasOne(s => s.Project)
+        builder
+            .HasOne(s => s.Project)
             .WithMany()
             .HasForeignKey(s => s.ProjectId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(s => s.CreatedByUser)
+        builder
+            .HasOne(s => s.CreatedByUser)
             .WithMany()
             .HasForeignKey(s => s.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(s => s.CreatedByUserId);
 
-        builder.HasOne(s => s.ApprovedByUser)
+        builder
+            .HasOne(s => s.ApprovedByUser)
             .WithMany()
             .HasForeignKey(s => s.ApprovedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
@@ -42,7 +42,8 @@ public class SiteLogConfiguration : IEntityTypeConfiguration<SiteLog>
 
         builder.HasIndex(s => new { s.ProjectId, s.WeekStart }).IsUnique();
 
-        builder.HasOne(s => s.Chapter)
+        builder
+            .HasOne(s => s.Chapter)
             .WithMany()
             .HasForeignKey(s => s.ChapterId)
             .OnDelete(DeleteBehavior.Restrict);

@@ -19,5 +19,6 @@ public class PayrollDetail : BaseEntity
     public decimal? AdvanceAmountApplied { get; set; }
     public decimal FinalAmountToPay { get; set; }
 
-    public ICollection<PayrollDetailPayment> Payments { get; set; } = new List<PayrollDetailPayment>();
+    public ICollection<PayrollDetailPayment> Payments { get; set; } =
+        new List<PayrollDetailPayment>();
 }

@@ -14,14 +14,16 @@ public class SupplierServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateSupplierService(context);
 
-        var result = await service.CreateAsync(new CreateSupplierDto
-        {
-            Name = "Concrete Supplies Inc",
-            City = "San Jose",
-            PhoneNumber = "8888-1111",
-            PersonalId = "3-101-123456",
-            Email = "supplies@example.com"
-        });
+        var result = await service.CreateAsync(
+            new CreateSupplierDto
+            {
+                Name = "Concrete Supplies Inc",
+                City = "San Jose",
+                PhoneNumber = "8888-1111",
+                PersonalId = "3-101-123456",
+                Email = "supplies@example.com",
+            }
+        );
 
         result.Id.Should().BeGreaterThan(0);
         result.Status.Should().Be(ActiveStatus.Active);
@@ -36,11 +38,9 @@ public class SupplierServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateSupplierService(context);
 
-        var created = await service.CreateAsync(new CreateSupplierDto
-        {
-            Name = "Steel Works",
-            City = "Alajuela"
-        });
+        var created = await service.CreateAsync(
+            new CreateSupplierDto { Name = "Steel Works", City = "Alajuela" }
+        );
 
         var result = await service.GetByIdAsync(created.Id);
 
@@ -64,18 +64,19 @@ public class SupplierServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateSupplierService(context);
 
-        var created = await service.CreateAsync(new CreateSupplierDto
-        {
-            Name = "Wood Supplies",
-            City = "Heredia"
-        });
+        var created = await service.CreateAsync(
+            new CreateSupplierDto { Name = "Wood Supplies", City = "Heredia" }
+        );
 
-        var updated = await service.UpdateAsync(created.Id, new UpdateSupplierDto
-        {
-            Name = "Wood Supplies Updated",
-            Status = ActiveStatus.Inactive,
-            City = "Cartago"
-        });
+        var updated = await service.UpdateAsync(
+            created.Id,
+            new UpdateSupplierDto
+            {
+                Name = "Wood Supplies Updated",
+                Status = ActiveStatus.Inactive,
+                City = "Cartago",
+            }
+        );
 
         updated.Name.Should().Be("Wood Supplies Updated");
         updated.Status.Should().Be(ActiveStatus.Inactive);
@@ -88,11 +89,9 @@ public class SupplierServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateSupplierService(context);
 
-        var created = await service.CreateAsync(new CreateSupplierDto
-        {
-            Name = "Glass Supplies",
-            City = "Limon"
-        });
+        var created = await service.CreateAsync(
+            new CreateSupplierDto { Name = "Glass Supplies", City = "Limon" }
+        );
 
         await service.DeleteAsync(created.Id);
 
@@ -109,11 +108,9 @@ public class SupplierServiceTests
 
         for (var i = 1; i <= 5; i++)
         {
-            await service.CreateAsync(new CreateSupplierDto
-            {
-                Name = $"Supplier {i}",
-                City = "San Jose"
-            });
+            await service.CreateAsync(
+                new CreateSupplierDto { Name = $"Supplier {i}", City = "San Jose" }
+            );
         }
 
         var firstPage = await service.GetAllAsync(pageNumber: 1, pageSize: 2);

@@ -7,7 +7,6 @@ public class BudgetActivityDtoValidator : AbstractValidator<BudgetActivityDto>
 {
     public BudgetActivityDtoValidator()
     {
-        RuleFor(x => x.Description)
-            .NotEmpty();
+        RuleFor(x => x.Description).NotEmpty();
     }
 }

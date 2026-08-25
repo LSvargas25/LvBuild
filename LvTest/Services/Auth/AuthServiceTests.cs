@@ -20,10 +20,17 @@ public class AuthServiceTests
     public async Task LoginAsync_WithCorrectCredentials_ReturnsTokensAndUpdatesUser()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "login-ok@example.com", Password, failedLoginAttempts: 3);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "login-ok@example.com",
+            Password,
+            failedLoginAttempts: 3
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var result = await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = Password });
+        var result = await authService.LoginAsync(
+            new LoginRequestDto { Email = user.Email, Password = Password }
+        );
 
         result.AccessToken.Should().NotBeNullOrWhiteSpace();
         result.RefreshToken.Should().NotBeNullOrWhiteSpace();
@@ -40,7 +47,10 @@ public class AuthServiceTests
         var user = await TestUserFactory.CreateAsync(context, "login-badpwd@example.com", Password);
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var act = async () => await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = "WrongPassword#1" });
+        var act = async () =>
+            await authService.LoginAsync(
+                new LoginRequestDto { Email = user.Email, Password = "WrongPassword#1" }
+            );
 
         await act.Should().ThrowAsync<ForbiddenException>();
 
@@ -52,12 +62,19 @@ public class AuthServiceTests
     public async Task LoginAsync_WithWrongPassword5Times_BlocksUser()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "login-blocked@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "login-blocked@example.com",
+            Password
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
         for (var i = 0; i < 5; i++)
         {
-            var act = async () => await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = "WrongPassword#1" });
+            var act = async () =>
+                await authService.LoginAsync(
+                    new LoginRequestDto { Email = user.Email, Password = "WrongPassword#1" }
+                );
             await act.Should().ThrowAsync<ForbiddenException>();
         }
 
@@ -70,10 +87,18 @@ public class AuthServiceTests
     public async Task LoginAsync_UserAlreadyBlocked_ThrowsEvenWithCorrectPassword()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "login-alreadyblocked@example.com", Password, status: UserStatus.Blocked);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "login-alreadyblocked@example.com",
+            Password,
+            status: UserStatus.Blocked
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var act = async () => await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = Password });
+        var act = async () =>
+            await authService.LoginAsync(
+                new LoginRequestDto { Email = user.Email, Password = Password }
+            );
 
         await act.Should().ThrowAsync<ForbiddenException>();
     }
@@ -85,14 +110,20 @@ public class AuthServiceTests
         var user = await TestUserFactory.CreateAsync(context, "refresh-ok@example.com", Password);
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var loginResult = await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = Password });
+        var loginResult = await authService.LoginAsync(
+            new LoginRequestDto { Email = user.Email, Password = Password }
+        );
 
-        var refreshResult = await authService.RefreshTokenAsync(new RefreshTokenRequestDto { RefreshToken = loginResult.RefreshToken });
+        var refreshResult = await authService.RefreshTokenAsync(
+            new RefreshTokenRequestDto { RefreshToken = loginResult.RefreshToken }
+        );
 
         refreshResult.RefreshToken.Should().NotBe(loginResult.RefreshToken);
         refreshResult.AccessToken.Should().NotBeNullOrWhiteSpace();
 
-        var oldToken = await context.RefreshTokens.FirstAsync(rt => rt.Token == loginResult.RefreshToken);
+        var oldToken = await context.RefreshTokens.FirstAsync(rt =>
+            rt.Token == loginResult.RefreshToken
+        );
         oldToken.Revoked.Should().BeTrue();
     }
 
@@ -100,7 +131,11 @@ public class AuthServiceTests
     public async Task RefreshTokenAsync_WithRevokedToken_Throws()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "refresh-revoked@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "refresh-revoked@example.com",
+            Password
+        );
 
         var refreshToken = new RefreshToken
         {
@@ -108,14 +143,17 @@ public class AuthServiceTests
             Token = Guid.NewGuid().ToString(),
             ExpiresAt = DateTime.UtcNow.AddHours(10),
             Revoked = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.RefreshTokens.Add(refreshToken);
         await context.SaveChangesAsync();
 
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var act = async () => await authService.RefreshTokenAsync(new RefreshTokenRequestDto { RefreshToken = refreshToken.Token });
+        var act = async () =>
+            await authService.RefreshTokenAsync(
+                new RefreshTokenRequestDto { RefreshToken = refreshToken.Token }
+            );
 
         await act.Should().ThrowAsync<ForbiddenException>();
     }
@@ -124,7 +162,11 @@ public class AuthServiceTests
     public async Task RefreshTokenAsync_WithExpiredToken_Throws()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "refresh-expired@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "refresh-expired@example.com",
+            Password
+        );
 
         var refreshToken = new RefreshToken
         {
@@ -132,14 +174,17 @@ public class AuthServiceTests
             Token = Guid.NewGuid().ToString(),
             ExpiresAt = DateTime.UtcNow.AddHours(-1),
             Revoked = false,
-            CreatedAt = DateTime.UtcNow.AddHours(-11)
+            CreatedAt = DateTime.UtcNow.AddHours(-11),
         };
         context.RefreshTokens.Add(refreshToken);
         await context.SaveChangesAsync();
 
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var act = async () => await authService.RefreshTokenAsync(new RefreshTokenRequestDto { RefreshToken = refreshToken.Token });
+        var act = async () =>
+            await authService.RefreshTokenAsync(
+                new RefreshTokenRequestDto { RefreshToken = refreshToken.Token }
+            );
 
         await act.Should().ThrowAsync<ForbiddenException>();
     }
@@ -151,22 +196,30 @@ public class AuthServiceTests
         var user = await TestUserFactory.CreateAsync(context, "forgot-reset@example.com", Password);
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var loginResult = await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = Password });
+        var loginResult = await authService.LoginAsync(
+            new LoginRequestDto { Email = user.Email, Password = Password }
+        );
 
         await authService.ForgotPasswordAsync(new ForgotPasswordRequestDto { Email = user.Email });
 
         var resetToken = await context.PasswordResetTokens.FirstAsync(t => t.UserId == user.Id);
 
         const string newPassword = "NewPassword#456";
-        await authService.ResetPasswordAsync(new ResetPasswordRequestDto { Token = resetToken.Token, NewPassword = newPassword });
+        await authService.ResetPasswordAsync(
+            new ResetPasswordRequestDto { Token = resetToken.Token, NewPassword = newPassword }
+        );
 
         var updatedResetToken = await context.PasswordResetTokens.FindAsync(resetToken.Id);
         updatedResetToken!.Used.Should().BeTrue();
 
-        var previousRefreshToken = await context.RefreshTokens.FirstAsync(rt => rt.Token == loginResult.RefreshToken);
+        var previousRefreshToken = await context.RefreshTokens.FirstAsync(rt =>
+            rt.Token == loginResult.RefreshToken
+        );
         previousRefreshToken.Revoked.Should().BeTrue();
 
-        var newLogin = await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = newPassword });
+        var newLogin = await authService.LoginAsync(
+            new LoginRequestDto { Email = user.Email, Password = newPassword }
+        );
         newLogin.AccessToken.Should().NotBeNullOrWhiteSpace();
     }
 
@@ -177,9 +230,12 @@ public class AuthServiceTests
         var user = await TestUserFactory.CreateAsync(context, "forgot-dev@example.com", Password);
         var authService = ServiceFactory.CreateAuthService(
             context,
-            hostEnvironment: new FakeHostEnvironment { EnvironmentName = Environments.Development });
+            hostEnvironment: new FakeHostEnvironment { EnvironmentName = Environments.Development }
+        );
 
-        var response = await authService.ForgotPasswordAsync(new ForgotPasswordRequestDto { Email = user.Email });
+        var response = await authService.ForgotPasswordAsync(
+            new ForgotPasswordRequestDto { Email = user.Email }
+        );
 
         var resetToken = await context.PasswordResetTokens.FirstAsync(t => t.UserId == user.Id);
         response.ResetToken.Should().Be(resetToken.Token);
@@ -192,9 +248,12 @@ public class AuthServiceTests
         var user = await TestUserFactory.CreateAsync(context, "forgot-prod@example.com", Password);
         var authService = ServiceFactory.CreateAuthService(
             context,
-            hostEnvironment: new FakeHostEnvironment { EnvironmentName = Environments.Production });
+            hostEnvironment: new FakeHostEnvironment { EnvironmentName = Environments.Production }
+        );
 
-        var response = await authService.ForgotPasswordAsync(new ForgotPasswordRequestDto { Email = user.Email });
+        var response = await authService.ForgotPasswordAsync(
+            new ForgotPasswordRequestDto { Email = user.Email }
+        );
 
         response.ResetToken.Should().BeNull();
 
@@ -206,19 +265,30 @@ public class AuthServiceTests
     public async Task ForgotPasswordAsync_ReturnsGenericResponse_RegardlessOfWhetherEmailExists()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "forgot-exists@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "forgot-exists@example.com",
+            Password
+        );
         var authService = ServiceFactory.CreateAuthService(
             context,
-            hostEnvironment: new FakeHostEnvironment { EnvironmentName = Environments.Production });
+            hostEnvironment: new FakeHostEnvironment { EnvironmentName = Environments.Production }
+        );
 
-        var responseForExistingEmail = await authService.ForgotPasswordAsync(new ForgotPasswordRequestDto { Email = user.Email });
-        var responseForUnknownEmail = await authService.ForgotPasswordAsync(new ForgotPasswordRequestDto { Email = "does-not-exist@example.com" });
+        var responseForExistingEmail = await authService.ForgotPasswordAsync(
+            new ForgotPasswordRequestDto { Email = user.Email }
+        );
+        var responseForUnknownEmail = await authService.ForgotPasswordAsync(
+            new ForgotPasswordRequestDto { Email = "does-not-exist@example.com" }
+        );
 
         responseForExistingEmail.Message.Should().Be(responseForUnknownEmail.Message);
         responseForExistingEmail.ResetToken.Should().BeNull();
         responseForUnknownEmail.ResetToken.Should().BeNull();
 
-        var tokenCountForUnknownEmail = await context.PasswordResetTokens.CountAsync(t => t.UserId != user.Id);
+        var tokenCountForUnknownEmail = await context.PasswordResetTokens.CountAsync(t =>
+            t.UserId != user.Id
+        );
         tokenCountForUnknownEmail.Should().Be(0);
     }
 
@@ -234,14 +304,21 @@ public class AuthServiceTests
             Token = Guid.NewGuid().ToString(),
             ExpiresAt = DateTime.UtcNow.AddMinutes(30),
             Used = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.PasswordResetTokens.Add(resetToken);
         await context.SaveChangesAsync();
 
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var act = async () => await authService.ResetPasswordAsync(new ResetPasswordRequestDto { Token = resetToken.Token, NewPassword = "AnotherPass#1" });
+        var act = async () =>
+            await authService.ResetPasswordAsync(
+                new ResetPasswordRequestDto
+                {
+                    Token = resetToken.Token,
+                    NewPassword = "AnotherPass#1",
+                }
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -250,7 +327,11 @@ public class AuthServiceTests
     public async Task ResetPasswordAsync_WithExpiredToken_Throws()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "reset-expired@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "reset-expired@example.com",
+            Password
+        );
 
         var resetToken = new PasswordResetToken
         {
@@ -258,14 +339,21 @@ public class AuthServiceTests
             Token = Guid.NewGuid().ToString(),
             ExpiresAt = DateTime.UtcNow.AddMinutes(-1),
             Used = false,
-            CreatedAt = DateTime.UtcNow.AddMinutes(-31)
+            CreatedAt = DateTime.UtcNow.AddMinutes(-31),
         };
         context.PasswordResetTokens.Add(resetToken);
         await context.SaveChangesAsync();
 
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var act = async () => await authService.ResetPasswordAsync(new ResetPasswordRequestDto { Token = resetToken.Token, NewPassword = "AnotherPass#1" });
+        var act = async () =>
+            await authService.ResetPasswordAsync(
+                new ResetPasswordRequestDto
+                {
+                    Token = resetToken.Token,
+                    NewPassword = "AnotherPass#1",
+                }
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -274,7 +362,12 @@ public class AuthServiceTests
     public async Task GetMyProfileAsync_ReturnsExpectedData()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "me-get@example.com", Password, roleId: TestUserFactory.OperationsDirectorRoleId);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-get@example.com",
+            Password,
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
         var profile = await authService.GetMyProfileAsync(user.Id);
@@ -293,7 +386,10 @@ public class AuthServiceTests
         var user = await TestUserFactory.CreateAsync(context, "me-update@example.com", Password);
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var result = await authService.UpdateMyProfileAsync(user.Id, new UpdateProfileDto { Name = "Nuevo Nombre" });
+        var result = await authService.UpdateMyProfileAsync(
+            user.Id,
+            new UpdateProfileDto { Name = "Nuevo Nombre" }
+        );
 
         result.Name.Should().Be("Nuevo Nombre");
 
@@ -308,25 +404,35 @@ public class AuthServiceTests
     public async Task ChangeMyPasswordAsync_WithCorrectCurrentPassword_UpdatesHashAndRevokesAllRefreshTokens()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "me-changepwd-ok@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-changepwd-ok@example.com",
+            Password
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var loginResult = await authService.LoginAsync(new LoginRequestDto { Email = user.Email, Password = Password });
+        var loginResult = await authService.LoginAsync(
+            new LoginRequestDto { Email = user.Email, Password = Password }
+        );
 
         const string newPassword = "NewPassword#789";
-        await authService.ChangeMyPasswordAsync(user.Id, new ChangePasswordDto
-        {
-            CurrentPassword = Password,
-            NewPassword = newPassword
-        });
+        await authService.ChangeMyPasswordAsync(
+            user.Id,
+            new ChangePasswordDto { CurrentPassword = Password, NewPassword = newPassword }
+        );
 
         var updatedUser = await context.Users.FindAsync(user.Id);
         BCrypt.Net.BCrypt.Verify(newPassword, updatedUser!.PasswordHash).Should().BeTrue();
 
-        var oldRefreshToken = await context.RefreshTokens.FirstAsync(rt => rt.Token == loginResult.RefreshToken);
+        var oldRefreshToken = await context.RefreshTokens.FirstAsync(rt =>
+            rt.Token == loginResult.RefreshToken
+        );
         oldRefreshToken.Revoked.Should().BeTrue();
 
-        var act = async () => await authService.RefreshTokenAsync(new RefreshTokenRequestDto { RefreshToken = loginResult.RefreshToken });
+        var act = async () =>
+            await authService.RefreshTokenAsync(
+                new RefreshTokenRequestDto { RefreshToken = loginResult.RefreshToken }
+            );
         await act.Should().ThrowAsync<ForbiddenException>();
     }
 
@@ -334,14 +440,22 @@ public class AuthServiceTests
     public async Task ChangeMyPasswordAsync_WithWrongCurrentPassword_Throws()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "me-changepwd-bad@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-changepwd-bad@example.com",
+            Password
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
-        var act = async () => await authService.ChangeMyPasswordAsync(user.Id, new ChangePasswordDto
-        {
-            CurrentPassword = "WrongPassword#1",
-            NewPassword = "NewPassword#789"
-        });
+        var act = async () =>
+            await authService.ChangeMyPasswordAsync(
+                user.Id,
+                new ChangePasswordDto
+                {
+                    CurrentPassword = "WrongPassword#1",
+                    NewPassword = "NewPassword#789",
+                }
+            );
 
         await act.Should().ThrowAsync<ValidationAppException>();
 
@@ -353,12 +467,17 @@ public class AuthServiceTests
     public async Task UpdateMyProfilePhotoAsync_WithInvalidContentType_Throws()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "me-photo-badtype@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-photo-badtype@example.com",
+            Password
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("not an image"));
 
-        var act = async () => await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "file.txt", "text/plain");
+        var act = async () =>
+            await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "file.txt", "text/plain");
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -367,12 +486,17 @@ public class AuthServiceTests
     public async Task UpdateMyProfilePhotoAsync_WithFileOverSizeLimit_Throws()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "me-photo-toobig@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-photo-toobig@example.com",
+            Password
+        );
         var authService = ServiceFactory.CreateAuthService(context);
 
         using var stream = new MemoryStream(new byte[(5 * 1024 * 1024) + 1]);
 
-        var act = async () => await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "photo.jpg", "image/jpeg");
+        var act = async () =>
+            await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "photo.jpg", "image/jpeg");
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -381,26 +505,48 @@ public class AuthServiceTests
     public async Task UpdateMyProfilePhotoAsync_ReplacingExistingPhoto_DeletesPreviousFile()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "me-photo-replace@example.com", Password);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-photo-replace@example.com",
+            Password
+        );
         user.ProfilePhotoPath = "/uploads/profile-photos/old-photo.jpg";
         await context.SaveChangesAsync();
 
         var fileStorageServiceMock = new Mock<IFileStorageService>();
         fileStorageServiceMock
-            .Setup(s => s.SaveFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), "profile-photos"))
+            .Setup(s =>
+                s.SaveFileAsync(
+                    It.IsAny<Stream>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>(),
+                    "profile-photos"
+                )
+            )
             .ReturnsAsync("/uploads/profile-photos/new-photo.jpg");
 
-        var authService = ServiceFactory.CreateAuthService(context, fileStorageService: fileStorageServiceMock.Object);
+        var authService = ServiceFactory.CreateAuthService(
+            context,
+            fileStorageService: fileStorageServiceMock.Object
+        );
 
         using var stream = new MemoryStream(new byte[100]);
 
-        var result = await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "new-photo.jpg", "image/jpeg");
+        var result = await authService.UpdateMyProfilePhotoAsync(
+            user.Id,
+            stream,
+            "new-photo.jpg",
+            "image/jpeg"
+        );
 
         result.ProfilePhotoPath.Should().Be("/uploads/profile-photos/new-photo.jpg");
 
         var updatedUser = await context.Users.FindAsync(user.Id);
         updatedUser!.ProfilePhotoPath.Should().Be("/uploads/profile-photos/new-photo.jpg");
 
-        fileStorageServiceMock.Verify(s => s.DeleteFile("/uploads/profile-photos/old-photo.jpg"), Times.Once);
+        fileStorageServiceMock.Verify(
+            s => s.DeleteFile("/uploads/profile-photos/old-photo.jpg"),
+            Times.Once
+        );
     }
 }

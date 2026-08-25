@@ -45,7 +45,8 @@ public class AuthService : IAuthService
         IValidator<ForgotPasswordRequestDto> forgotPasswordValidator,
         IValidator<ResetPasswordRequestDto> resetPasswordValidator,
         IValidator<UpdateProfileDto> updateProfileValidator,
-        IValidator<ChangePasswordDto> changePasswordValidator)
+        IValidator<ChangePasswordDto> changePasswordValidator
+    )
     {
         _userRepository = userRepository;
         _refreshTokenRepository = refreshTokenRepository;
@@ -63,7 +64,10 @@ public class AuthService : IAuthService
         _changePasswordValidator = changePasswordValidator;
     }
 
-    public async Task<LoginResponseDto> LoginAsync(LoginRequestDto request, string? ipAddress = null)
+    public async Task<LoginResponseDto> LoginAsync(
+        LoginRequestDto request,
+        string? ipAddress = null
+    )
     {
         await _loginValidator.ValidateAndThrowAppExceptionAsync(request);
 
@@ -92,12 +96,19 @@ public class AuthService : IAuthService
         return await IssueTokensAsync(user, ipAddress);
     }
 
-    public async Task<LoginResponseDto> RefreshTokenAsync(RefreshTokenRequestDto request, string? ipAddress = null)
+    public async Task<LoginResponseDto> RefreshTokenAsync(
+        RefreshTokenRequestDto request,
+        string? ipAddress = null
+    )
     {
         await _refreshTokenValidator.ValidateAndThrowAppExceptionAsync(request);
 
         var existingToken = await _refreshTokenRepository.GetByTokenAsync(request.RefreshToken);
-        if (existingToken is null || existingToken.Revoked || existingToken.ExpiresAt <= DateTime.UtcNow)
+        if (
+            existingToken is null
+            || existingToken.Revoked
+            || existingToken.ExpiresAt <= DateTime.UtcNow
+        )
         {
             throw new ForbiddenException("Invalid or expired refresh token.");
         }
@@ -106,7 +117,9 @@ public class AuthService : IAuthService
         existingToken.UpdatedAt = DateTime.UtcNow;
         await _refreshTokenRepository.UpdateAsync(existingToken);
 
-        var user = existingToken.User ?? await _userRepository.GetByIdAsync(existingToken.UserId)
+        var user =
+            existingToken.User
+            ?? await _userRepository.GetByIdAsync(existingToken.UserId)
             ?? throw new NotFoundException("User not found.");
 
         return await IssueTokensAsync(user, ipAddress);
@@ -125,7 +138,9 @@ public class AuthService : IAuthService
         await _refreshTokenRepository.UpdateAsync(token);
     }
 
-    public async Task<ForgotPasswordResponseDto> ForgotPasswordAsync(ForgotPasswordRequestDto request)
+    public async Task<ForgotPasswordResponseDto> ForgotPasswordAsync(
+        ForgotPasswordRequestDto request
+    )
     {
         await _forgotPasswordValidator.ValidateAndThrowAppExceptionAsync(request);
 
@@ -137,7 +152,8 @@ public class AuthService : IAuthService
             return response;
         }
 
-        var expirationMinutes = _configuration.GetValue<int?>("Security:PasswordResetTokenExpirationMinutes") ?? 30;
+        var expirationMinutes =
+            _configuration.GetValue<int?>("Security:PasswordResetTokenExpirationMinutes") ?? 30;
         var token = _tokenService.GenerateRefreshToken();
 
         var resetToken = new PasswordResetToken
@@ -145,13 +161,17 @@ public class AuthService : IAuthService
             UserId = user.Id,
             Token = token,
             ExpiresAt = DateTime.UtcNow.AddMinutes(expirationMinutes),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _passwordResetTokenRepository.AddAsync(resetToken);
 
         // Never log the raw token: anyone with log access could hijack the reset flow without touching email.
-        _logger.LogInformation("Password reset requested for user {UserId} ({Email}).", user.Id, user.Email);
+        _logger.LogInformation(
+            "Password reset requested for user {UserId} ({Email}).",
+            user.Id,
+            user.Email
+        );
 
         // Temporary until the real email module exists (Fase 14): expose the token in the response,
         // but only in Development, where there is no mail server to deliver it otherwise.
@@ -173,7 +193,9 @@ public class AuthService : IAuthService
             throw new ValidationAppException("Invalid or expired password reset token.");
         }
 
-        var user = resetToken.User ?? await _userRepository.GetByIdAsync(resetToken.UserId)
+        var user =
+            resetToken.User
+            ?? await _userRepository.GetByIdAsync(resetToken.UserId)
             ?? throw new NotFoundException("User not found.");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
@@ -189,7 +211,9 @@ public class AuthService : IAuthService
 
     public async Task<UserProfileDto> GetMyProfileAsync(int userId)
     {
-        var user = await _userRepository.GetByIdAsync(userId) ?? throw new NotFoundException($"User {userId} not found.");
+        var user =
+            await _userRepository.GetByIdAsync(userId)
+            ?? throw new NotFoundException($"User {userId} not found.");
         return MapToProfileDto(user);
     }
 
@@ -197,7 +221,9 @@ public class AuthService : IAuthService
     {
         await _updateProfileValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var user = await _userRepository.GetByIdAsync(userId) ?? throw new NotFoundException($"User {userId} not found.");
+        var user =
+            await _userRepository.GetByIdAsync(userId)
+            ?? throw new NotFoundException($"User {userId} not found.");
 
         user.Name = request.Name;
         user.UpdatedAt = DateTime.UtcNow;
@@ -210,7 +236,9 @@ public class AuthService : IAuthService
     {
         await _changePasswordValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var user = await _userRepository.GetByIdAsync(userId) ?? throw new NotFoundException($"User {userId} not found.");
+        var user =
+            await _userRepository.GetByIdAsync(userId)
+            ?? throw new NotFoundException($"User {userId} not found.");
 
         if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
         {
@@ -224,15 +252,27 @@ public class AuthService : IAuthService
         await _refreshTokenRepository.RevokeAllActiveTokensForUserAsync(user.Id);
     }
 
-    public async Task<UserProfileDto> UpdateMyProfilePhotoAsync(int userId, Stream fileStream, string fileName, string contentType)
+    public async Task<UserProfileDto> UpdateMyProfilePhotoAsync(
+        int userId,
+        Stream fileStream,
+        string fileName,
+        string contentType
+    )
     {
-        var user = await _userRepository.GetByIdAsync(userId) ?? throw new NotFoundException($"User {userId} not found.");
+        var user =
+            await _userRepository.GetByIdAsync(userId)
+            ?? throw new NotFoundException($"User {userId} not found.");
 
         // Save the new photo BEFORE deleting the old one: SaveFileAsync can reject the upload
         // (bad content-type / over 5MB), and we never want a failed upload to cost the user their
         // existing photo. Only delete the old file once the new one is safely on disk and persisted.
         var previousPhotoPath = user.ProfilePhotoPath;
-        var savedPath = await _fileStorageService.SaveFileAsync(fileStream, fileName, contentType, ProfilePhotoSubfolder);
+        var savedPath = await _fileStorageService.SaveFileAsync(
+            fileStream,
+            fileName,
+            contentType,
+            ProfilePhotoSubfolder
+        );
 
         user.ProfilePhotoPath = savedPath;
         user.UpdatedAt = DateTime.UtcNow;
@@ -246,21 +286,23 @@ public class AuthService : IAuthService
         return MapToProfileDto(user);
     }
 
-    private static UserProfileDto MapToProfileDto(User user) => new()
-    {
-        Id = user.Id,
-        Name = user.Name,
-        Email = user.Email,
-        Status = user.Status.ToString(),
-        ProfilePhotoPath = user.ProfilePhotoPath,
-        Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
-        CreatedAt = user.CreatedAt,
-        LastLoginAt = user.LastLoginAt
-    };
+    private static UserProfileDto MapToProfileDto(User user) =>
+        new()
+        {
+            Id = user.Id,
+            Name = user.Name,
+            Email = user.Email,
+            Status = user.Status.ToString(),
+            ProfilePhotoPath = user.ProfilePhotoPath,
+            Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt,
+        };
 
     private async Task RegisterFailedLoginAttemptAsync(User user)
     {
-        var maxFailedAttempts = _configuration.GetValue<int?>("Security:MaxFailedLoginAttempts") ?? 5;
+        var maxFailedAttempts =
+            _configuration.GetValue<int?>("Security:MaxFailedLoginAttempts") ?? 5;
 
         user.FailedLoginAttempts += 1;
 
@@ -286,7 +328,7 @@ public class AuthService : IAuthService
             Token = refreshTokenValue,
             ExpiresAt = _tokenService.GetRefreshTokenExpiresAt(),
             CreatedByIp = ipAddress,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _refreshTokenRepository.AddAsync(refreshToken);
@@ -299,7 +341,7 @@ public class AuthService : IAuthService
             UserId = user.Id,
             Name = user.Name,
             Email = user.Email,
-            Roles = roles
+            Roles = roles,
         };
     }
 }

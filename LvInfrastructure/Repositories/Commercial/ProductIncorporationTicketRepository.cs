@@ -35,7 +35,10 @@ public class ProductIncorporationTicketRepository : IProductIncorporationTicketR
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(List<ProductIncorporationTicket> Items, int TotalCount)> GetPagedByBranchAsync(int branchId, int pageNumber, int pageSize)
+    public async Task<(
+        List<ProductIncorporationTicket> Items,
+        int TotalCount
+    )> GetPagedByBranchAsync(int branchId, int pageNumber, int pageSize)
     {
         var query = _context.ProductIncorporationTickets.Where(t => t.BranchId == branchId);
         var totalCount = await query.CountAsync();

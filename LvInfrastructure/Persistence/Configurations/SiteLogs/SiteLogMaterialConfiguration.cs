@@ -14,13 +14,15 @@ public class SiteLogMaterialConfiguration : IEntityTypeConfiguration<SiteLogMate
 
         builder.Property(m => m.QuantityUsed).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(m => m.SiteLog)
+        builder
+            .HasOne(m => m.SiteLog)
             .WithMany(s => s.Materials)
             .HasForeignKey(m => m.SiteLogId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(m => m.SiteLogId);
 
-        builder.HasOne(m => m.Material)
+        builder
+            .HasOne(m => m.Material)
             .WithMany()
             .HasForeignKey(m => m.MaterialId)
             .OnDelete(DeleteBehavior.Restrict);

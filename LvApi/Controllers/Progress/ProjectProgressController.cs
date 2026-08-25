@@ -22,9 +22,14 @@ public class ProjectProgressController : ControllerBase
     public async Task<ActionResult<PagedResult<ProjectProgressDto>>> GetHistory(
         int projectId,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20
+    )
     {
-        var result = await _projectProgressService.GetHistoryByProjectAsync(projectId, pageNumber, pageSize);
+        var result = await _projectProgressService.GetHistoryByProjectAsync(
+            projectId,
+            pageNumber,
+            pageSize
+        );
         return Ok(result);
     }
 }

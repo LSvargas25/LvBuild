@@ -39,6 +39,7 @@ public class Project : BaseEntity
     public int CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;
 
-    public ICollection<ProjectEndDateHistory> EndDateHistory { get; set; } = new List<ProjectEndDateHistory>();
+    public ICollection<ProjectEndDateHistory> EndDateHistory { get; set; } =
+        new List<ProjectEndDateHistory>();
     public ICollection<ProjectWorker> Workers { get; set; } = new List<ProjectWorker>();
 }

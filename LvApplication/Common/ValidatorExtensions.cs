@@ -5,7 +5,10 @@ namespace LvApplication.Common;
 
 public static class ValidatorExtensions
 {
-    public static async Task ValidateAndThrowAppExceptionAsync<T>(this IValidator<T> validator, T instance)
+    public static async Task ValidateAndThrowAppExceptionAsync<T>(
+        this IValidator<T> validator,
+        T instance
+    )
     {
         var result = await validator.ValidateAsync(instance);
 

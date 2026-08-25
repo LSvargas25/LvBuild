@@ -8,5 +8,9 @@ public interface IProductRepository
     Task<Product?> GetBySkuAsync(string sku);
     Task AddAsync(Product product);
     Task UpdateAsync(Product product);
-    Task<(List<Product> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, bool activeOnly);
+    Task<(List<Product> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        bool activeOnly
+    );
 }

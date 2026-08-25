@@ -14,15 +14,22 @@ public class ProjectInventoryItemRepository : IProjectInventoryItemRepository
         _context = context;
     }
 
-    public Task<ProjectInventoryItem?> GetByProjectAndMaterialAsync(int projectId, int materialId) =>
-        _context.ProjectInventoryItems.FirstOrDefaultAsync(i => i.ProjectId == projectId && i.MaterialId == materialId);
+    public Task<ProjectInventoryItem?> GetByProjectAndMaterialAsync(
+        int projectId,
+        int materialId
+    ) =>
+        _context.ProjectInventoryItems.FirstOrDefaultAsync(i =>
+            i.ProjectId == projectId && i.MaterialId == materialId
+        );
 
     public Task<ProjectInventoryItem?> GetByProjectAndProductAsync(int projectId, int productId) =>
-        _context.ProjectInventoryItems.FirstOrDefaultAsync(i => i.ProjectId == projectId && i.ProductId == productId);
+        _context.ProjectInventoryItems.FirstOrDefaultAsync(i =>
+            i.ProjectId == projectId && i.ProductId == productId
+        );
 
     public Task<List<ProjectInventoryItem>> GetByProjectAsync(int projectId) =>
-        _context.ProjectInventoryItems
-            .Where(i => i.ProjectId == projectId)
+        _context
+            .ProjectInventoryItems.Where(i => i.ProjectId == projectId)
             .OrderBy(i => i.Id)
             .ToListAsync();
 
@@ -39,5 +46,7 @@ public class ProjectInventoryItemRepository : IProjectInventoryItemRepository
     }
 
     public Task<int> CountWithQuantityAsync(int projectId) =>
-        _context.ProjectInventoryItems.CountAsync(i => i.ProjectId == projectId && i.CurrentQuantity > 0);
+        _context.ProjectInventoryItems.CountAsync(i =>
+            i.ProjectId == projectId && i.CurrentQuantity > 0
+        );
 }

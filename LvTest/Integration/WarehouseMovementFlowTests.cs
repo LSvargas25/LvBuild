@@ -25,7 +25,11 @@ public class WarehouseMovementFlowTests
         await using var context = await SqlServerTestDbContextFactory.CreateAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
-        var user = await TestUserFactory.CreateAsync(context, $"gm-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            $"gm-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
 
         var warehouse = new Branch
         {
@@ -35,7 +39,7 @@ public class WarehouseMovementFlowTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Warehouse,
             OperationsDirectorId = user.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         var commerce = new Branch
         {
@@ -45,7 +49,7 @@ public class WarehouseMovementFlowTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Commercial,
             OperationsDirectorId = user.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.AddRange(warehouse, commerce);
         await context.SaveChangesAsync();
@@ -61,40 +65,54 @@ public class WarehouseMovementFlowTests
             CreatedByUserId = user.Id,
             ValidatedByUserId = user.Id,
             ValidatedDate = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Products.Add(product);
         await context.SaveChangesAsync();
 
-        context.BranchInventories.Add(new BranchInventory
-        {
-            BranchId = warehouse.Id,
-            ProductId = product.Id,
-            Quantity = 20m,
-            MinimumStock = 0,
-            CreatedAt = DateTime.UtcNow
-        });
+        context.BranchInventories.Add(
+            new BranchInventory
+            {
+                BranchId = warehouse.Id,
+                ProductId = product.Id,
+                Quantity = 20m,
+                MinimumStock = 0,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
         await context.SaveChangesAsync();
 
         var service = ServiceFactory.CreateInventoryMovementService(context);
 
-        var sent = await service.CreateAsync(new CreateInventoryMovementDto
-        {
-            OriginBranchId = warehouse.Id,
-            DestinationBranchId = commerce.Id,
-            ProductId = product.Id,
-            Quantity = 5m
-        }, user.Id);
+        var sent = await service.CreateAsync(
+            new CreateInventoryMovementDto
+            {
+                OriginBranchId = warehouse.Id,
+                DestinationBranchId = commerce.Id,
+                ProductId = product.Id,
+                Quantity = 5m,
+            },
+            user.Id
+        );
 
         sent.Status.Should().Be(InventoryMovementStatus.Sent);
 
-        var validated = await service.ValidateAsync(sent.Id, true, user.Id, new[] { "GeneralManager" });
+        var validated = await service.ValidateAsync(
+            sent.Id,
+            true,
+            user.Id,
+            new[] { "GeneralManager" }
+        );
 
         validated.Status.Should().Be(InventoryMovementStatus.Accepted);
 
         context.ChangeTracker.Clear();
-        var origin = await context.BranchInventories.AsNoTracking().FirstAsync(i => i.BranchId == warehouse.Id && i.ProductId == product.Id);
-        var destination = await context.BranchInventories.AsNoTracking().FirstAsync(i => i.BranchId == commerce.Id && i.ProductId == product.Id);
+        var origin = await context
+            .BranchInventories.AsNoTracking()
+            .FirstAsync(i => i.BranchId == warehouse.Id && i.ProductId == product.Id);
+        var destination = await context
+            .BranchInventories.AsNoTracking()
+            .FirstAsync(i => i.BranchId == commerce.Id && i.ProductId == product.Id);
 
         origin.Quantity.Should().Be(15m);
         destination.Quantity.Should().Be(5m);
@@ -108,7 +126,11 @@ public class WarehouseMovementFlowTests
         await using var context = await SqlServerTestDbContextFactory.CreateAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
-        var user = await TestUserFactory.CreateAsync(context, $"gm-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            $"gm-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
 
         var warehouse = new Branch
         {
@@ -118,7 +140,7 @@ public class WarehouseMovementFlowTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Warehouse,
             OperationsDirectorId = user.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(warehouse);
         await context.SaveChangesAsync();
@@ -134,7 +156,7 @@ public class WarehouseMovementFlowTests
             CreatedByUserId = user.Id,
             ValidatedByUserId = user.Id,
             ValidatedDate = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Products.Add(product);
         await context.SaveChangesAsync();
@@ -142,18 +164,20 @@ public class WarehouseMovementFlowTests
         // Bypasses the service-layer validation on purpose: writes directly to prove
         // the database-level CK_InventoryMovements_ExactlyOneDestination itself
         // rejects an invalid row, as a second line of defense beyond application code.
-        context.InventoryMovements.Add(new LvDomain.Entities.Warehouse.InventoryMovement
-        {
-            OriginBranchId = warehouse.Id,
-            DestinationBranchId = null,
-            DestinationProjectId = null,
-            ProductId = product.Id,
-            Quantity = 1m,
-            Status = InventoryMovementStatus.Sent,
-            SentByUserId = user.Id,
-            SentDate = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
-        });
+        context.InventoryMovements.Add(
+            new LvDomain.Entities.Warehouse.InventoryMovement
+            {
+                OriginBranchId = warehouse.Id,
+                DestinationBranchId = null,
+                DestinationProjectId = null,
+                ProductId = product.Id,
+                Quantity = 1m,
+                Status = InventoryMovementStatus.Sent,
+                SentByUserId = user.Id,
+                SentDate = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
 
         var act = async () => await context.SaveChangesAsync();
 

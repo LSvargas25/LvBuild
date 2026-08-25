@@ -14,10 +14,11 @@ public class SiteLogRepository : ISiteLogRepository
         _context = context;
     }
 
-    private IQueryable<SiteLog> SiteLogsWithChildren => _context.SiteLogs
-        .Include(s => s.Workers)
-        .Include(s => s.Materials)
-        .Include(s => s.Equipment);
+    private IQueryable<SiteLog> SiteLogsWithChildren =>
+        _context
+            .SiteLogs.Include(s => s.Workers)
+            .Include(s => s.Materials)
+            .Include(s => s.Equipment);
 
     public Task<SiteLog?> GetByIdAsync(int id) =>
         SiteLogsWithChildren.FirstOrDefaultAsync(s => s.Id == id);
@@ -25,7 +26,10 @@ public class SiteLogRepository : ISiteLogRepository
     public Task<bool> ExistsForProjectAndWeekAsync(int projectId, DateTime weekStart) =>
         _context.SiteLogs.AnyAsync(s => s.ProjectId == projectId && s.WeekStart == weekStart);
 
-    public async Task<(List<SiteLog> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(List<SiteLog> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize
+    )
     {
         var totalCount = await _context.SiteLogs.CountAsync();
 
@@ -38,7 +42,11 @@ public class SiteLogRepository : ISiteLogRepository
         return (items, totalCount);
     }
 
-    public async Task<(List<SiteLog> Items, int TotalCount)> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<(List<SiteLog> Items, int TotalCount)> GetPagedByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
         var query = _context.SiteLogs.Where(s => s.ProjectId == projectId);
 

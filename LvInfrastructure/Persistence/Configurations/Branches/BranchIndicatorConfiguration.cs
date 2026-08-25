@@ -17,12 +17,12 @@ public class BranchIndicatorConfiguration : IEntityTypeConfiguration<BranchIndic
         builder.Property(bi => bi.DirectExpenses).HasColumnType("decimal(18,2)");
         builder.Property(bi => bi.IndirectExpenses).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(bi => bi.Branch)
+        builder
+            .HasOne(bi => bi.Branch)
             .WithOne(b => b.Indicator)
             .HasForeignKey<BranchIndicator>(bi => bi.BranchId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasIndex(bi => bi.BranchId)
-            .IsUnique();
+        builder.HasIndex(bi => bi.BranchId).IsUnique();
     }
 }

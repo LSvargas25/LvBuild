@@ -20,7 +20,8 @@ public class BudgetService : IBudgetService
         IValidator<CreateBudgetDto> createValidator,
         IValidator<UpdateBudgetDto> updateValidator,
         IValidator<RequestCorrectionDto> requestCorrectionValidator,
-        IValidator<CancelBudgetDto> cancelValidator)
+        IValidator<CancelBudgetDto> cancelValidator
+    )
     {
         _budgetRepository = budgetRepository;
         _createValidator = createValidator;
@@ -42,20 +43,22 @@ public class BudgetService : IBudgetService
             UtilityPercentage = request.UtilityPercentage,
             IndirectCostsTotal = request.IndirectCostsTotal,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         SyncChapters(budget, request.Chapters);
         RecalculateTotals(budget);
 
-        budget.History.Add(new BudgetHistory
-        {
-            UserId = createdByUserId,
-            PreviousStatus = null,
-            NewStatus = BudgetStatus.Draft,
-            Timestamp = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
-        });
+        budget.History.Add(
+            new BudgetHistory
+            {
+                UserId = createdByUserId,
+                PreviousStatus = null,
+                NewStatus = BudgetStatus.Draft,
+                Timestamp = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
 
         await _budgetRepository.AddAsync(budget);
 
@@ -66,7 +69,9 @@ public class BudgetService : IBudgetService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         EnsureEditable(budget);
 
@@ -87,30 +92,46 @@ public class BudgetService : IBudgetService
 
     public async Task<BudgetResponseDto> SubmitForReviewAsync(int id, int actingUserId)
     {
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         if (budget.Status != BudgetStatus.Draft && budget.Status != BudgetStatus.Correction)
         {
-            throw new ForbiddenException("Solo se puede enviar a revisión un presupuesto en Borrador o Corrección.");
+            throw new ForbiddenException(
+                "Solo se puede enviar a revisión un presupuesto en Borrador o Corrección."
+            );
         }
 
         if (!budget.Chapters.Any())
         {
-            throw new ValidationAppException("El presupuesto debe tener al menos un capítulo para enviarse a revisión.");
+            throw new ValidationAppException(
+                "El presupuesto debe tener al menos un capítulo para enviarse a revisión."
+            );
         }
 
-        await TransitionAsync(budget, BudgetStatus.Review, actingUserId, comment: null, reason: null);
+        await TransitionAsync(
+            budget,
+            BudgetStatus.Review,
+            actingUserId,
+            comment: null,
+            reason: null
+        );
 
         return MapToDto(budget);
     }
 
     public async Task<BudgetResponseDto> ApproveInternalAsync(int id, int actingUserId)
     {
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         if (budget.Status != BudgetStatus.Review)
         {
-            throw new ForbiddenException("Solo se puede aprobar internamente un presupuesto en Revisión.");
+            throw new ForbiddenException(
+                "Solo se puede aprobar internamente un presupuesto en Revisión."
+            );
         }
 
         await TransitionAsync(budget, BudgetStatus.Sent, actingUserId, comment: null, reason: null);
@@ -118,75 +139,131 @@ public class BudgetService : IBudgetService
         return MapToDto(budget);
     }
 
-    public async Task<BudgetResponseDto> RequestCorrectionAsync(int id, RequestCorrectionDto request, int actingUserId)
+    public async Task<BudgetResponseDto> RequestCorrectionAsync(
+        int id,
+        RequestCorrectionDto request,
+        int actingUserId
+    )
     {
         await _requestCorrectionValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         if (budget.Status != BudgetStatus.Review)
         {
-            throw new ForbiddenException("Solo se puede solicitar corrección de un presupuesto en Revisión.");
+            throw new ForbiddenException(
+                "Solo se puede solicitar corrección de un presupuesto en Revisión."
+            );
         }
 
-        await TransitionAsync(budget, BudgetStatus.Correction, actingUserId, comment: request.Comment, reason: null);
+        await TransitionAsync(
+            budget,
+            BudgetStatus.Correction,
+            actingUserId,
+            comment: request.Comment,
+            reason: null
+        );
 
         return MapToDto(budget);
     }
 
-    public async Task<BudgetResponseDto> WithdrawFromCommercialAsync(int id, RequestCorrectionDto request, int actingUserId)
+    public async Task<BudgetResponseDto> WithdrawFromCommercialAsync(
+        int id,
+        RequestCorrectionDto request,
+        int actingUserId
+    )
     {
         await _requestCorrectionValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         if (budget.Status != BudgetStatus.Sent)
         {
-            throw new ForbiddenException("Solo se puede retirar del proceso comercial un presupuesto Enviado.");
+            throw new ForbiddenException(
+                "Solo se puede retirar del proceso comercial un presupuesto Enviado."
+            );
         }
 
-        await TransitionAsync(budget, BudgetStatus.Correction, actingUserId, comment: request.Comment, reason: null);
+        await TransitionAsync(
+            budget,
+            BudgetStatus.Correction,
+            actingUserId,
+            comment: request.Comment,
+            reason: null
+        );
 
         return MapToDto(budget);
     }
 
     public async Task<BudgetResponseDto> MarkClientApprovedAsync(int id, int actingUserId)
     {
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         if (budget.Status != BudgetStatus.Sent)
         {
-            throw new ForbiddenException("Solo se puede marcar como aprobado por el cliente un presupuesto Enviado.");
+            throw new ForbiddenException(
+                "Solo se puede marcar como aprobado por el cliente un presupuesto Enviado."
+            );
         }
 
-        await TransitionAsync(budget, BudgetStatus.ClientApproved, actingUserId, comment: null, reason: null);
+        await TransitionAsync(
+            budget,
+            BudgetStatus.ClientApproved,
+            actingUserId,
+            comment: null,
+            reason: null
+        );
 
         return MapToDto(budget);
     }
 
-    public async Task<BudgetResponseDto> CancelAsync(int id, CancelBudgetDto request, int actingUserId)
+    public async Task<BudgetResponseDto> CancelAsync(
+        int id,
+        CancelBudgetDto request,
+        int actingUserId
+    )
     {
         await _cancelValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         if (budget.Status is BudgetStatus.ClientApproved or BudgetStatus.Cancelled)
         {
-            throw new ValidationAppException($"No se puede cancelar un presupuesto en estado {budget.Status}.");
+            throw new ValidationAppException(
+                $"No se puede cancelar un presupuesto en estado {budget.Status}."
+            );
         }
 
-        await TransitionAsync(budget, BudgetStatus.Cancelled, actingUserId, comment: null, reason: request.Reason);
+        await TransitionAsync(
+            budget,
+            BudgetStatus.Cancelled,
+            actingUserId,
+            comment: null,
+            reason: request.Reason
+        );
 
         return MapToDto(budget);
     }
 
     public async Task DeleteAsync(int id)
     {
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
 
         if (budget.Status != BudgetStatus.Draft)
         {
-            throw new ValidationAppException("Solo se puede eliminar un presupuesto en estado Borrador; use Cancelar en cualquier otro estado.");
+            throw new ValidationAppException(
+                "Solo se puede eliminar un presupuesto en estado Borrador; use Cancelar en cualquier otro estado."
+            );
         }
 
         // The creation entry always has PreviousStatus == null; any entry with a non-null
@@ -195,7 +272,9 @@ public class BudgetService : IBudgetService
         var history = await _budgetRepository.GetHistoryAsync(id);
         if (history.Any(h => h.PreviousStatus.HasValue))
         {
-            throw new ValidationAppException("Este presupuesto ya tuvo actividad (salió de Borrador alguna vez); use Cancelar en vez de Eliminar.");
+            throw new ValidationAppException(
+                "Este presupuesto ya tuvo actividad (salió de Borrador alguna vez); use Cancelar en vez de Eliminar."
+            );
         }
 
         await _budgetRepository.DeleteAsync(budget);
@@ -203,20 +282,30 @@ public class BudgetService : IBudgetService
 
     public async Task<BudgetResponseDto> GetByIdAsync(int id)
     {
-        var budget = await _budgetRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Budget {id} not found.");
+        var budget =
+            await _budgetRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Budget {id} not found.");
         return MapToDto(budget);
     }
 
-    public async Task<PagedResult<BudgetResponseDto>> GetAllAsync(int pageNumber, int pageSize, BudgetStatus? status)
+    public async Task<PagedResult<BudgetResponseDto>> GetAllAsync(
+        int pageNumber,
+        int pageSize,
+        BudgetStatus? status
+    )
     {
-        var (items, totalCount) = await _budgetRepository.GetPagedAsync(pageNumber, pageSize, status);
+        var (items, totalCount) = await _budgetRepository.GetPagedAsync(
+            pageNumber,
+            pageSize,
+            status
+        );
 
         return new PagedResult<BudgetResponseDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
@@ -235,7 +324,7 @@ public class BudgetService : IBudgetService
                 NewStatus = h.NewStatus,
                 Comment = h.Comment,
                 Reason = h.Reason,
-                Timestamp = h.Timestamp
+                Timestamp = h.Timestamp,
             })
             .ToList();
     }
@@ -248,22 +337,30 @@ public class BudgetService : IBudgetService
         }
     }
 
-    private async Task TransitionAsync(Budget budget, BudgetStatus newStatus, int actingUserId, string? comment, string? reason)
+    private async Task TransitionAsync(
+        Budget budget,
+        BudgetStatus newStatus,
+        int actingUserId,
+        string? comment,
+        string? reason
+    )
     {
         var previousStatus = budget.Status;
         budget.Status = newStatus;
         budget.UpdatedAt = DateTime.UtcNow;
 
-        budget.History.Add(new BudgetHistory
-        {
-            UserId = actingUserId,
-            PreviousStatus = previousStatus,
-            NewStatus = newStatus,
-            Comment = comment,
-            Reason = reason,
-            Timestamp = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
-        });
+        budget.History.Add(
+            new BudgetHistory
+            {
+                UserId = actingUserId,
+                PreviousStatus = previousStatus,
+                NewStatus = newStatus,
+                Comment = comment,
+                Reason = reason,
+                Timestamp = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
 
         await _budgetRepository.UpdateAsync(budget);
     }
@@ -276,12 +373,16 @@ public class BudgetService : IBudgetService
         }
 
         var chaptersTotal = budget.Chapters.Sum(c => c.TotalChapter);
-        budget.TotalBudget = (chaptersTotal + budget.IndirectCostsTotal) * (1 + budget.UtilityPercentage / 100m);
+        budget.TotalBudget =
+            (chaptersTotal + budget.IndirectCostsTotal) * (1 + budget.UtilityPercentage / 100m);
     }
 
     private static void SyncChapters(Budget budget, List<BudgetChapterDto> chapterDtos)
     {
-        var incomingIds = chapterDtos.Where(c => c.Id.HasValue).Select(c => c.Id!.Value).ToHashSet();
+        var incomingIds = chapterDtos
+            .Where(c => c.Id.HasValue)
+            .Select(c => c.Id!.Value)
+            .ToHashSet();
         var toRemove = budget.Chapters.Where(c => !incomingIds.Contains(c.Id)).ToList();
         foreach (var chapter in toRemove)
         {
@@ -312,7 +413,10 @@ public class BudgetService : IBudgetService
 
     private static void SyncActivities(BudgetChapter chapter, List<BudgetActivityDto> activityDtos)
     {
-        var incomingIds = activityDtos.Where(a => a.Id.HasValue).Select(a => a.Id!.Value).ToHashSet();
+        var incomingIds = activityDtos
+            .Where(a => a.Id.HasValue)
+            .Select(a => a.Id!.Value)
+            .ToHashSet();
         var toRemove = chapter.Activities.Where(a => !incomingIds.Contains(a.Id)).ToList();
         foreach (var activity in toRemove)
         {
@@ -346,9 +450,15 @@ public class BudgetService : IBudgetService
         return activity;
     }
 
-    private static void SyncMaterials(BudgetActivity activity, List<BudgetActivityMaterialDto> materialDtos)
+    private static void SyncMaterials(
+        BudgetActivity activity,
+        List<BudgetActivityMaterialDto> materialDtos
+    )
     {
-        var incomingIds = materialDtos.Where(m => m.Id.HasValue).Select(m => m.Id!.Value).ToHashSet();
+        var incomingIds = materialDtos
+            .Where(m => m.Id.HasValue)
+            .Select(m => m.Id!.Value)
+            .ToHashSet();
         var toRemove = activity.Materials.Where(m => !incomingIds.Contains(m.Id)).ToList();
         foreach (var material in toRemove)
         {
@@ -374,9 +484,15 @@ public class BudgetService : IBudgetService
         return material;
     }
 
-    private static void SyncEquipment(BudgetActivity activity, List<BudgetActivityEquipmentDto> equipmentDtos)
+    private static void SyncEquipment(
+        BudgetActivity activity,
+        List<BudgetActivityEquipmentDto> equipmentDtos
+    )
     {
-        var incomingIds = equipmentDtos.Where(e => e.Id.HasValue).Select(e => e.Id!.Value).ToHashSet();
+        var incomingIds = equipmentDtos
+            .Where(e => e.Id.HasValue)
+            .Select(e => e.Id!.Value)
+            .ToHashSet();
         var toRemove = activity.Equipment.Where(e => !incomingIds.Contains(e.Id)).ToList();
         foreach (var equipment in toRemove)
         {
@@ -430,54 +546,64 @@ public class BudgetService : IBudgetService
         return labor;
     }
 
-    private static BudgetResponseDto MapToDto(Budget budget) => new()
-    {
-        Id = budget.Id,
-        CustomerId = budget.CustomerId,
-        BranchId = budget.BranchId,
-        Name = budget.Name,
-        Status = budget.Status,
-        UtilityPercentage = budget.UtilityPercentage,
-        IndirectCostsTotal = budget.IndirectCostsTotal,
-        TotalBudget = budget.TotalBudget,
-        CreatedByUserId = budget.CreatedByUserId,
-        Chapters = budget.Chapters
-            .OrderBy(c => c.Order)
-            .Select(c => new BudgetChapterResponseDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Order = c.Order,
-                EstimatedWeeks = c.EstimatedWeeks,
-                TotalChapter = c.TotalChapter,
-                Activities = c.Activities.Select(a => new BudgetActivityResponseDto
+    private static BudgetResponseDto MapToDto(Budget budget) =>
+        new()
+        {
+            Id = budget.Id,
+            CustomerId = budget.CustomerId,
+            BranchId = budget.BranchId,
+            Name = budget.Name,
+            Status = budget.Status,
+            UtilityPercentage = budget.UtilityPercentage,
+            IndirectCostsTotal = budget.IndirectCostsTotal,
+            TotalBudget = budget.TotalBudget,
+            CreatedByUserId = budget.CreatedByUserId,
+            Chapters = budget
+                .Chapters.OrderBy(c => c.Order)
+                .Select(c => new BudgetChapterResponseDto
                 {
-                    Id = a.Id,
-                    Description = a.Description,
-                    MaterialQuantity = a.MaterialQuantity,
-                    MaterialCost = a.MaterialCost,
-                    LaborCost = a.LaborCost,
-                    EquipmentCost = a.EquipmentCost,
-                    TotalActivity = a.TotalActivity,
-                    Materials = a.Materials.Select(m => new BudgetActivityMaterialResponseDto
-                    {
-                        Id = m.Id,
-                        MaterialId = m.MaterialId,
-                        UnitPrice = m.UnitPrice
-                    }).ToList(),
-                    Equipment = a.Equipment.Select(e => new BudgetActivityEquipmentResponseDto
-                    {
-                        Id = e.Id,
-                        EquipmentName = e.EquipmentName,
-                        UnitPrice = e.UnitPrice
-                    }).ToList(),
-                    Labor = a.Labor.Select(l => new BudgetActivityLaborResponseDto
-                    {
-                        Id = l.Id,
-                        WorkerType = l.WorkerType,
-                        HourlyRate = l.HourlyRate
-                    }).ToList()
-                }).ToList()
-            }).ToList()
-    };
+                    Id = c.Id,
+                    Name = c.Name,
+                    Order = c.Order,
+                    EstimatedWeeks = c.EstimatedWeeks,
+                    TotalChapter = c.TotalChapter,
+                    Activities = c
+                        .Activities.Select(a => new BudgetActivityResponseDto
+                        {
+                            Id = a.Id,
+                            Description = a.Description,
+                            MaterialQuantity = a.MaterialQuantity,
+                            MaterialCost = a.MaterialCost,
+                            LaborCost = a.LaborCost,
+                            EquipmentCost = a.EquipmentCost,
+                            TotalActivity = a.TotalActivity,
+                            Materials = a
+                                .Materials.Select(m => new BudgetActivityMaterialResponseDto
+                                {
+                                    Id = m.Id,
+                                    MaterialId = m.MaterialId,
+                                    UnitPrice = m.UnitPrice,
+                                })
+                                .ToList(),
+                            Equipment = a
+                                .Equipment.Select(e => new BudgetActivityEquipmentResponseDto
+                                {
+                                    Id = e.Id,
+                                    EquipmentName = e.EquipmentName,
+                                    UnitPrice = e.UnitPrice,
+                                })
+                                .ToList(),
+                            Labor = a
+                                .Labor.Select(l => new BudgetActivityLaborResponseDto
+                                {
+                                    Id = l.Id,
+                                    WorkerType = l.WorkerType,
+                                    HourlyRate = l.HourlyRate,
+                                })
+                                .ToList(),
+                        })
+                        .ToList(),
+                })
+                .ToList(),
+        };
 }

@@ -48,7 +48,9 @@ public class AuthController : ApiControllerBase
     [AllowAnonymous]
     [EnableRateLimiting(RateLimiterPolicies.ForgotPassword)]
     [HttpPost("forgot-password")]
-    public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword(ForgotPasswordRequestDto request)
+    public async Task<ActionResult<ForgotPasswordResponseDto>> ForgotPassword(
+        ForgotPasswordRequestDto request
+    )
     {
         var result = await _authService.ForgotPasswordAsync(request);
         return Ok(result);
@@ -91,7 +93,8 @@ public class AuthController : ApiControllerBase
             GetCurrentUserId(),
             stream,
             file.FileName,
-            file.ContentType);
+            file.ContentType
+        );
 
         return Ok(result);
     }

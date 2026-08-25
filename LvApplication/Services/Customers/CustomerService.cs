@@ -16,7 +16,8 @@ public class CustomerService : ICustomerService
     public CustomerService(
         ICustomerRepository customerRepository,
         IValidator<CreateCustomerDto> createValidator,
-        IValidator<UpdateCustomerDto> updateValidator)
+        IValidator<UpdateCustomerDto> updateValidator
+    )
     {
         _customerRepository = customerRepository;
         _createValidator = createValidator;
@@ -37,7 +38,7 @@ public class CustomerService : ICustomerService
             PersonalId = request.PersonalId,
             Email = request.Email,
             BranchId = request.BranchId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _customerRepository.AddAsync(customer);
@@ -49,7 +50,9 @@ public class CustomerService : ICustomerService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var customer = await _customerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Customer {id} not found.");
+        var customer =
+            await _customerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Customer {id} not found.");
 
         customer.Name = request.Name;
         customer.CustomerType = request.CustomerType;
@@ -68,7 +71,9 @@ public class CustomerService : ICustomerService
 
     public async Task<CustomerResponseDto> GetByIdAsync(int id)
     {
-        var customer = await _customerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Customer {id} not found.");
+        var customer =
+            await _customerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Customer {id} not found.");
         return MapToDto(customer);
     }
 
@@ -81,13 +86,15 @@ public class CustomerService : ICustomerService
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
     public async Task DeleteAsync(int id)
     {
-        var customer = await _customerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Customer {id} not found.");
+        var customer =
+            await _customerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Customer {id} not found.");
 
         customer.Status = ActiveStatus.Inactive;
         customer.UpdatedAt = DateTime.UtcNow;
@@ -95,16 +102,17 @@ public class CustomerService : ICustomerService
         await _customerRepository.UpdateAsync(customer);
     }
 
-    private static CustomerResponseDto MapToDto(Customer customer) => new()
-    {
-        Id = customer.Id,
-        Name = customer.Name,
-        CustomerType = customer.CustomerType,
-        Status = customer.Status,
-        City = customer.City,
-        PhoneNumber = customer.PhoneNumber,
-        PersonalId = customer.PersonalId,
-        Email = customer.Email,
-        BranchId = customer.BranchId
-    };
+    private static CustomerResponseDto MapToDto(Customer customer) =>
+        new()
+        {
+            Id = customer.Id,
+            Name = customer.Name,
+            CustomerType = customer.CustomerType,
+            Status = customer.Status,
+            City = customer.City,
+            PhoneNumber = customer.PhoneNumber,
+            PersonalId = customer.PersonalId,
+            Email = customer.Email,
+            BranchId = customer.BranchId,
+        };
 }

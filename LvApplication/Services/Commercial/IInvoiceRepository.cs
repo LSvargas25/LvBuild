@@ -9,5 +9,9 @@ public interface IInvoiceRepository
     Task UpdateAsync(Invoice invoice);
     Task DeleteAsync(Invoice invoice);
     Task<int> CountByBranchAsync(int branchId);
-    Task<(List<Invoice> Items, int TotalCount)> GetPagedByBranchAsync(int branchId, int pageNumber, int pageSize);
+    Task<(List<Invoice> Items, int TotalCount)> GetPagedByBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    );
 }

@@ -21,15 +21,25 @@ public class MaterialTicketsController : ApiControllerBase
 
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPost("projects/{projectId:int}/material-tickets")]
-    public async Task<ActionResult<MaterialTicketDto>> Create(int projectId, CreateMaterialTicketDto request)
+    public async Task<ActionResult<MaterialTicketDto>> Create(
+        int projectId,
+        CreateMaterialTicketDto request
+    )
     {
-        var result = await _materialTicketService.CreateAsync(projectId, request, GetCurrentUserId());
+        var result = await _materialTicketService.CreateAsync(
+            projectId,
+            request,
+            GetCurrentUserId()
+        );
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPut("material-tickets/{id:int}")]
-    public async Task<ActionResult<MaterialTicketDto>> Update(int id, UpdateMaterialTicketDto request)
+    public async Task<ActionResult<MaterialTicketDto>> Update(
+        int id,
+        UpdateMaterialTicketDto request
+    )
     {
         var result = await _materialTicketService.UpdateAsync(id, request);
         return Ok(result);
@@ -63,9 +73,14 @@ public class MaterialTicketsController : ApiControllerBase
     public async Task<ActionResult<PagedResult<MaterialTicketDto>>> GetAllByProject(
         int projectId,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20
+    )
     {
-        var result = await _materialTicketService.GetAllByProjectAsync(projectId, pageNumber, pageSize);
+        var result = await _materialTicketService.GetAllByProjectAsync(
+            projectId,
+            pageNumber,
+            pageSize
+        );
         return Ok(result);
     }
 

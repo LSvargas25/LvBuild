@@ -20,7 +20,8 @@ public class ProductService : IProductService
     public ProductService(
         IProductRepository productRepository,
         IValidator<CreateProductDto> createValidator,
-        IValidator<UpdateProductDto> updateValidator)
+        IValidator<UpdateProductDto> updateValidator
+    )
     {
         _productRepository = productRepository;
         _createValidator = createValidator;
@@ -28,11 +29,15 @@ public class ProductService : IProductService
     }
 
     private static bool CanAutoValidate(IEnumerable<string> actingUserRoles) =>
-        actingUserRoles.Contains(GeneralManagerRole) ||
-        actingUserRoles.Contains(OperationsDirectorRole) ||
-        actingUserRoles.Contains(BranchAdminRole);
+        actingUserRoles.Contains(GeneralManagerRole)
+        || actingUserRoles.Contains(OperationsDirectorRole)
+        || actingUserRoles.Contains(BranchAdminRole);
 
-    public async Task<ProductDto> CreateAsync(CreateProductDto request, int createdByUserId, IEnumerable<string> actingUserRoles)
+    public async Task<ProductDto> CreateAsync(
+        CreateProductDto request,
+        int createdByUserId,
+        IEnumerable<string> actingUserRoles
+    )
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
@@ -59,7 +64,7 @@ public class ProductService : IProductService
             ActiveStatus = true,
             ValidatedByUserId = autoValidate ? createdByUserId : null,
             ValidatedDate = autoValidate ? now : null,
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         await _productRepository.AddAsync(product);
@@ -67,11 +72,17 @@ public class ProductService : IProductService
         return MapToDto(product);
     }
 
-    public async Task<ProductDto> UpdateAsync(int id, UpdateProductDto request, IEnumerable<string> actingUserRoles)
+    public async Task<ProductDto> UpdateAsync(
+        int id,
+        UpdateProductDto request,
+        IEnumerable<string> actingUserRoles
+    )
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var product = await _productRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Product {id} not found.");
+        var product =
+            await _productRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Product {id} not found.");
 
         var autoValidate = CanAutoValidate(actingUserRoles);
         var now = DateTime.UtcNow;
@@ -102,18 +113,29 @@ public class ProductService : IProductService
         return MapToDto(product);
     }
 
-    public async Task<ProductDto> ValidateAsync(int id, bool approve, int actingUserId, IEnumerable<string> actingUserRoles)
+    public async Task<ProductDto> ValidateAsync(
+        int id,
+        bool approve,
+        int actingUserId,
+        IEnumerable<string> actingUserRoles
+    )
     {
         if (!CanAutoValidate(actingUserRoles))
         {
-            throw new ForbiddenException("Solo Gerente General, Director de Operaciones o Administrador de Sucursal pueden validar productos.");
+            throw new ForbiddenException(
+                "Solo Gerente General, Director de Operaciones o Administrador de Sucursal pueden validar productos."
+            );
         }
 
-        var product = await _productRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Product {id} not found.");
+        var product =
+            await _productRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Product {id} not found.");
 
         if (product.Status != ProductStatus.PendingValidation)
         {
-            throw new ValidationAppException("Solo se puede validar un producto en estado PendingValidation.");
+            throw new ValidationAppException(
+                "Solo se puede validar un producto en estado PendingValidation."
+            );
         }
 
         product.Status = approve ? ProductStatus.Validated : ProductStatus.Rejected;
@@ -128,7 +150,9 @@ public class ProductService : IProductService
 
     public async Task<ProductDto> DeactivateAsync(int id)
     {
-        var product = await _productRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Product {id} not found.");
+        var product =
+            await _productRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Product {id} not found.");
         product.ActiveStatus = false;
         product.UpdatedAt = DateTime.UtcNow;
         await _productRepository.UpdateAsync(product);
@@ -137,7 +161,9 @@ public class ProductService : IProductService
 
     public async Task<ProductDto> ActivateAsync(int id)
     {
-        var product = await _productRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Product {id} not found.");
+        var product =
+            await _productRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Product {id} not found.");
         product.ActiveStatus = true;
         product.UpdatedAt = DateTime.UtcNow;
         await _productRepository.UpdateAsync(product);
@@ -146,38 +172,49 @@ public class ProductService : IProductService
 
     public async Task<ProductDto> GetByIdAsync(int id)
     {
-        var product = await _productRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Product {id} not found.");
+        var product =
+            await _productRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Product {id} not found.");
         return MapToDto(product);
     }
 
-    public async Task<PagedResult<ProductDto>> GetAllAsync(int pageNumber, int pageSize, bool activeOnly)
+    public async Task<PagedResult<ProductDto>> GetAllAsync(
+        int pageNumber,
+        int pageSize,
+        bool activeOnly
+    )
     {
-        var (items, totalCount) = await _productRepository.GetPagedAsync(pageNumber, pageSize, activeOnly);
+        var (items, totalCount) = await _productRepository.GetPagedAsync(
+            pageNumber,
+            pageSize,
+            activeOnly
+        );
 
         return new PagedResult<ProductDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
-    private static ProductDto MapToDto(Product product) => new()
-    {
-        Id = product.Id,
-        Name = product.Name,
-        Description = product.Description,
-        Sku = product.Sku,
-        UnitOfMeasure = product.UnitOfMeasure,
-        UnitPrice = product.UnitPrice,
-        UnitCost = product.UnitCost,
-        Category = product.Category,
-        Status = product.Status,
-        ActiveStatus = product.ActiveStatus,
-        CreatedByUserId = product.CreatedByUserId,
-        ValidatedByUserId = product.ValidatedByUserId,
-        ValidatedDate = product.ValidatedDate,
-        CreatedAt = product.CreatedAt
-    };
+    private static ProductDto MapToDto(Product product) =>
+        new()
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            Sku = product.Sku,
+            UnitOfMeasure = product.UnitOfMeasure,
+            UnitPrice = product.UnitPrice,
+            UnitCost = product.UnitCost,
+            Category = product.Category,
+            Status = product.Status,
+            ActiveStatus = product.ActiveStatus,
+            CreatedByUserId = product.CreatedByUserId,
+            ValidatedByUserId = product.ValidatedByUserId,
+            ValidatedDate = product.ValidatedDate,
+            CreatedAt = product.CreatedAt,
+        };
 }

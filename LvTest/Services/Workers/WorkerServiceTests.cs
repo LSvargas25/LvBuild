@@ -10,7 +10,11 @@ namespace LvTest.Services.Workers;
 
 public class WorkerServiceTests
 {
-    private static async Task<Branch> CreateBranchAsync(AppDbContext context, int operationsDirectorId, BranchType branchType)
+    private static async Task<Branch> CreateBranchAsync(
+        AppDbContext context,
+        int operationsDirectorId,
+        BranchType branchType
+    )
     {
         var branch = new Branch
         {
@@ -20,7 +24,7 @@ public class WorkerServiceTests
             Status = BranchStatus.Active,
             BranchType = branchType,
             OperationsDirectorId = operationsDirectorId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
@@ -31,18 +35,24 @@ public class WorkerServiceTests
     public async Task CreateAsync_StorageCategoryAssignedToWarehouseBranch_Succeeds()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "wdir1@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "wdir1@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
         var branch = await CreateBranchAsync(context, director.Id, BranchType.Warehouse);
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var result = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Bodeguero Uno",
-            Category = WorkerCategory.Storage,
-            Type = WorkerType.WarehouseKeeper,
-            HourlyRate = 8,
-            BranchId = branch.Id
-        });
+        var result = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Bodeguero Uno",
+                Category = WorkerCategory.Storage,
+                Type = WorkerType.WarehouseKeeper,
+                HourlyRate = 8,
+                BranchId = branch.Id,
+            }
+        );
 
         result.BranchId.Should().Be(branch.Id);
     }
@@ -51,18 +61,25 @@ public class WorkerServiceTests
     public async Task CreateAsync_NonStorageCategoryAssignedToWarehouseBranch_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "wdir2@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "wdir2@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
         var branch = await CreateBranchAsync(context, director.Id, BranchType.Warehouse);
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var act = async () => await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Vendedor Mal Asignado",
-            Category = WorkerCategory.Commercial,
-            Type = WorkerType.Salesperson,
-            HourlyRate = 8,
-            BranchId = branch.Id
-        });
+        var act = async () =>
+            await service.CreateAsync(
+                new CreateWorkerDto
+                {
+                    Name = "Vendedor Mal Asignado",
+                    Category = WorkerCategory.Commercial,
+                    Type = WorkerType.Salesperson,
+                    HourlyRate = 8,
+                    BranchId = branch.Id,
+                }
+            );
 
         var exception = await act.Should().ThrowAsync<ValidationAppException>();
         exception.Which.Message.Should().Contain("Bodega deben tener categoría Almacenamiento");
@@ -72,18 +89,24 @@ public class WorkerServiceTests
     public async Task CreateAsync_AnyCategoryAssignedToCommercialBranch_Succeeds()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "wdir3@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "wdir3@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
         var branch = await CreateBranchAsync(context, director.Id, BranchType.Commercial);
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var result = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Vendedor Comercio",
-            Category = WorkerCategory.Commercial,
-            Type = WorkerType.Salesperson,
-            HourlyRate = 8,
-            BranchId = branch.Id
-        });
+        var result = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Vendedor Comercio",
+                Category = WorkerCategory.Commercial,
+                Type = WorkerType.Salesperson,
+                HourlyRate = 8,
+                BranchId = branch.Id,
+            }
+        );
 
         result.BranchId.Should().Be(branch.Id);
     }
@@ -92,27 +115,37 @@ public class WorkerServiceTests
     public async Task UpdateAsync_MismatchedCategoryForWarehouseBranch_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "wdir4@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "wdir4@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
         var branch = await CreateBranchAsync(context, director.Id, BranchType.Warehouse);
         var service = ServiceFactory.CreateWorkerService(context);
-        var created = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Bodeguero Dos",
-            Category = WorkerCategory.Storage,
-            Type = WorkerType.WarehouseKeeper,
-            HourlyRate = 8,
-            BranchId = branch.Id
-        });
+        var created = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Bodeguero Dos",
+                Category = WorkerCategory.Storage,
+                Type = WorkerType.WarehouseKeeper,
+                HourlyRate = 8,
+                BranchId = branch.Id,
+            }
+        );
 
-        var act = async () => await service.UpdateAsync(created.Id, new UpdateWorkerDto
-        {
-            Name = "Bodeguero Dos",
-            Status = ActiveStatus.Active,
-            Category = WorkerCategory.Commercial,
-            Type = WorkerType.Salesperson,
-            HourlyRate = 8,
-            BranchId = branch.Id
-        });
+        var act = async () =>
+            await service.UpdateAsync(
+                created.Id,
+                new UpdateWorkerDto
+                {
+                    Name = "Bodeguero Dos",
+                    Status = ActiveStatus.Active,
+                    Category = WorkerCategory.Commercial,
+                    Type = WorkerType.Salesperson,
+                    HourlyRate = 8,
+                    BranchId = branch.Id,
+                }
+            );
 
         var exception = await act.Should().ThrowAsync<ValidationAppException>();
         exception.Which.Message.Should().Contain("Bodega deben tener categoría Almacenamiento");
@@ -124,13 +157,15 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var result = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Carlos Ramirez",
-            Category = WorkerCategory.Office,
-            Type = WorkerType.Engineer,
-            HourlyRate = 15
-        });
+        var result = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Carlos Ramirez",
+                Category = WorkerCategory.Office,
+                Type = WorkerType.Engineer,
+                HourlyRate = 15,
+            }
+        );
 
         result.Id.Should().BeGreaterThan(0);
         result.Category.Should().Be(WorkerCategory.Office);
@@ -143,16 +178,21 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var act = async () => await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Mismatched Worker",
-            Category = WorkerCategory.Office,
-            Type = WorkerType.SiteForeman,
-            HourlyRate = 10
-        });
+        var act = async () =>
+            await service.CreateAsync(
+                new CreateWorkerDto
+                {
+                    Name = "Mismatched Worker",
+                    Category = WorkerCategory.Office,
+                    Type = WorkerType.SiteForeman,
+                    HourlyRate = 10,
+                }
+            );
 
         var exception = await act.Should().ThrowAsync<ValidationAppException>();
-        exception.Which.Message.Should().Contain("El tipo de trabajador no corresponde a la categoría seleccionada");
+        exception
+            .Which.Message.Should()
+            .Contain("El tipo de trabajador no corresponde a la categoría seleccionada");
     }
 
     [Fact]
@@ -161,16 +201,21 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var act = async () => await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Another Mismatched Worker",
-            Category = WorkerCategory.Storage,
-            Type = WorkerType.BusinessManager,
-            HourlyRate = 10
-        });
+        var act = async () =>
+            await service.CreateAsync(
+                new CreateWorkerDto
+                {
+                    Name = "Another Mismatched Worker",
+                    Category = WorkerCategory.Storage,
+                    Type = WorkerType.BusinessManager,
+                    HourlyRate = 10,
+                }
+            );
 
         var exception = await act.Should().ThrowAsync<ValidationAppException>();
-        exception.Which.Message.Should().Contain("El tipo de trabajador no corresponde a la categoría seleccionada");
+        exception
+            .Which.Message.Should()
+            .Contain("El tipo de trabajador no corresponde a la categoría seleccionada");
     }
 
     [Fact]
@@ -179,13 +224,15 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var result = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Storage Worker",
-            Category = WorkerCategory.Storage,
-            Type = WorkerType.WarehouseKeeper,
-            HourlyRate = 8
-        });
+        var result = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Storage Worker",
+                Category = WorkerCategory.Storage,
+                Type = WorkerType.WarehouseKeeper,
+                HourlyRate = 8,
+            }
+        );
 
         result.Id.Should().BeGreaterThan(0);
     }
@@ -196,13 +243,15 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var created = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Jose Fonseca",
-            Category = WorkerCategory.Construction,
-            Type = WorkerType.Laborer,
-            HourlyRate = 6
-        });
+        var created = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Jose Fonseca",
+                Category = WorkerCategory.Construction,
+                Type = WorkerType.Laborer,
+                HourlyRate = 6,
+            }
+        );
 
         var result = await service.GetByIdAsync(created.Id);
 
@@ -228,24 +277,29 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var created = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Ana Solis",
-            Category = WorkerCategory.Commercial,
-            Type = WorkerType.Salesperson,
-            HourlyRate = 9
-        });
+        var created = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Ana Solis",
+                Category = WorkerCategory.Commercial,
+                Type = WorkerType.Salesperson,
+                HourlyRate = 9,
+            }
+        );
 
-        var updated = await service.UpdateAsync(created.Id, new UpdateWorkerDto
-        {
-            Name = "Ana Solis Updated",
-            PersonalId = "1-1111-1111",
-            PhoneNumber = "8888-1234",
-            Status = ActiveStatus.Inactive,
-            Category = WorkerCategory.Commercial,
-            Type = WorkerType.BusinessManager,
-            HourlyRate = 12
-        });
+        var updated = await service.UpdateAsync(
+            created.Id,
+            new UpdateWorkerDto
+            {
+                Name = "Ana Solis Updated",
+                PersonalId = "1-1111-1111",
+                PhoneNumber = "8888-1234",
+                Status = ActiveStatus.Inactive,
+                Category = WorkerCategory.Commercial,
+                Type = WorkerType.BusinessManager,
+                HourlyRate = 12,
+            }
+        );
 
         updated.Name.Should().Be("Ana Solis Updated");
         updated.PersonalId.Should().Be("1-1111-1111");
@@ -260,25 +314,33 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var created = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Luis Vargas",
-            Category = WorkerCategory.Office,
-            Type = WorkerType.Engineer,
-            HourlyRate = 14
-        });
+        var created = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Luis Vargas",
+                Category = WorkerCategory.Office,
+                Type = WorkerType.Engineer,
+                HourlyRate = 14,
+            }
+        );
 
-        var act = async () => await service.UpdateAsync(created.Id, new UpdateWorkerDto
-        {
-            Name = "Luis Vargas",
-            Status = ActiveStatus.Active,
-            Category = WorkerCategory.Office,
-            Type = WorkerType.SiteForeman,
-            HourlyRate = 14
-        });
+        var act = async () =>
+            await service.UpdateAsync(
+                created.Id,
+                new UpdateWorkerDto
+                {
+                    Name = "Luis Vargas",
+                    Status = ActiveStatus.Active,
+                    Category = WorkerCategory.Office,
+                    Type = WorkerType.SiteForeman,
+                    HourlyRate = 14,
+                }
+            );
 
         var exception = await act.Should().ThrowAsync<ValidationAppException>();
-        exception.Which.Message.Should().Contain("El tipo de trabajador no corresponde a la categoría seleccionada");
+        exception
+            .Which.Message.Should()
+            .Contain("El tipo de trabajador no corresponde a la categoría seleccionada");
     }
 
     [Fact]
@@ -287,14 +349,18 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var act = async () => await service.UpdateAsync(999, new UpdateWorkerDto
-        {
-            Name = "Ghost Worker",
-            Status = ActiveStatus.Active,
-            Category = WorkerCategory.Office,
-            Type = WorkerType.Engineer,
-            HourlyRate = 10
-        });
+        var act = async () =>
+            await service.UpdateAsync(
+                999,
+                new UpdateWorkerDto
+                {
+                    Name = "Ghost Worker",
+                    Status = ActiveStatus.Active,
+                    Category = WorkerCategory.Office,
+                    Type = WorkerType.Engineer,
+                    HourlyRate = 10,
+                }
+            );
 
         await act.Should().ThrowAsync<NotFoundException>();
     }
@@ -305,13 +371,15 @@ public class WorkerServiceTests
         using var context = TestDbContextFactory.Create();
         var service = ServiceFactory.CreateWorkerService(context);
 
-        var created = await service.CreateAsync(new CreateWorkerDto
-        {
-            Name = "Mario Chinchilla",
-            Category = WorkerCategory.Storage,
-            Type = WorkerType.Transporter,
-            HourlyRate = 7
-        });
+        var created = await service.CreateAsync(
+            new CreateWorkerDto
+            {
+                Name = "Mario Chinchilla",
+                Category = WorkerCategory.Storage,
+                Type = WorkerType.Transporter,
+                HourlyRate = 7,
+            }
+        );
 
         await service.DeleteAsync(created.Id);
 
@@ -338,13 +406,15 @@ public class WorkerServiceTests
 
         for (var i = 1; i <= 5; i++)
         {
-            await service.CreateAsync(new CreateWorkerDto
-            {
-                Name = $"Worker {i}",
-                Category = WorkerCategory.Construction,
-                Type = WorkerType.Laborer,
-                HourlyRate = 5
-            });
+            await service.CreateAsync(
+                new CreateWorkerDto
+                {
+                    Name = $"Worker {i}",
+                    Category = WorkerCategory.Construction,
+                    Type = WorkerType.Laborer,
+                    HourlyRate = 5,
+                }
+            );
         }
 
         var firstPage = await service.GetAllAsync(pageNumber: 1, pageSize: 2);

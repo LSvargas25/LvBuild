@@ -26,9 +26,17 @@ public class ProjectChaptersController : ControllerBase
 
     [Authorize(Roles = "GeneralManager,OperationsDirector,ProjectAdmin")]
     [HttpPut("projects/{projectId:int}/chapters/{chapterId:int}/assigned-sold-total")]
-    public async Task<ActionResult<ProjectChapterDto>> UpdateAssignedSoldTotal(int projectId, int chapterId, UpdateAssignedSoldTotalDto request)
+    public async Task<ActionResult<ProjectChapterDto>> UpdateAssignedSoldTotal(
+        int projectId,
+        int chapterId,
+        UpdateAssignedSoldTotalDto request
+    )
     {
-        var result = await _projectChapterService.UpdateAssignedSoldTotalAsync(projectId, chapterId, request.AssignedSoldTotal);
+        var result = await _projectChapterService.UpdateAssignedSoldTotalAsync(
+            projectId,
+            chapterId,
+            request.AssignedSoldTotal
+        );
         return Ok(result);
     }
 }

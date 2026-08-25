@@ -4,5 +4,5 @@ public enum SiteLogStatus
 {
     Draft,
     Review,
-    Approved
+    Approved,
 }

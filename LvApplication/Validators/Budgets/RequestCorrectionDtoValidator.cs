@@ -7,8 +7,6 @@ public class RequestCorrectionDtoValidator : AbstractValidator<RequestCorrection
 {
     public RequestCorrectionDtoValidator()
     {
-        RuleFor(x => x.Comment)
-            .NotEmpty()
-            .WithMessage("El comentario es obligatorio.");
+        RuleFor(x => x.Comment).NotEmpty().WithMessage("El comentario es obligatorio.");
     }
 }

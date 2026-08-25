@@ -5,5 +5,9 @@ namespace LvApplication.Services.Progress;
 public interface IProjectProgressRepository
 {
     Task AddAsync(ProjectProgress progress);
-    Task<(List<ProjectProgress> Items, int TotalCount)> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize);
+    Task<(List<ProjectProgress> Items, int TotalCount)> GetPagedByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    );
 }

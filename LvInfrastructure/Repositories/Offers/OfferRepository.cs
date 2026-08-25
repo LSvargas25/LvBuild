@@ -23,7 +23,11 @@ public class OfferRepository : IOfferRepository
     public Task<Offer?> GetByBudgetIdAsync(int budgetId) =>
         OffersWithChapters.FirstOrDefaultAsync(o => o.BudgetId == budgetId);
 
-    public async Task<(List<Offer> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, OfferStatus? status)
+    public async Task<(List<Offer> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        OfferStatus? status
+    )
     {
         var query = OffersWithChapters.AsQueryable();
 

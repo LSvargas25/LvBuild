@@ -19,9 +19,18 @@ namespace LvTest.Integration;
 [Collection("SqlServerIntegration")]
 public class InvoiceStockControlFlowTests
 {
-    private static async Task<(Branch Branch, CashRegister CashRegister, Product Product, LvDomain.Entities.Auth.User User)> SeedContextAsync(AppDbContext context, string emailPrefix)
+    private static async Task<(
+        Branch Branch,
+        CashRegister CashRegister,
+        Product Product,
+        LvDomain.Entities.Auth.User User
+    )> SeedContextAsync(AppDbContext context, string emailPrefix)
     {
-        var user = await TestUserFactory.CreateAsync(context, $"{emailPrefix}-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            $"{emailPrefix}-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
 
         var branch = new Branch
         {
@@ -31,7 +40,7 @@ public class InvoiceStockControlFlowTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Commercial,
             OperationsDirectorId = user.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
@@ -43,7 +52,7 @@ public class InvoiceStockControlFlowTests
             OpeningDate = DateTime.UtcNow,
             OpeningBalance = 0m,
             Status = CashRegisterStatus.Open,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.CashRegisters.Add(register);
 
@@ -58,19 +67,21 @@ public class InvoiceStockControlFlowTests
             CreatedByUserId = user.Id,
             ValidatedByUserId = user.Id,
             ValidatedDate = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Products.Add(product);
         await context.SaveChangesAsync();
 
-        context.BranchInventories.Add(new BranchInventory
-        {
-            BranchId = branch.Id,
-            ProductId = product.Id,
-            Quantity = 20m,
-            MinimumStock = 0,
-            CreatedAt = DateTime.UtcNow
-        });
+        context.BranchInventories.Add(
+            new BranchInventory
+            {
+                BranchId = branch.Id,
+                ProductId = product.Id,
+                Quantity = 20m,
+                MinimumStock = 0,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
         await context.SaveChangesAsync();
 
         return (branch, register, product, user);
@@ -85,13 +96,19 @@ public class InvoiceStockControlFlowTests
         var (branch, register, product, user) = await SeedContextAsync(context, "inv1");
         var service = ServiceFactory.CreateInvoiceService(context);
 
-        var draft = await service.CreateAsync(new CreateInvoiceDto
-        {
-            BranchId = branch.Id,
-            CashRegisterId = register.Id,
-            PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 5 } }
-        }, user.Id);
+        var draft = await service.CreateAsync(
+            new CreateInvoiceDto
+            {
+                BranchId = branch.Id,
+                CashRegisterId = register.Id,
+                PaymentType = InvoicePaymentType.Credito,
+                Details = new()
+                {
+                    new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 5 },
+                },
+            },
+            user.Id
+        );
 
         var issued = await service.IssueAsync(draft.Id, new IssueInvoiceDto(), user.Id);
 
@@ -99,7 +116,9 @@ public class InvoiceStockControlFlowTests
         issued.InvoiceNumber.Should().NotBeNullOrEmpty();
 
         context.ChangeTracker.Clear();
-        var inventory = await context.BranchInventories.AsNoTracking().FirstAsync(i => i.BranchId == branch.Id && i.ProductId == product.Id);
+        var inventory = await context
+            .BranchInventories.AsNoTracking()
+            .FirstAsync(i => i.BranchId == branch.Id && i.ProductId == product.Id);
         inventory.Quantity.Should().Be(15m);
 
         await transaction.RollbackAsync();
@@ -119,7 +138,10 @@ public class InvoiceStockControlFlowTests
             BranchId = branch.Id,
             CashRegisterId = register.Id,
             PaymentType = InvoicePaymentType.Credito,
-            Details = new() { new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 } }
+            Details = new()
+            {
+                new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 },
+            },
         };
 
         var firstDraft = await service.CreateAsync(draftDto, user.Id);
@@ -129,7 +151,9 @@ public class InvoiceStockControlFlowTests
         secondDraft.InvoiceNumber.Should().BeNull();
 
         context.ChangeTracker.Clear();
-        var draftCount = await context.Invoices.AsNoTracking().CountAsync(i => i.InvoiceNumber == null);
+        var draftCount = await context
+            .Invoices.AsNoTracking()
+            .CountAsync(i => i.InvoiceNumber == null);
         draftCount.Should().BeGreaterThanOrEqualTo(2);
 
         await transaction.RollbackAsync();

@@ -12,21 +12,43 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
 
         builder.HasKey(r => r.Id);
 
-        builder.Property(r => r.Name)
-            .IsRequired()
-            .HasMaxLength(100);
+        builder.Property(r => r.Name).IsRequired().HasMaxLength(100);
 
-        builder.HasIndex(r => r.Name)
-            .IsUnique();
+        builder.HasIndex(r => r.Name).IsUnique();
 
         var seedDate = new DateTime(2026, 7, 20, 0, 0, 0, DateTimeKind.Utc);
 
         builder.HasData(
-            new Role { Id = 1, Name = "GeneralManager", CreatedAt = seedDate },
-            new Role { Id = 2, Name = "OperationsDirector", CreatedAt = seedDate },
-            new Role { Id = 3, Name = "ProjectAdmin", CreatedAt = seedDate },
-            new Role { Id = 4, Name = "BranchAdmin", CreatedAt = seedDate },
-            new Role { Id = 5, Name = "BusinessManager", CreatedAt = seedDate }
+            new Role
+            {
+                Id = 1,
+                Name = "GeneralManager",
+                CreatedAt = seedDate,
+            },
+            new Role
+            {
+                Id = 2,
+                Name = "OperationsDirector",
+                CreatedAt = seedDate,
+            },
+            new Role
+            {
+                Id = 3,
+                Name = "ProjectAdmin",
+                CreatedAt = seedDate,
+            },
+            new Role
+            {
+                Id = 4,
+                Name = "BranchAdmin",
+                CreatedAt = seedDate,
+            },
+            new Role
+            {
+                Id = 5,
+                Name = "BusinessManager",
+                CreatedAt = seedDate,
+            }
         );
     }
 }

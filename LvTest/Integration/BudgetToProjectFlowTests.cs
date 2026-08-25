@@ -26,15 +26,23 @@ public class BudgetToProjectFlowTests
         await using var context = await SqlServerTestDbContextFactory.CreateAsync();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
-        var director = await TestUserFactory.CreateAsync(context, $"director-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var manager = await TestUserFactory.CreateAsync(context, $"gm-{Guid.NewGuid():N}@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            $"director-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var manager = await TestUserFactory.CreateAsync(
+            context,
+            $"gm-{Guid.NewGuid():N}@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
 
         var customer = new Customer
         {
             Name = "Cliente Integracion",
             CustomerType = CustomerType.Project,
             Status = ActiveStatus.Active,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Customers.Add(customer);
         await context.SaveChangesAsync();
@@ -47,7 +55,7 @@ public class BudgetToProjectFlowTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Office,
             OperationsDirectorId = director.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
@@ -62,7 +70,7 @@ public class BudgetToProjectFlowTests
             IndirectCostsTotal = 50,
             TotalBudget = 1000,
             CreatedByUserId = manager.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Budgets.Add(budget);
         await context.SaveChangesAsync();
@@ -86,27 +94,28 @@ public class BudgetToProjectFlowTests
             TotalProjectPrice = 100000m,
             Status = OfferStatus.ClientAccepted,
             CreatedByUserId = manager.Id,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Offers.Add(offer);
         await context.SaveChangesAsync();
 
         var projectService = ServiceFactory.CreateProjectService(context);
 
-        var result = await projectService.CreateProjectAsync(new CreateProjectDto
-        {
-            OfferId = offer.Id,
-            BranchId = branch.Id,
-            StartDate = new DateTime(2026, 3, 1)
-        }, manager.Id);
+        var result = await projectService.CreateProjectAsync(
+            new CreateProjectDto
+            {
+                OfferId = offer.Id,
+                BranchId = branch.Id,
+                StartDate = new DateTime(2026, 3, 1),
+            },
+            manager.Id
+        );
 
         result.Id.Should().BeGreaterThan(0);
         result.Status.Should().Be(ProjectStatus.Active);
 
         context.ChangeTracker.Clear();
-        var reloaded = await context.Projects
-            .AsNoTracking()
-            .FirstAsync(p => p.Id == result.Id);
+        var reloaded = await context.Projects.AsNoTracking().FirstAsync(p => p.Id == result.Id);
 
         reloaded.OfferId.Should().Be(offer.Id);
         reloaded.BudgetId.Should().Be(budget.Id);

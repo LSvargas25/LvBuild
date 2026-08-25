@@ -17,12 +17,14 @@ public class ProjectChapterConfiguration : IEntityTypeConfiguration<ProjectChapt
         builder.Property(c => c.ChapterProfit).HasColumnType("decimal(18,2)");
         builder.Property(c => c.IncidentPercentage).HasColumnType("decimal(5,2)");
 
-        builder.HasOne(c => c.Project)
+        builder
+            .HasOne(c => c.Project)
             .WithMany()
             .HasForeignKey(c => c.ProjectId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(c => c.Chapter)
+        builder
+            .HasOne(c => c.Chapter)
             .WithMany()
             .HasForeignKey(c => c.ChapterId)
             .OnDelete(DeleteBehavior.Restrict);

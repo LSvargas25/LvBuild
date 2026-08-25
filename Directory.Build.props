@@ -1,5 +1,4 @@
 <Project>
-
   <!--
     Centralized analyzer settings for every project in the solution.
     Uses the .NET SDK's built-in analyzers (Microsoft.CodeAnalysis.NetAnalyzers) —
@@ -11,5 +10,4 @@
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
-
 </Project>

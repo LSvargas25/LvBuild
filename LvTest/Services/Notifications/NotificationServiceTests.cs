@@ -11,11 +11,23 @@ public class NotificationServiceTests
     public async Task NotifyAsync_MultipleUserIds_CreatesOneUnreadNotificationPerUser()
     {
         using var context = TestDbContextFactory.Create();
-        var userA = await TestUserFactory.CreateAsync(context, "notif-a@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
-        var userB = await TestUserFactory.CreateAsync(context, "notif-b@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
+        var userA = await TestUserFactory.CreateAsync(
+            context,
+            "notif-a@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
+        var userB = await TestUserFactory.CreateAsync(
+            context,
+            "notif-b@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
         var service = ServiceFactory.CreateNotificationService(context);
 
-        await service.NotifyAsync(new[] { userA.Id, userB.Id }, NotificationType.StockBajo, "Stock bajo: SKU-1.");
+        await service.NotifyAsync(
+            new[] { userA.Id, userB.Id },
+            NotificationType.StockBajo,
+            "Stock bajo: SKU-1."
+        );
 
         var resultA = await service.GetMyNotificationsAsync(userA.Id, 1, 20);
         var resultB = await service.GetMyNotificationsAsync(userB.Id, 1, 20);
@@ -30,9 +42,17 @@ public class NotificationServiceTests
     public async Task MarkAsReadAsync_OwnNotification_SetsIsReadTrue()
     {
         using var context = TestDbContextFactory.Create();
-        var user = await TestUserFactory.CreateAsync(context, "notif-c@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "notif-c@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
         var service = ServiceFactory.CreateNotificationService(context);
-        await service.NotifyAsync(new[] { user.Id }, NotificationType.VentaRealizada, "Venta realizada.");
+        await service.NotifyAsync(
+            new[] { user.Id },
+            NotificationType.VentaRealizada,
+            "Venta realizada."
+        );
         var notification = (await service.GetMyNotificationsAsync(user.Id, 1, 20)).Items.Single();
 
         await service.MarkAsReadAsync(notification.Id, user.Id);
@@ -45,10 +65,22 @@ public class NotificationServiceTests
     public async Task MarkAsReadAsync_NotificationBelongsToAnotherUser_ThrowsNotFoundException()
     {
         using var context = TestDbContextFactory.Create();
-        var owner = await TestUserFactory.CreateAsync(context, "notif-owner@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
-        var otherUser = await TestUserFactory.CreateAsync(context, "notif-other@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var owner = await TestUserFactory.CreateAsync(
+            context,
+            "notif-owner@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
+        var otherUser = await TestUserFactory.CreateAsync(
+            context,
+            "notif-other@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
         var service = ServiceFactory.CreateNotificationService(context);
-        await service.NotifyAsync(new[] { owner.Id }, NotificationType.VentaRealizada, "Venta realizada.");
+        await service.NotifyAsync(
+            new[] { owner.Id },
+            NotificationType.VentaRealizada,
+            "Venta realizada."
+        );
         var notification = (await service.GetMyNotificationsAsync(owner.Id, 1, 20)).Items.Single();
 
         var act = async () => await service.MarkAsReadAsync(notification.Id, otherUser.Id);

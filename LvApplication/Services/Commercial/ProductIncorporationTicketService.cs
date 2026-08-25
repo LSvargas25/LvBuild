@@ -25,7 +25,8 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
         IBranchRepository branchRepository,
         IBranchInventoryRepository inventoryRepository,
         IProductRepository productRepository,
-        IValidator<CreateProductIncorporationTicketDto> createValidator)
+        IValidator<CreateProductIncorporationTicketDto> createValidator
+    )
     {
         _ticketRepository = ticketRepository;
         _branchRepository = branchRepository;
@@ -35,28 +36,38 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
     }
 
     private static bool CanAutoValidate(IEnumerable<string> actingUserRoles) =>
-        actingUserRoles.Contains(GeneralManagerRole) ||
-        actingUserRoles.Contains(OperationsDirectorRole) ||
-        actingUserRoles.Contains(BranchAdminRole);
+        actingUserRoles.Contains(GeneralManagerRole)
+        || actingUserRoles.Contains(OperationsDirectorRole)
+        || actingUserRoles.Contains(BranchAdminRole);
 
-    public async Task<ProductIncorporationTicketDto> CreateAsync(CreateProductIncorporationTicketDto request, int createdByUserId, IEnumerable<string> actingUserRoles)
+    public async Task<ProductIncorporationTicketDto> CreateAsync(
+        CreateProductIncorporationTicketDto request,
+        int createdByUserId,
+        IEnumerable<string> actingUserRoles
+    )
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var branch = await _branchRepository.GetByIdAsync(request.BranchId)
+        var branch =
+            await _branchRepository.GetByIdAsync(request.BranchId)
             ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
 
         if (branch.BranchType is not (BranchType.Commercial or BranchType.Warehouse))
         {
-            throw new ValidationAppException("La sucursal debe ser de tipo Comercio o Bodega para incorporar productos.");
+            throw new ValidationAppException(
+                "La sucursal debe ser de tipo Comercio o Bodega para incorporar productos."
+            );
         }
 
-        var product = await _productRepository.GetByIdAsync(request.ProductId)
+        var product =
+            await _productRepository.GetByIdAsync(request.ProductId)
             ?? throw new NotFoundException($"Product {request.ProductId} not found.");
 
         if (product.Status != ProductStatus.Validated)
         {
-            throw new ValidationAppException("Solo se pueden incorporar productos en estado Validated.");
+            throw new ValidationAppException(
+                "Solo se pueden incorporar productos en estado Validated."
+            );
         }
 
         var autoValidate = CanAutoValidate(actingUserRoles);
@@ -71,10 +82,12 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
             UnitCost = request.UnitCost,
             CreatedByUserId = createdByUserId,
             CreatedDate = now,
-            Status = autoValidate ? ProductIncorporationTicketStatus.Validated : ProductIncorporationTicketStatus.PendingValidation,
+            Status = autoValidate
+                ? ProductIncorporationTicketStatus.Validated
+                : ProductIncorporationTicketStatus.PendingValidation,
             ValidatedByUserId = autoValidate ? createdByUserId : null,
             ValidatedDate = autoValidate ? now : null,
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         await _ticketRepository.AddAsync(ticket);
@@ -87,21 +100,34 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
         return MapToDto(ticket);
     }
 
-    public async Task<ProductIncorporationTicketDto> ValidateAsync(int id, bool approve, int actingUserId, IEnumerable<string> actingUserRoles)
+    public async Task<ProductIncorporationTicketDto> ValidateAsync(
+        int id,
+        bool approve,
+        int actingUserId,
+        IEnumerable<string> actingUserRoles
+    )
     {
         if (!CanAutoValidate(actingUserRoles))
         {
-            throw new ForbiddenException("Solo Gerente General, Director de Operaciones o Administrador de Sucursal pueden validar incorporaciones.");
+            throw new ForbiddenException(
+                "Solo Gerente General, Director de Operaciones o Administrador de Sucursal pueden validar incorporaciones."
+            );
         }
 
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
 
         if (ticket.Status != ProductIncorporationTicketStatus.PendingValidation)
         {
-            throw new ValidationAppException("Solo se puede validar un ticket en estado PendingValidation.");
+            throw new ValidationAppException(
+                "Solo se puede validar un ticket en estado PendingValidation."
+            );
         }
 
-        ticket.Status = approve ? ProductIncorporationTicketStatus.Validated : ProductIncorporationTicketStatus.Rejected;
+        ticket.Status = approve
+            ? ProductIncorporationTicketStatus.Validated
+            : ProductIncorporationTicketStatus.Rejected;
         ticket.ValidatedByUserId = actingUserId;
         ticket.ValidatedDate = DateTime.UtcNow;
         ticket.UpdatedAt = DateTime.UtcNow;
@@ -118,11 +144,15 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
 
     public async Task DeleteAsync(int id)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
 
         if (ticket.Status != ProductIncorporationTicketStatus.PendingValidation)
         {
-            throw new ValidationAppException("Solo se puede eliminar un ticket en estado PendingValidation.");
+            throw new ValidationAppException(
+                "Solo se puede eliminar un ticket en estado PendingValidation."
+            );
         }
 
         await _ticketRepository.DeleteAsync(ticket);
@@ -130,26 +160,39 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
 
     public async Task<ProductIncorporationTicketDto> GetByIdAsync(int id)
     {
-        var ticket = await _ticketRepository.GetByIdAsync(id) ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
+        var ticket =
+            await _ticketRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
         return MapToDto(ticket);
     }
 
-    public async Task<PagedResult<ProductIncorporationTicketDto>> GetAllByBranchAsync(int branchId, int pageNumber, int pageSize)
+    public async Task<PagedResult<ProductIncorporationTicketDto>> GetAllByBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _ticketRepository.GetPagedByBranchAsync(branchId, pageNumber, pageSize);
+        var (items, totalCount) = await _ticketRepository.GetPagedByBranchAsync(
+            branchId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<ProductIncorporationTicketDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
     private async Task IncrementInventoryAsync(ProductIncorporationTicket ticket)
     {
-        var inventory = await _inventoryRepository.GetByBranchAndProductAsync(ticket.BranchId, ticket.ProductId);
+        var inventory = await _inventoryRepository.GetByBranchAndProductAsync(
+            ticket.BranchId,
+            ticket.ProductId
+        );
 
         if (inventory is null)
         {
@@ -159,7 +202,7 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
                 ProductId = ticket.ProductId,
                 Quantity = ticket.Quantity,
                 MinimumStock = 0,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
             await _inventoryRepository.AddAsync(inventory);
         }
@@ -171,18 +214,19 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
         }
     }
 
-    private static ProductIncorporationTicketDto MapToDto(ProductIncorporationTicket ticket) => new()
-    {
-        Id = ticket.Id,
-        BranchId = ticket.BranchId,
-        ProductId = ticket.ProductId,
-        SupplierId = ticket.SupplierId,
-        Quantity = ticket.Quantity,
-        UnitCost = ticket.UnitCost,
-        CreatedByUserId = ticket.CreatedByUserId,
-        CreatedDate = ticket.CreatedDate,
-        Status = ticket.Status,
-        ValidatedByUserId = ticket.ValidatedByUserId,
-        ValidatedDate = ticket.ValidatedDate
-    };
+    private static ProductIncorporationTicketDto MapToDto(ProductIncorporationTicket ticket) =>
+        new()
+        {
+            Id = ticket.Id,
+            BranchId = ticket.BranchId,
+            ProductId = ticket.ProductId,
+            SupplierId = ticket.SupplierId,
+            Quantity = ticket.Quantity,
+            UnitCost = ticket.UnitCost,
+            CreatedByUserId = ticket.CreatedByUserId,
+            CreatedDate = ticket.CreatedDate,
+            Status = ticket.Status,
+            ValidatedByUserId = ticket.ValidatedByUserId,
+            ValidatedDate = ticket.ValidatedDate,
+        };
 }

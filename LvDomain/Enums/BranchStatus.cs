@@ -4,5 +4,5 @@ public enum BranchStatus
 {
     Active,
     Inactive,
-    Archived
+    Archived,
 }

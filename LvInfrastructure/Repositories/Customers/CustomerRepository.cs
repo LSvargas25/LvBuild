@@ -17,12 +17,15 @@ public class CustomerRepository : ICustomerRepository
     public Task<Customer?> GetByIdAsync(int id) =>
         _context.Customers.FirstOrDefaultAsync(c => c.Id == id);
 
-    public async Task<(List<Customer> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(List<Customer> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize
+    )
     {
         var totalCount = await _context.Customers.CountAsync();
 
-        var items = await _context.Customers
-            .OrderBy(c => c.Id)
+        var items = await _context
+            .Customers.OrderBy(c => c.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

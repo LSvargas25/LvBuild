@@ -29,7 +29,11 @@ public class NotificationRepository : INotificationRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(List<Notification> Items, int TotalCount)> GetPagedForUserAsync(int userId, int pageNumber, int pageSize)
+    public async Task<(List<Notification> Items, int TotalCount)> GetPagedForUserAsync(
+        int userId,
+        int pageNumber,
+        int pageSize
+    )
     {
         var query = _context.Notifications.Where(n => n.UserId == userId);
 

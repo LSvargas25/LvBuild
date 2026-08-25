@@ -7,5 +7,5 @@ public enum NotificationType
     ProductoSinRotacion,
     VentaRealizada,
     CompraProveedor,
-    MovimientoBodega
+    MovimientoBodega,
 }

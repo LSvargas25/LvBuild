@@ -15,11 +15,16 @@ public class InvoiceDetailConfiguration : IEntityTypeConfiguration<InvoiceDetail
         builder.Property(d => d.UnitPrice).HasColumnType("decimal(18,2)");
         builder.Property(d => d.Subtotal).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(d => d.Invoice)
+        builder
+            .HasOne(d => d.Invoice)
             .WithMany(i => i.Details)
             .HasForeignKey(d => d.InvoiceId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasOne(d => d.Product).WithMany().HasForeignKey(d => d.ProductId).OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(d => d.Product)
+            .WithMany()
+            .HasForeignKey(d => d.ProductId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

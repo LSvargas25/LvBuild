@@ -14,8 +14,8 @@ public class PayrollRepository : IPayrollRepository
         _context = context;
     }
 
-    private IQueryable<LvDomain.Entities.Payroll.Payroll> PayrollsWithDetails => _context.Payrolls
-        .Include(p => p.Details).ThenInclude(d => d.Payments);
+    private IQueryable<LvDomain.Entities.Payroll.Payroll> PayrollsWithDetails =>
+        _context.Payrolls.Include(p => p.Details).ThenInclude(d => d.Payments);
 
     public Task<LvDomain.Entities.Payroll.Payroll?> GetByIdAsync(int id) =>
         PayrollsWithDetails.FirstOrDefaultAsync(p => p.Id == id);
@@ -23,7 +23,10 @@ public class PayrollRepository : IPayrollRepository
     public Task<bool> ExistsForSiteLogAsync(int siteLogId) =>
         _context.Payrolls.AnyAsync(p => p.SiteLogId == siteLogId);
 
-    public async Task<(List<LvDomain.Entities.Payroll.Payroll> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(
+        List<LvDomain.Entities.Payroll.Payroll> Items,
+        int TotalCount
+    )> GetPagedAsync(int pageNumber, int pageSize)
     {
         var totalCount = await _context.Payrolls.CountAsync();
 
@@ -36,7 +39,10 @@ public class PayrollRepository : IPayrollRepository
         return (items, totalCount);
     }
 
-    public async Task<(List<LvDomain.Entities.Payroll.Payroll> Items, int TotalCount)> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<(
+        List<LvDomain.Entities.Payroll.Payroll> Items,
+        int TotalCount
+    )> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize)
     {
         var query = _context.Payrolls.Where(p => p.ProjectId == projectId);
 
@@ -53,9 +59,14 @@ public class PayrollRepository : IPayrollRepository
     }
 
     public async Task<decimal> SumPaidTotalByChapterAsync(int projectId, int chapterId) =>
-        await _context.Payrolls
-            .Where(p => p.ProjectId == projectId && p.ChapterId == chapterId && p.Status == PayrollStatus.Paid)
-            .SumAsync(p => (decimal?)p.TotalPayroll) ?? 0m;
+        await _context
+            .Payrolls.Where(p =>
+                p.ProjectId == projectId
+                && p.ChapterId == chapterId
+                && p.Status == PayrollStatus.Paid
+            )
+            .SumAsync(p => (decimal?)p.TotalPayroll)
+        ?? 0m;
 
     public async Task AddAsync(LvDomain.Entities.Payroll.Payroll payroll)
     {

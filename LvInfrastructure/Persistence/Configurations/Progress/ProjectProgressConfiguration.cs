@@ -14,12 +14,14 @@ public class ProjectProgressConfiguration : IEntityTypeConfiguration<ProjectProg
 
         builder.Property(p => p.ProgressPercentage).HasColumnType("decimal(5,2)");
 
-        builder.HasOne(p => p.Project)
+        builder
+            .HasOne(p => p.Project)
             .WithMany()
             .HasForeignKey(p => p.ProjectId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(p => p.SiteLog)
+        builder
+            .HasOne(p => p.SiteLog)
             .WithMany()
             .HasForeignKey(p => p.SiteLogId)
             .OnDelete(DeleteBehavior.Restrict);

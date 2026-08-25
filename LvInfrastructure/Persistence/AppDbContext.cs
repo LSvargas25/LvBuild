@@ -3,9 +3,9 @@ using LvDomain.Entities.Branches;
 using LvDomain.Entities.Budgets;
 using LvDomain.Entities.Commercial;
 using LvDomain.Entities.Customers;
+using LvDomain.Entities.Incidents;
 using LvDomain.Entities.Inventory;
 using LvDomain.Entities.Materials;
-using LvDomain.Entities.Incidents;
 using LvDomain.Entities.Notifications;
 using LvDomain.Entities.Offers;
 using LvDomain.Entities.Payroll;
@@ -21,9 +21,8 @@ namespace LvInfrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-    }
+    public AppDbContext(DbContextOptions<AppDbContext> options)
+        : base(options) { }
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Role> Roles => Set<Role>();
@@ -77,7 +76,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Product> Products => Set<Product>();
     public DbSet<BranchInventory> BranchInventories => Set<BranchInventory>();
-    public DbSet<ProductIncorporationTicket> ProductIncorporationTickets => Set<ProductIncorporationTicket>();
+    public DbSet<ProductIncorporationTicket> ProductIncorporationTickets =>
+        Set<ProductIncorporationTicket>();
     public DbSet<CashRegister> CashRegisters => Set<CashRegister>();
     public DbSet<Invoice> Invoices => Set<Invoice>();
     public DbSet<InvoiceDetail> InvoiceDetails => Set<InvoiceDetail>();

@@ -20,7 +20,11 @@ public class ProjectProgressRepository : IProjectProgressRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(List<ProjectProgress> Items, int TotalCount)> GetPagedByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<(List<ProjectProgress> Items, int TotalCount)> GetPagedByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
         var query = _context.ProjectProgresses.Where(p => p.ProjectId == projectId);
 

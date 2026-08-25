@@ -8,10 +8,11 @@ public class UpdateInvoiceDraftDtoValidator : AbstractValidator<UpdateInvoiceDra
     public UpdateInvoiceDraftDtoValidator()
     {
         RuleFor(x => x.Details).NotEmpty().WithMessage("La factura debe tener al menos una línea.");
-        RuleForEach(x => x.Details).ChildRules(line =>
-        {
-            line.RuleFor(l => l.ProductId).GreaterThan(0);
-            line.RuleFor(l => l.Quantity).GreaterThan(0);
-        });
+        RuleForEach(x => x.Details)
+            .ChildRules(line =>
+            {
+                line.RuleFor(l => l.ProductId).GreaterThan(0);
+                line.RuleFor(l => l.Quantity).GreaterThan(0);
+            });
     }
 }

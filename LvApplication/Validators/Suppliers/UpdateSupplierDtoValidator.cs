@@ -7,14 +7,10 @@ public class UpdateSupplierDtoValidator : AbstractValidator<UpdateSupplierDto>
 {
     public UpdateSupplierDtoValidator()
     {
-        RuleFor(x => x.Name)
-            .NotEmpty();
+        RuleFor(x => x.Name).NotEmpty();
 
-        RuleFor(x => x.Email)
-            .EmailAddress()
-            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+        RuleFor(x => x.Email).EmailAddress().When(x => !string.IsNullOrWhiteSpace(x.Email));
 
-        RuleFor(x => x.Status)
-            .IsInEnum();
+        RuleFor(x => x.Status).IsInEnum();
     }
 }

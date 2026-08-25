@@ -15,10 +15,10 @@ public class RefreshTokenRepository : IRefreshTokenRepository
     }
 
     public Task<RefreshToken?> GetByTokenAsync(string token) =>
-        _context.RefreshTokens
-            .Include(rt => rt.User)
-            .ThenInclude(u => u.UserRoles)
-            .ThenInclude(ur => ur.Role)
+        _context
+            .RefreshTokens.Include(rt => rt.User)
+                .ThenInclude(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(rt => rt.Token == token);
 
     public async Task AddAsync(RefreshToken refreshToken)
@@ -35,8 +35,10 @@ public class RefreshTokenRepository : IRefreshTokenRepository
 
     public async Task RevokeAllActiveTokensForUserAsync(int userId)
     {
-        var activeTokens = await _context.RefreshTokens
-            .Where(rt => rt.UserId == userId && !rt.Revoked && rt.ExpiresAt > DateTime.UtcNow)
+        var activeTokens = await _context
+            .RefreshTokens.Where(rt =>
+                rt.UserId == userId && !rt.Revoked && rt.ExpiresAt > DateTime.UtcNow
+            )
             .ToListAsync();
 
         foreach (var token in activeTokens)

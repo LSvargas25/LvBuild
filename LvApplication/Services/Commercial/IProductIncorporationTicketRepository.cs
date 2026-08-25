@@ -8,5 +8,9 @@ public interface IProductIncorporationTicketRepository
     Task AddAsync(ProductIncorporationTicket ticket);
     Task UpdateAsync(ProductIncorporationTicket ticket);
     Task DeleteAsync(ProductIncorporationTicket ticket);
-    Task<(List<ProductIncorporationTicket> Items, int TotalCount)> GetPagedByBranchAsync(int branchId, int pageNumber, int pageSize);
+    Task<(List<ProductIncorporationTicket> Items, int TotalCount)> GetPagedByBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    );
 }

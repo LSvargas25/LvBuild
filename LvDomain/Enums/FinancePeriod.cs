@@ -4,5 +4,5 @@ public enum FinancePeriod
 {
     Week,
     Month,
-    Year
+    Year,
 }

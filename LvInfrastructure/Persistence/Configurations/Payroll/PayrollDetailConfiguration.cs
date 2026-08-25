@@ -17,18 +17,17 @@ public class PayrollDetailConfiguration : IEntityTypeConfiguration<PayrollDetail
         builder.Property(d => d.AdvanceAmountApplied).HasColumnType("decimal(18,2)");
         builder.Property(d => d.FinalAmountToPay).HasColumnType("decimal(18,2)");
 
-        builder.Property(d => d.PaymentType)
-            .HasConversion<string>()
-            .HasMaxLength(30)
-            .IsRequired();
+        builder.Property(d => d.PaymentType).HasConversion<string>().HasMaxLength(30).IsRequired();
 
-        builder.HasOne(d => d.Payroll)
+        builder
+            .HasOne(d => d.Payroll)
             .WithMany(p => p.Details)
             .HasForeignKey(d => d.PayrollId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(d => d.PayrollId);
 
-        builder.HasOne(d => d.Worker)
+        builder
+            .HasOne(d => d.Worker)
             .WithMany()
             .HasForeignKey(d => d.WorkerId)
             .OnDelete(DeleteBehavior.Restrict);

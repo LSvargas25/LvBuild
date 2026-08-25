@@ -35,7 +35,11 @@ public class InventoryMovementRepository : IInventoryMovementRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<(List<InventoryMovement> Items, int TotalCount)> GetPagedByOriginBranchAsync(int branchId, int pageNumber, int pageSize)
+    public async Task<(List<InventoryMovement> Items, int TotalCount)> GetPagedByOriginBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    )
     {
         var query = _context.InventoryMovements.Where(m => m.OriginBranchId == branchId);
         var totalCount = await query.CountAsync();

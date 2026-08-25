@@ -17,12 +17,15 @@ public class WorkerRepository : IWorkerRepository
     public Task<Worker?> GetByIdAsync(int id) =>
         _context.Workers.FirstOrDefaultAsync(w => w.Id == id);
 
-    public async Task<(List<Worker> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(List<Worker> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize
+    )
     {
         var totalCount = await _context.Workers.CountAsync();
 
-        var items = await _context.Workers
-            .OrderBy(w => w.Id)
+        var items = await _context
+            .Workers.OrderBy(w => w.Id)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();

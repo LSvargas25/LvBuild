@@ -14,13 +14,15 @@ public class SiteLogWorkerConfiguration : IEntityTypeConfiguration<SiteLogWorker
 
         builder.Property(w => w.HoursWorked).HasColumnType("decimal(5,2)");
 
-        builder.HasOne(w => w.SiteLog)
+        builder
+            .HasOne(w => w.SiteLog)
             .WithMany(s => s.Workers)
             .HasForeignKey(w => w.SiteLogId)
             .OnDelete(DeleteBehavior.Cascade);
         builder.HasIndex(w => w.SiteLogId);
 
-        builder.HasOne(w => w.Worker)
+        builder
+            .HasOne(w => w.Worker)
             .WithMany()
             .HasForeignKey(w => w.WorkerId)
             .OnDelete(DeleteBehavior.Restrict);

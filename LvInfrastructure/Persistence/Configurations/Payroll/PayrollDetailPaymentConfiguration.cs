@@ -14,12 +14,14 @@ public class PayrollDetailPaymentConfiguration : IEntityTypeConfiguration<Payrol
 
         builder.Property(p => p.Amount).HasColumnType("decimal(18,2)");
 
-        builder.Property(p => p.PaymentMethod)
+        builder
+            .Property(p => p.PaymentMethod)
             .HasConversion<string>()
             .HasMaxLength(20)
             .IsRequired();
 
-        builder.HasOne(p => p.PayrollDetail)
+        builder
+            .HasOne(p => p.PayrollDetail)
             .WithMany(d => d.Payments)
             .HasForeignKey(p => p.PayrollDetailId)
             .OnDelete(DeleteBehavior.Cascade);

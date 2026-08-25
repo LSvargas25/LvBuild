@@ -7,7 +7,6 @@ public class UpdateProfileDtoValidator : AbstractValidator<UpdateProfileDto>
 {
     public UpdateProfileDtoValidator()
     {
-        RuleFor(x => x.Name)
-            .NotEmpty();
+        RuleFor(x => x.Name).NotEmpty();
     }
 }

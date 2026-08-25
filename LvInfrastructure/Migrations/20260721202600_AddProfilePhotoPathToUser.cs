@@ -15,22 +15,22 @@ namespace LvInfrastructure.Migrations
                 table: "Users",
                 type: "nvarchar(300)",
                 maxLength: 300,
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.UpdateData(
                 table: "Users",
                 keyColumn: "Id",
                 keyValue: 1,
                 column: "ProfilePhotoPath",
-                value: null);
+                value: null
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "ProfilePhotoPath",
-                table: "Users");
+            migrationBuilder.DropColumn(name: "ProfilePhotoPath", table: "Users");
         }
     }
 }

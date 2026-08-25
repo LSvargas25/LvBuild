@@ -19,12 +19,29 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder.Property(i => i.Tax).HasColumnType("decimal(18,2)");
         builder.Property(i => i.Total).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(i => i.Branch).WithMany().HasForeignKey(i => i.BranchId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(i => i.CashRegister).WithMany().HasForeignKey(i => i.CashRegisterId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(i => i.Customer).WithMany().HasForeignKey(i => i.CustomerId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne(i => i.CreatedByUser).WithMany().HasForeignKey(i => i.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(i => i.Branch)
+            .WithMany()
+            .HasForeignKey(i => i.BranchId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(i => i.CashRegister)
+            .WithMany()
+            .HasForeignKey(i => i.CashRegisterId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(i => i.Customer)
+            .WithMany()
+            .HasForeignKey(i => i.CustomerId)
+            .OnDelete(DeleteBehavior.Restrict);
+        builder
+            .HasOne(i => i.CreatedByUser)
+            .WithMany()
+            .HasForeignKey(i => i.CreatedByUserId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasIndex(i => new { i.BranchId, i.InvoiceNumber })
+        builder
+            .HasIndex(i => new { i.BranchId, i.InvoiceNumber })
             .IsUnique()
             .HasFilter("[InvoiceNumber] IS NOT NULL");
     }

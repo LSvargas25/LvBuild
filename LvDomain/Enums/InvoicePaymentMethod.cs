@@ -4,5 +4,5 @@ public enum InvoicePaymentMethod
 {
     Efectivo,
     Tarjeta,
-    Sinpe
+    Sinpe,
 }

@@ -14,7 +14,11 @@ public class InvoiceService : IInvoiceService
 {
     private const decimal TaxRate = 0.13m;
     private const decimal LowStockThreshold = 3m;
-    private static readonly string[] LowStockRecipientRoles = { "GeneralManager", "OperationsDirector" };
+    private static readonly string[] LowStockRecipientRoles =
+    {
+        "GeneralManager",
+        "OperationsDirector",
+    };
 
     private readonly IInvoiceRepository _invoiceRepository;
     private readonly IBranchRepository _branchRepository;
@@ -39,7 +43,8 @@ public class InvoiceService : IInvoiceService
         IValidator<CreateInvoiceDto> createValidator,
         IValidator<UpdateInvoiceDraftDto> updateDraftValidator,
         IValidator<IssueInvoiceDto> issueValidator,
-        IValidator<CreateInvoicePaymentDto> paymentValidator)
+        IValidator<CreateInvoicePaymentDto> paymentValidator
+    )
     {
         _invoiceRepository = invoiceRepository;
         _branchRepository = branchRepository;
@@ -58,20 +63,26 @@ public class InvoiceService : IInvoiceService
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var branch = await _branchRepository.GetByIdAsync(request.BranchId)
+        var branch =
+            await _branchRepository.GetByIdAsync(request.BranchId)
             ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
 
         if (branch.BranchType != BranchType.Commercial)
         {
-            throw new ValidationAppException("Solo se puede facturar en una sucursal de tipo Comercio.");
+            throw new ValidationAppException(
+                "Solo se puede facturar en una sucursal de tipo Comercio."
+            );
         }
 
-        var cashRegister = await _cashRegisterRepository.GetByIdAsync(request.CashRegisterId)
+        var cashRegister =
+            await _cashRegisterRepository.GetByIdAsync(request.CashRegisterId)
             ?? throw new NotFoundException($"CashRegister {request.CashRegisterId} not found.");
 
         if (cashRegister.BranchId != request.BranchId)
         {
-            throw new ValidationAppException("La caja indicada no pertenece a la sucursal de la factura.");
+            throw new ValidationAppException(
+                "La caja indicada no pertenece a la sucursal de la factura."
+            );
         }
 
         var details = await BuildDetailLinesAsync(request.Details);
@@ -92,7 +103,7 @@ public class InvoiceService : IInvoiceService
             Total = total,
             CreatedByUserId = createdByUserId,
             Details = details,
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         await _invoiceRepository.AddAsync(invoice);
@@ -104,7 +115,9 @@ public class InvoiceService : IInvoiceService
     {
         await _updateDraftValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var invoice = await _invoiceRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Invoice {id} not found.");
+        var invoice =
+            await _invoiceRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Invoice {id} not found.");
 
         if (invoice.Status != InvoiceStatus.Draft)
         {
@@ -135,7 +148,9 @@ public class InvoiceService : IInvoiceService
     {
         await _issueValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var invoice = await _invoiceRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Invoice {id} not found.");
+        var invoice =
+            await _invoiceRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Invoice {id} not found.");
 
         if (invoice.Status != InvoiceStatus.Draft)
         {
@@ -144,24 +159,34 @@ public class InvoiceService : IInvoiceService
 
         if (invoice.Details.Count == 0)
         {
-            throw new ValidationAppException("La factura debe tener al menos una línea antes de emitirse.");
+            throw new ValidationAppException(
+                "La factura debe tener al menos una línea antes de emitirse."
+            );
         }
 
-        var cashRegister = await _cashRegisterRepository.GetByIdAsync(invoice.CashRegisterId)
+        var cashRegister =
+            await _cashRegisterRepository.GetByIdAsync(invoice.CashRegisterId)
             ?? throw new NotFoundException($"CashRegister {invoice.CashRegisterId} not found.");
 
         if (cashRegister.Status != CashRegisterStatus.Open)
         {
-            throw new ValidationAppException("La caja asociada a la factura debe estar abierta para poder emitirla.");
+            throw new ValidationAppException(
+                "La caja asociada a la factura debe estar abierta para poder emitirla."
+            );
         }
 
         var inventoryByProduct = new Dictionary<int, BranchInventory>();
         foreach (var detail in invoice.Details)
         {
-            var inventory = await _inventoryRepository.GetByBranchAndProductAsync(invoice.BranchId, detail.ProductId);
+            var inventory = await _inventoryRepository.GetByBranchAndProductAsync(
+                invoice.BranchId,
+                detail.ProductId
+            );
             if (inventory is null || inventory.Quantity < detail.Quantity)
             {
-                throw new ValidationAppException($"Stock insuficiente para el producto {detail.ProductId} en la sucursal {invoice.BranchId}.");
+                throw new ValidationAppException(
+                    $"Stock insuficiente para el producto {detail.ProductId} en la sucursal {invoice.BranchId}."
+                );
             }
 
             inventoryByProduct[detail.ProductId] = inventory;
@@ -172,7 +197,9 @@ public class InvoiceService : IInvoiceService
             var paymentsSum = request.Payments.Sum(p => p.Amount);
             if (paymentsSum != invoice.Total)
             {
-                throw new ValidationAppException("Para ventas de Contado, los pagos deben cubrir exactamente el total de la factura.");
+                throw new ValidationAppException(
+                    "Para ventas de Contado, los pagos deben cubrir exactamente el total de la factura."
+                );
             }
         }
 
@@ -203,14 +230,16 @@ public class InvoiceService : IInvoiceService
         var now = DateTime.UtcNow;
         foreach (var payment in request.Payments)
         {
-            invoice.Payments.Add(new InvoicePayment
-            {
-                Date = now,
-                Amount = payment.Amount,
-                PaymentMethod = payment.PaymentMethod,
-                ReceivedByUserId = actingUserId,
-                CreatedAt = now
-            });
+            invoice.Payments.Add(
+                new InvoicePayment
+                {
+                    Date = now,
+                    Amount = payment.Amount,
+                    PaymentMethod = payment.PaymentMethod,
+                    ReceivedByUserId = actingUserId,
+                    CreatedAt = now,
+                }
+            );
         }
 
         await _invoiceRepository.UpdateAsync(invoice);
@@ -218,15 +247,26 @@ public class InvoiceService : IInvoiceService
         return MapToDto(invoice);
     }
 
-    public async Task<InvoiceDto> AddPaymentAsync(int id, CreateInvoicePaymentDto request, int receivedByUserId)
+    public async Task<InvoiceDto> AddPaymentAsync(
+        int id,
+        CreateInvoicePaymentDto request,
+        int receivedByUserId
+    )
     {
         await _paymentValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var invoice = await _invoiceRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Invoice {id} not found.");
+        var invoice =
+            await _invoiceRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Invoice {id} not found.");
 
-        if (invoice.Status != InvoiceStatus.Issued || invoice.PaymentType != InvoicePaymentType.Credito)
+        if (
+            invoice.Status != InvoiceStatus.Issued
+            || invoice.PaymentType != InvoicePaymentType.Credito
+        )
         {
-            throw new ValidationAppException("Solo se pueden registrar pagos sobre facturas emitidas de Crédito.");
+            throw new ValidationAppException(
+                "Solo se pueden registrar pagos sobre facturas emitidas de Crédito."
+            );
         }
 
         var balance = invoice.Total - invoice.Payments.Sum(p => p.Amount);
@@ -237,17 +277,21 @@ public class InvoiceService : IInvoiceService
 
         if (request.Amount > balance)
         {
-            throw new ValidationAppException("El monto del pago no puede superar el saldo pendiente.");
+            throw new ValidationAppException(
+                "El monto del pago no puede superar el saldo pendiente."
+            );
         }
 
-        invoice.Payments.Add(new InvoicePayment
-        {
-            Date = DateTime.UtcNow,
-            Amount = request.Amount,
-            PaymentMethod = request.PaymentMethod,
-            ReceivedByUserId = receivedByUserId,
-            CreatedAt = DateTime.UtcNow
-        });
+        invoice.Payments.Add(
+            new InvoicePayment
+            {
+                Date = DateTime.UtcNow,
+                Amount = request.Amount,
+                PaymentMethod = request.PaymentMethod,
+                ReceivedByUserId = receivedByUserId,
+                CreatedAt = DateTime.UtcNow,
+            }
+        );
         invoice.UpdatedAt = DateTime.UtcNow;
 
         await _invoiceRepository.UpdateAsync(invoice);
@@ -257,11 +301,15 @@ public class InvoiceService : IInvoiceService
 
     public async Task<InvoiceDto> CancelAsync(int id)
     {
-        var invoice = await _invoiceRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Invoice {id} not found.");
+        var invoice =
+            await _invoiceRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Invoice {id} not found.");
 
         if (invoice.Status != InvoiceStatus.Issued)
         {
-            throw new ValidationAppException("Solo se puede cancelar una factura en estado Issued.");
+            throw new ValidationAppException(
+                "Solo se puede cancelar una factura en estado Issued."
+            );
         }
 
         if (invoice.PaymentType != InvoicePaymentType.Credito)
@@ -271,12 +319,17 @@ public class InvoiceService : IInvoiceService
 
         if (invoice.Payments.Count > 0)
         {
-            throw new ValidationAppException("No se puede cancelar una factura que ya tiene pagos registrados.");
+            throw new ValidationAppException(
+                "No se puede cancelar una factura que ya tiene pagos registrados."
+            );
         }
 
         foreach (var detail in invoice.Details)
         {
-            var inventory = await _inventoryRepository.GetByBranchAndProductAsync(invoice.BranchId, detail.ProductId);
+            var inventory = await _inventoryRepository.GetByBranchAndProductAsync(
+                invoice.BranchId,
+                detail.ProductId
+            );
             if (inventory is not null)
             {
                 inventory.Quantity += detail.Quantity;
@@ -295,7 +348,9 @@ public class InvoiceService : IInvoiceService
 
     public async Task DeleteAsync(int id)
     {
-        var invoice = await _invoiceRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Invoice {id} not found.");
+        var invoice =
+            await _invoiceRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Invoice {id} not found.");
 
         if (invoice.Status != InvoiceStatus.Draft)
         {
@@ -307,20 +362,30 @@ public class InvoiceService : IInvoiceService
 
     public async Task<InvoiceDto> GetByIdAsync(int id)
     {
-        var invoice = await _invoiceRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Invoice {id} not found.");
+        var invoice =
+            await _invoiceRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Invoice {id} not found.");
         return MapToDto(invoice);
     }
 
-    public async Task<PagedResult<InvoiceDto>> GetAllByBranchAsync(int branchId, int pageNumber, int pageSize)
+    public async Task<PagedResult<InvoiceDto>> GetAllByBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _invoiceRepository.GetPagedByBranchAsync(branchId, pageNumber, pageSize);
+        var (items, totalCount) = await _invoiceRepository.GetPagedByBranchAsync(
+            branchId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<InvoiceDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
@@ -341,12 +406,15 @@ public class InvoiceService : IInvoiceService
         foreach (var productId in productIds)
         {
             var product = await _productRepository.GetByIdAsync(productId);
-            var productLabel = product is null ? $"#{productId}" : $"{product.Name} ({product.Sku})";
+            var productLabel = product is null
+                ? $"#{productId}"
+                : $"{product.Name} ({product.Sku})";
 
             await _notificationService.NotifyAsync(
                 recipientIds,
                 NotificationType.StockBajo,
-                $"Stock bajo en {branch?.Name ?? $"sucursal #{branchId}"}: {productLabel}.");
+                $"Stock bajo en {branch?.Name ?? $"sucursal #{branchId}"}: {productLabel}."
+            );
         }
     }
 
@@ -356,30 +424,37 @@ public class InvoiceService : IInvoiceService
 
         foreach (var line in lines)
         {
-            var product = await _productRepository.GetByIdAsync(line.ProductId)
+            var product =
+                await _productRepository.GetByIdAsync(line.ProductId)
                 ?? throw new NotFoundException($"Product {line.ProductId} not found.");
 
             if (product.Status != ProductStatus.Validated)
             {
-                throw new ValidationAppException($"El producto {product.Sku} no está validado y no puede facturarse.");
+                throw new ValidationAppException(
+                    $"El producto {product.Sku} no está validado y no puede facturarse."
+                );
             }
 
             var subtotal = line.Quantity * product.UnitPrice;
 
-            details.Add(new InvoiceDetail
-            {
-                ProductId = product.Id,
-                Quantity = line.Quantity,
-                UnitPrice = product.UnitPrice,
-                Subtotal = subtotal,
-                CreatedAt = DateTime.UtcNow
-            });
+            details.Add(
+                new InvoiceDetail
+                {
+                    ProductId = product.Id,
+                    Quantity = line.Quantity,
+                    UnitPrice = product.UnitPrice,
+                    Subtotal = subtotal,
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
         }
 
         return details;
     }
 
-    private static (decimal Subtotal, decimal Tax, decimal Total) CalculateTotals(List<InvoiceDetail> details)
+    private static (decimal Subtotal, decimal Tax, decimal Total) CalculateTotals(
+        List<InvoiceDetail> details
+    )
     {
         var subtotal = details.Sum(d => d.Subtotal);
         var tax = Math.Round(subtotal * TaxRate, 2);
@@ -405,26 +480,30 @@ public class InvoiceService : IInvoiceService
             Tax = invoice.Tax,
             Total = invoice.Total,
             CreatedByUserId = invoice.CreatedByUserId,
-            Details = invoice.Details.Select(d => new InvoiceDetailDto
-            {
-                Id = d.Id,
-                ProductId = d.ProductId,
-                ProductName = d.Product?.Name ?? string.Empty,
-                Quantity = d.Quantity,
-                UnitPrice = d.UnitPrice,
-                Subtotal = d.Subtotal
-            }).ToList(),
-            Payments = invoice.Payments.Select(p => new InvoicePaymentDto
-            {
-                Id = p.Id,
-                Date = p.Date,
-                Amount = p.Amount,
-                PaymentMethod = p.PaymentMethod,
-                ReceivedByUserId = p.ReceivedByUserId
-            }).ToList(),
+            Details = invoice
+                .Details.Select(d => new InvoiceDetailDto
+                {
+                    Id = d.Id,
+                    ProductId = d.ProductId,
+                    ProductName = d.Product?.Name ?? string.Empty,
+                    Quantity = d.Quantity,
+                    UnitPrice = d.UnitPrice,
+                    Subtotal = d.Subtotal,
+                })
+                .ToList(),
+            Payments = invoice
+                .Payments.Select(p => new InvoicePaymentDto
+                {
+                    Id = p.Id,
+                    Date = p.Date,
+                    Amount = p.Amount,
+                    PaymentMethod = p.PaymentMethod,
+                    ReceivedByUserId = p.ReceivedByUserId,
+                })
+                .ToList(),
             TotalPaid = totalPaid,
             Balance = invoice.Total - totalPaid,
-            IsFullyPaid = totalPaid >= invoice.Total
+            IsFullyPaid = totalPaid >= invoice.Total,
         };
     }
 }

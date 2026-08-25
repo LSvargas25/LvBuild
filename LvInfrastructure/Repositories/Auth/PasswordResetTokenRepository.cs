@@ -15,8 +15,8 @@ public class PasswordResetTokenRepository : IPasswordResetTokenRepository
     }
 
     public Task<PasswordResetToken?> GetByTokenAsync(string token) =>
-        _context.PasswordResetTokens
-            .Include(prt => prt.User)
+        _context
+            .PasswordResetTokens.Include(prt => prt.User)
             .FirstOrDefaultAsync(prt => prt.Token == token);
 
     public async Task AddAsync(PasswordResetToken passwordResetToken)

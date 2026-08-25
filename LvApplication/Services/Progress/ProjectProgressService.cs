@@ -19,7 +19,8 @@ public class ProjectProgressService : IProjectProgressService
         IProjectProgressRepository progressRepository,
         ISiteLogRepository siteLogRepository,
         IProjectRepository projectRepository,
-        IOfferRepository offerRepository)
+        IOfferRepository offerRepository
+    )
     {
         _progressRepository = progressRepository;
         _siteLogRepository = siteLogRepository;
@@ -29,22 +30,26 @@ public class ProjectProgressService : IProjectProgressService
 
     public async Task<ProjectProgressDto> CalculateAndRecordAsync(int siteLogId)
     {
-        var siteLog = await _siteLogRepository.GetByIdAsync(siteLogId)
+        var siteLog =
+            await _siteLogRepository.GetByIdAsync(siteLogId)
             ?? throw new NotFoundException($"SiteLog {siteLogId} not found.");
 
-        var project = await _projectRepository.GetByIdAsync(siteLog.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(siteLog.ProjectId)
             ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
 
-        var offer = await _offerRepository.GetByIdAsync(project.OfferId)
+        var offer =
+            await _offerRepository.GetByIdAsync(project.OfferId)
             ?? throw new NotFoundException($"Offer {project.OfferId} not found.");
 
         // SUPUESTO (la sección 13 de la especificación no trae la fórmula exacta):
         // % de avance = semanas transcurridas entre el inicio del proyecto y el fin de
         // semana de esta bitácora, sobre la duración estimada de la oferta, con tope en 100%.
         var elapsedWeeks = (decimal)(siteLog.WeekEnd - project.StartDate).TotalDays / 7m;
-        var progressPercentage = offer.EstimatedDurationWeeks > 0
-            ? Math.Min(100m, elapsedWeeks / offer.EstimatedDurationWeeks * 100m)
-            : 100m;
+        var progressPercentage =
+            offer.EstimatedDurationWeeks > 0
+                ? Math.Min(100m, elapsedWeeks / offer.EstimatedDurationWeeks * 100m)
+                : 100m;
 
         var progress = new ProjectProgress
         {
@@ -52,7 +57,7 @@ public class ProjectProgressService : IProjectProgressService
             SiteLogId = siteLog.Id,
             ProgressPercentage = progressPercentage,
             CalculatedAt = DateTime.UtcNow,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _progressRepository.AddAsync(progress);
@@ -60,25 +65,34 @@ public class ProjectProgressService : IProjectProgressService
         return MapToDto(progress);
     }
 
-    public async Task<PagedResult<ProjectProgressDto>> GetHistoryByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<PagedResult<ProjectProgressDto>> GetHistoryByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _progressRepository.GetPagedByProjectAsync(projectId, pageNumber, pageSize);
+        var (items, totalCount) = await _progressRepository.GetPagedByProjectAsync(
+            projectId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<ProjectProgressDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
-    private static ProjectProgressDto MapToDto(ProjectProgress progress) => new()
-    {
-        Id = progress.Id,
-        ProjectId = progress.ProjectId,
-        SiteLogId = progress.SiteLogId,
-        ProgressPercentage = progress.ProgressPercentage,
-        CalculatedAt = progress.CalculatedAt
-    };
+    private static ProjectProgressDto MapToDto(ProjectProgress progress) =>
+        new()
+        {
+            Id = progress.Id,
+            ProjectId = progress.ProjectId,
+            SiteLogId = progress.SiteLogId,
+            ProgressPercentage = progress.ProgressPercentage,
+            CalculatedAt = progress.CalculatedAt,
+        };
 }

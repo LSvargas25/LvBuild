@@ -12,14 +12,12 @@ public class PasswordResetTokenConfiguration : IEntityTypeConfiguration<Password
 
         builder.HasKey(prt => prt.Id);
 
-        builder.Property(prt => prt.Token)
-            .IsRequired()
-            .HasMaxLength(300);
+        builder.Property(prt => prt.Token).IsRequired().HasMaxLength(300);
 
-        builder.HasIndex(prt => prt.Token)
-            .IsUnique();
+        builder.HasIndex(prt => prt.Token).IsUnique();
 
-        builder.HasOne(prt => prt.User)
+        builder
+            .HasOne(prt => prt.User)
             .WithMany()
             .HasForeignKey(prt => prt.UserId)
             .OnDelete(DeleteBehavior.Cascade);

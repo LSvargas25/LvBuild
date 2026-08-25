@@ -22,7 +22,11 @@ public class ProductsController : ApiControllerBase
     [HttpPost]
     public async Task<ActionResult<ProductDto>> Create(CreateProductDto request)
     {
-        var result = await _productService.CreateAsync(request, GetCurrentUserId(), GetCurrentRoles());
+        var result = await _productService.CreateAsync(
+            request,
+            GetCurrentUserId(),
+            GetCurrentRoles()
+        );
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
@@ -37,7 +41,12 @@ public class ProductsController : ApiControllerBase
     [HttpPost("{id:int}/validate")]
     public async Task<ActionResult<ProductDto>> Validate(int id, ValidateProductDto request)
     {
-        var result = await _productService.ValidateAsync(id, request.Approve, GetCurrentUserId(), GetCurrentRoles());
+        var result = await _productService.ValidateAsync(
+            id,
+            request.Approve,
+            GetCurrentUserId(),
+            GetCurrentRoles()
+        );
         return Ok(result);
     }
 
@@ -68,7 +77,8 @@ public class ProductsController : ApiControllerBase
     public async Task<ActionResult<PagedResult<ProductDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] bool activeOnly = true)
+        [FromQuery] bool activeOnly = true
+    )
     {
         var result = await _productService.GetAllAsync(pageNumber, pageSize, activeOnly);
         return Ok(result);

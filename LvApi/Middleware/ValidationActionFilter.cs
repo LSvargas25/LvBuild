@@ -6,7 +6,10 @@ namespace LvApi.Middleware;
 
 public class ValidationActionFilter : IAsyncActionFilter
 {
-    public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+    public async Task OnActionExecutionAsync(
+        ActionExecutingContext context,
+        ActionExecutionDelegate next
+    )
     {
         foreach (var argument in context.ActionArguments.Values)
         {
@@ -17,7 +20,10 @@ public class ValidationActionFilter : IAsyncActionFilter
 
             var validatorType = typeof(IValidator<>).MakeGenericType(argument.GetType());
 
-            if (context.HttpContext.RequestServices.GetService(validatorType) is not IValidator validator)
+            if (
+                context.HttpContext.RequestServices.GetService(validatorType)
+                is not IValidator validator
+            )
             {
                 continue;
             }

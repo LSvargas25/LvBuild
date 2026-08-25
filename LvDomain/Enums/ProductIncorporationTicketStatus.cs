@@ -4,5 +4,5 @@ public enum ProductIncorporationTicketStatus
 {
     PendingValidation,
     Validated,
-    Rejected
+    Rejected,
 }

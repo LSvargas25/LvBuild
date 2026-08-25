@@ -15,15 +15,17 @@ public class BranchInventoryService : IBranchInventoryService
     {
         var items = await _repository.GetByBranchAsync(branchId);
 
-        return items.Select(i => new BranchInventoryDto
-        {
-            Id = i.Id,
-            BranchId = i.BranchId,
-            ProductId = i.ProductId,
-            ProductName = i.Product.Name,
-            Sku = i.Product.Sku,
-            Quantity = i.Quantity,
-            MinimumStock = i.MinimumStock
-        }).ToList();
+        return items
+            .Select(i => new BranchInventoryDto
+            {
+                Id = i.Id,
+                BranchId = i.BranchId,
+                ProductId = i.ProductId,
+                ProductName = i.Product.Name,
+                Sku = i.Product.Sku,
+                Quantity = i.Quantity,
+                MinimumStock = i.MinimumStock,
+            })
+            .ToList();
     }
 }

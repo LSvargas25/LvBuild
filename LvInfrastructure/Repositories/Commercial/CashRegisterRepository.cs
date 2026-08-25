@@ -19,7 +19,9 @@ public class CashRegisterRepository : ICashRegisterRepository
         await _context.CashRegisters.FirstOrDefaultAsync(c => c.Id == id);
 
     public async Task<CashRegister?> GetOpenByBranchAsync(int branchId) =>
-        await _context.CashRegisters.FirstOrDefaultAsync(c => c.BranchId == branchId && c.Status == CashRegisterStatus.Open);
+        await _context.CashRegisters.FirstOrDefaultAsync(c =>
+            c.BranchId == branchId && c.Status == CashRegisterStatus.Open
+        );
 
     public async Task AddAsync(CashRegister register)
     {
@@ -43,7 +45,11 @@ public class CashRegisterRepository : ICashRegisterRepository
         await _context.Invoices.AnyAsync(i => i.CashRegisterId == cashRegisterId);
 
     public async Task<decimal> SumCashPaymentsAsync(int cashRegisterId) =>
-        await _context.InvoicePayments
-            .Where(p => p.PaymentMethod == InvoicePaymentMethod.Efectivo && p.Invoice.CashRegisterId == cashRegisterId)
-            .SumAsync(p => (decimal?)p.Amount) ?? 0m;
+        await _context
+            .InvoicePayments.Where(p =>
+                p.PaymentMethod == InvoicePaymentMethod.Efectivo
+                && p.Invoice.CashRegisterId == cashRegisterId
+            )
+            .SumAsync(p => (decimal?)p.Amount)
+        ?? 0m;
 }

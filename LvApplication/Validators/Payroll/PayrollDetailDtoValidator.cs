@@ -14,9 +14,12 @@ public class PayrollDetailDtoValidator : AbstractValidator<PayrollDetailDto>
         RuleFor(d => d)
             .Must(d =>
             {
-                var finalAmountToPay = (d.HoursWorked * d.HourlyRate) - (d.AdvanceAmountApplied ?? 0);
+                var finalAmountToPay =
+                    (d.HoursWorked * d.HourlyRate) - (d.AdvanceAmountApplied ?? 0);
                 return d.Payments.Sum(p => p.Amount) == finalAmountToPay;
             })
-            .WithMessage("La suma de los pagos de cada detalle debe coincidir con el monto final a pagar.");
+            .WithMessage(
+                "La suma de los pagos de cada detalle debe coincidir con el monto final a pagar."
+            );
     }
 }

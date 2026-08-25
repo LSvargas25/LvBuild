@@ -4,5 +4,5 @@ public enum MaterialTicketStatus
 {
     Review,
     Applied,
-    Archived
+    Archived,
 }

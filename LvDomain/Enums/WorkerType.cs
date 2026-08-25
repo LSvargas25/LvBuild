@@ -12,5 +12,5 @@ public enum WorkerType
     BusinessManager,
     Salesperson,
     WarehouseKeeper,
-    Transporter
+    Transporter,
 }

@@ -17,7 +17,8 @@ public class InventoryMovementService : IInventoryMovementService
     private const string OperationsDirectorRole = "OperationsDirector";
 
     private static bool CanValidate(IEnumerable<string> actingUserRoles) =>
-        actingUserRoles.Contains(GeneralManagerRole) || actingUserRoles.Contains(OperationsDirectorRole);
+        actingUserRoles.Contains(GeneralManagerRole)
+        || actingUserRoles.Contains(OperationsDirectorRole);
 
     private readonly IInventoryMovementRepository _movementRepository;
     private readonly IBranchRepository _branchRepository;
@@ -34,7 +35,8 @@ public class InventoryMovementService : IInventoryMovementService
         IProductRepository productRepository,
         IBranchInventoryRepository branchInventoryRepository,
         IProjectInventoryItemRepository projectInventoryItemRepository,
-        IValidator<CreateInventoryMovementDto> createValidator)
+        IValidator<CreateInventoryMovementDto> createValidator
+    )
     {
         _movementRepository = movementRepository;
         _branchRepository = branchRepository;
@@ -45,35 +47,48 @@ public class InventoryMovementService : IInventoryMovementService
         _createValidator = createValidator;
     }
 
-    public async Task<InventoryMovementDto> CreateAsync(CreateInventoryMovementDto request, int sentByUserId)
+    public async Task<InventoryMovementDto> CreateAsync(
+        CreateInventoryMovementDto request,
+        int sentByUserId
+    )
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var originBranch = await _branchRepository.GetByIdAsync(request.OriginBranchId)
+        var originBranch =
+            await _branchRepository.GetByIdAsync(request.OriginBranchId)
             ?? throw new NotFoundException($"Branch {request.OriginBranchId} not found.");
 
         if (originBranch.BranchType != BranchType.Warehouse)
         {
-            throw new ValidationAppException("La sucursal de origen de un movimiento de inventario debe ser de tipo Bodega.");
+            throw new ValidationAppException(
+                "La sucursal de origen de un movimiento de inventario debe ser de tipo Bodega."
+            );
         }
 
         if (request.DestinationBranchId.HasValue)
         {
-            var destinationBranch = await _branchRepository.GetByIdAsync(request.DestinationBranchId.Value)
+            var destinationBranch =
+                await _branchRepository.GetByIdAsync(request.DestinationBranchId.Value)
                 ?? throw new NotFoundException($"Branch {request.DestinationBranchId} not found.");
 
             if (destinationBranch.BranchType != BranchType.Commercial)
             {
-                throw new ValidationAppException("La sucursal de destino de un movimiento de inventario debe ser de tipo Comercio.");
+                throw new ValidationAppException(
+                    "La sucursal de destino de un movimiento de inventario debe ser de tipo Comercio."
+                );
             }
         }
         else
         {
-            _ = await _projectRepository.GetByIdAsync(request.DestinationProjectId!.Value)
-                ?? throw new NotFoundException($"Project {request.DestinationProjectId} not found.");
+            _ =
+                await _projectRepository.GetByIdAsync(request.DestinationProjectId!.Value)
+                ?? throw new NotFoundException(
+                    $"Project {request.DestinationProjectId} not found."
+                );
         }
 
-        _ = await _productRepository.GetByIdAsync(request.ProductId)
+        _ =
+            await _productRepository.GetByIdAsync(request.ProductId)
             ?? throw new NotFoundException($"Product {request.ProductId} not found.");
 
         var now = DateTime.UtcNow;
@@ -87,7 +102,7 @@ public class InventoryMovementService : IInventoryMovementService
             Status = InventoryMovementStatus.Sent,
             SentByUserId = sentByUserId,
             SentDate = now,
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         await _movementRepository.AddAsync(movement);
@@ -95,14 +110,23 @@ public class InventoryMovementService : IInventoryMovementService
         return MapToDto(movement);
     }
 
-    public async Task<InventoryMovementDto> ValidateAsync(int id, bool approve, int actingUserId, IEnumerable<string> actingUserRoles)
+    public async Task<InventoryMovementDto> ValidateAsync(
+        int id,
+        bool approve,
+        int actingUserId,
+        IEnumerable<string> actingUserRoles
+    )
     {
         if (!CanValidate(actingUserRoles))
         {
-            throw new ForbiddenException("Solo Gerente General o Director de Operaciones pueden validar movimientos de inventario.");
+            throw new ForbiddenException(
+                "Solo Gerente General o Director de Operaciones pueden validar movimientos de inventario."
+            );
         }
 
-        var movement = await _movementRepository.GetByIdAsync(id) ?? throw new NotFoundException($"InventoryMovement {id} not found.");
+        var movement =
+            await _movementRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"InventoryMovement {id} not found.");
 
         if (movement.Status != InventoryMovementStatus.Sent)
         {
@@ -111,10 +135,15 @@ public class InventoryMovementService : IInventoryMovementService
 
         if (approve)
         {
-            var originInventory = await _branchInventoryRepository.GetByBranchAndProductAsync(movement.OriginBranchId, movement.ProductId);
+            var originInventory = await _branchInventoryRepository.GetByBranchAndProductAsync(
+                movement.OriginBranchId,
+                movement.ProductId
+            );
             if (originInventory is null || originInventory.Quantity < movement.Quantity)
             {
-                throw new ValidationAppException("Stock insuficiente en la bodega de origen para completar el traslado.");
+                throw new ValidationAppException(
+                    "Stock insuficiente en la bodega de origen para completar el traslado."
+                );
             }
 
             originInventory.Quantity -= movement.Quantity;
@@ -123,13 +152,23 @@ public class InventoryMovementService : IInventoryMovementService
 
             if (movement.DestinationBranchId.HasValue)
             {
-                await IncrementBranchInventoryAsync(movement.DestinationBranchId.Value, movement.ProductId, movement.Quantity);
+                await IncrementBranchInventoryAsync(
+                    movement.DestinationBranchId.Value,
+                    movement.ProductId,
+                    movement.Quantity
+                );
             }
             else
             {
-                var product = await _productRepository.GetByIdAsync(movement.ProductId)
+                var product =
+                    await _productRepository.GetByIdAsync(movement.ProductId)
                     ?? throw new NotFoundException($"Product {movement.ProductId} not found.");
-                await IncrementProjectInventoryAsync(movement.DestinationProjectId!.Value, movement.ProductId, movement.Quantity, product.UnitCost);
+                await IncrementProjectInventoryAsync(
+                    movement.DestinationProjectId!.Value,
+                    movement.ProductId,
+                    movement.Quantity,
+                    product.UnitCost
+                );
             }
 
             movement.Status = InventoryMovementStatus.Accepted;
@@ -150,7 +189,10 @@ public class InventoryMovementService : IInventoryMovementService
 
     private async Task IncrementBranchInventoryAsync(int branchId, int productId, decimal quantity)
     {
-        var inventory = await _branchInventoryRepository.GetByBranchAndProductAsync(branchId, productId);
+        var inventory = await _branchInventoryRepository.GetByBranchAndProductAsync(
+            branchId,
+            productId
+        );
 
         if (inventory is null)
         {
@@ -160,7 +202,7 @@ public class InventoryMovementService : IInventoryMovementService
                 ProductId = productId,
                 Quantity = quantity,
                 MinimumStock = 0,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
             await _branchInventoryRepository.AddAsync(inventory);
         }
@@ -172,9 +214,17 @@ public class InventoryMovementService : IInventoryMovementService
         }
     }
 
-    private async Task IncrementProjectInventoryAsync(int projectId, int productId, decimal quantity, decimal unitCost)
+    private async Task IncrementProjectInventoryAsync(
+        int projectId,
+        int productId,
+        decimal quantity,
+        decimal unitCost
+    )
     {
-        var item = await _projectInventoryItemRepository.GetByProjectAndProductAsync(projectId, productId);
+        var item = await _projectInventoryItemRepository.GetByProjectAndProductAsync(
+            projectId,
+            productId
+        );
 
         if (item is null)
         {
@@ -184,7 +234,7 @@ public class InventoryMovementService : IInventoryMovementService
                 ProductId = productId,
                 CurrentQuantity = quantity,
                 ReferenceUnitCost = unitCost,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
             await _projectInventoryItemRepository.AddAsync(item);
         }
@@ -201,14 +251,20 @@ public class InventoryMovementService : IInventoryMovementService
     {
         if (!CanValidate(actingUserRoles))
         {
-            throw new ForbiddenException("Solo Gerente General o Director de Operaciones pueden eliminar movimientos de inventario.");
+            throw new ForbiddenException(
+                "Solo Gerente General o Director de Operaciones pueden eliminar movimientos de inventario."
+            );
         }
 
-        var movement = await _movementRepository.GetByIdAsync(id) ?? throw new NotFoundException($"InventoryMovement {id} not found.");
+        var movement =
+            await _movementRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"InventoryMovement {id} not found.");
 
         if (movement.Status != InventoryMovementStatus.Sent)
         {
-            throw new ValidationAppException("Solo se puede eliminar un movimiento en estado Sent.");
+            throw new ValidationAppException(
+                "Solo se puede eliminar un movimiento en estado Sent."
+            );
         }
 
         await _movementRepository.DeleteAsync(movement);
@@ -216,35 +272,46 @@ public class InventoryMovementService : IInventoryMovementService
 
     public async Task<InventoryMovementDto> GetByIdAsync(int id)
     {
-        var movement = await _movementRepository.GetByIdAsync(id) ?? throw new NotFoundException($"InventoryMovement {id} not found.");
+        var movement =
+            await _movementRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"InventoryMovement {id} not found.");
         return MapToDto(movement);
     }
 
-    public async Task<PagedResult<InventoryMovementDto>> GetAllByOriginBranchAsync(int branchId, int pageNumber, int pageSize)
+    public async Task<PagedResult<InventoryMovementDto>> GetAllByOriginBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _movementRepository.GetPagedByOriginBranchAsync(branchId, pageNumber, pageSize);
+        var (items, totalCount) = await _movementRepository.GetPagedByOriginBranchAsync(
+            branchId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<InventoryMovementDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
-    private static InventoryMovementDto MapToDto(InventoryMovement movement) => new()
-    {
-        Id = movement.Id,
-        OriginBranchId = movement.OriginBranchId,
-        DestinationBranchId = movement.DestinationBranchId,
-        DestinationProjectId = movement.DestinationProjectId,
-        ProductId = movement.ProductId,
-        Quantity = movement.Quantity,
-        Status = movement.Status,
-        SentByUserId = movement.SentByUserId,
-        SentDate = movement.SentDate,
-        ValidatedByUserId = movement.ValidatedByUserId,
-        ValidatedDate = movement.ValidatedDate
-    };
+    private static InventoryMovementDto MapToDto(InventoryMovement movement) =>
+        new()
+        {
+            Id = movement.Id,
+            OriginBranchId = movement.OriginBranchId,
+            DestinationBranchId = movement.DestinationBranchId,
+            DestinationProjectId = movement.DestinationProjectId,
+            ProductId = movement.ProductId,
+            Quantity = movement.Quantity,
+            Status = movement.Status,
+            SentByUserId = movement.SentByUserId,
+            SentDate = movement.SentDate,
+            ValidatedByUserId = movement.ValidatedByUserId,
+            ValidatedDate = movement.ValidatedDate,
+        };
 }

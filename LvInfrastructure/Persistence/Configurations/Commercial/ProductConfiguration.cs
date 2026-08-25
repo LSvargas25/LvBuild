@@ -24,13 +24,15 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.HasIndex(p => p.Sku).IsUnique();
 
-        builder.HasOne(p => p.CreatedByUser)
+        builder
+            .HasOne(p => p.CreatedByUser)
             .WithMany()
             .HasForeignKey(p => p.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(p => p.CreatedByUserId);
 
-        builder.HasOne(p => p.ValidatedByUser)
+        builder
+            .HasOne(p => p.ValidatedByUser)
             .WithMany()
             .HasForeignKey(p => p.ValidatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);

@@ -14,12 +14,14 @@ public class BranchInventoryConfiguration : IEntityTypeConfiguration<BranchInven
         builder.Property(i => i.Quantity).HasColumnType("decimal(18,2)");
         builder.Property(i => i.MinimumStock).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(i => i.Branch)
+        builder
+            .HasOne(i => i.Branch)
             .WithMany()
             .HasForeignKey(i => i.BranchId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(i => i.Product)
+        builder
+            .HasOne(i => i.Product)
             .WithMany()
             .HasForeignKey(i => i.ProductId)
             .OnDelete(DeleteBehavior.Restrict);

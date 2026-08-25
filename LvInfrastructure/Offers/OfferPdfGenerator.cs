@@ -32,98 +32,155 @@ public class OfferPdfGenerator : IOfferPdfGenerator
         var companyName = _configuration["Company:Name"] ?? "LV Construcciones";
         var logoPath = _configuration["Company:LogoPath"];
 
-        Document.Create(container =>
-        {
-            container.Page(page =>
+        Document
+            .Create(container =>
             {
-                page.Size(PageSizes.A4);
-                page.Margin(30);
-                page.DefaultTextStyle(style => style.FontSize(10));
-
-                page.Header().Column(column =>
+                container.Page(page =>
                 {
-                    column.Item().Row(row =>
-                    {
-                        if (!string.IsNullOrWhiteSpace(logoPath) && File.Exists(logoPath))
+                    page.Size(PageSizes.A4);
+                    page.Margin(30);
+                    page.DefaultTextStyle(style => style.FontSize(10));
+
+                    page.Header()
+                        .Column(column =>
                         {
-                            row.ConstantItem(70).Image(logoPath);
-                        }
+                            column
+                                .Item()
+                                .Row(row =>
+                                {
+                                    if (
+                                        !string.IsNullOrWhiteSpace(logoPath)
+                                        && File.Exists(logoPath)
+                                    )
+                                    {
+                                        row.ConstantItem(70).Image(logoPath);
+                                    }
 
-                        row.RelativeItem().AlignRight().Text(companyName).Bold().FontSize(16);
-                    });
+                                    row.RelativeItem()
+                                        .AlignRight()
+                                        .Text(companyName)
+                                        .Bold()
+                                        .FontSize(16);
+                                });
 
-                    column.Item().PaddingTop(5).LineHorizontal(1);
-                });
-
-                page.Content().PaddingVertical(10).Column(column =>
-                {
-                    column.Spacing(6);
-
-                    column.Item().Text($"Oferta N.º {offer.OfferNumber}").Bold().FontSize(14);
-                    column.Item().Text($"Fecha de emisión: {offer.IssueDate:dd/MM/yyyy}");
-                    column.Item().Text($"Vigencia: {offer.ValidityDays} días");
-                    column.Item().Text($"Ubicación de la obra: {offer.WorkLocation}");
-
-                    column.Item().PaddingTop(5).Text("Alcance de la obra").Bold();
-                    column.Item().Text(offer.WorkScope);
-
-                    column.Item().PaddingTop(10).Text("Capítulos").Bold().FontSize(12);
-                    column.Item().Table(table =>
-                    {
-                        table.ColumnsDefinition(columns =>
-                        {
-                            columns.RelativeColumn(3);
-                            columns.RelativeColumn(1);
-                            columns.RelativeColumn(2);
+                            column.Item().PaddingTop(5).LineHorizontal(1);
                         });
 
-                        table.Header(header =>
+                    page.Content()
+                        .PaddingVertical(10)
+                        .Column(column =>
                         {
-                            header.Cell().Text("Capítulo").Bold();
-                            header.Cell().Text("Semanas").Bold();
-                            header.Cell().Text("Cant. aprox. materiales").Bold();
+                            column.Spacing(6);
+
+                            column
+                                .Item()
+                                .Text($"Oferta N.º {offer.OfferNumber}")
+                                .Bold()
+                                .FontSize(14);
+                            column.Item().Text($"Fecha de emisión: {offer.IssueDate:dd/MM/yyyy}");
+                            column.Item().Text($"Vigencia: {offer.ValidityDays} días");
+                            column.Item().Text($"Ubicación de la obra: {offer.WorkLocation}");
+
+                            column.Item().PaddingTop(5).Text("Alcance de la obra").Bold();
+                            column.Item().Text(offer.WorkScope);
+
+                            column.Item().PaddingTop(10).Text("Capítulos").Bold().FontSize(12);
+                            column
+                                .Item()
+                                .Table(table =>
+                                {
+                                    table.ColumnsDefinition(columns =>
+                                    {
+                                        columns.RelativeColumn(3);
+                                        columns.RelativeColumn(1);
+                                        columns.RelativeColumn(2);
+                                    });
+
+                                    table.Header(header =>
+                                    {
+                                        header.Cell().Text("Capítulo").Bold();
+                                        header.Cell().Text("Semanas").Bold();
+                                        header.Cell().Text("Cant. aprox. materiales").Bold();
+                                    });
+
+                                    foreach (var chapter in offer.Chapters)
+                                    {
+                                        table.Cell().Text(chapter.ChapterName);
+                                        table.Cell().Text(chapter.EstimatedWeeks.ToString());
+                                        table
+                                            .Cell()
+                                            .Text(
+                                                chapter.ApproxMaterialQuantity?.ToString("N2")
+                                                    ?? "-"
+                                            );
+                                    }
+                                });
+
+                            column
+                                .Item()
+                                .PaddingTop(10)
+                                .Text(
+                                    $"Fecha estimada de inicio: {offer.EstimatedStartDate:dd/MM/yyyy}"
+                                );
+                            column
+                                .Item()
+                                .Text($"Duración estimada: {offer.EstimatedDurationWeeks} semanas");
+                            column
+                                .Item()
+                                .Text(
+                                    $"Fecha estimada de entrega: {offer.EstimatedDeliveryDate:dd/MM/yyyy}"
+                                );
+
+                            column
+                                .Item()
+                                .PaddingTop(10)
+                                .Text("Condiciones comerciales")
+                                .Bold()
+                                .FontSize(12);
+                            column.Item().Text($"Forma de pago: {offer.PaymentTerms}");
+                            column.Item().Text($"Garantías: {offer.Warranties}");
+                            column.Item().Text($"Exclusiones: {offer.Exclusions}");
+
+                            if (offer.OfferType == OfferType.Turnkey)
+                            {
+                                column
+                                    .Item()
+                                    .PaddingTop(10)
+                                    .Text($"Precio total del proyecto: {offer.TotalProjectPrice:C}")
+                                    .Bold()
+                                    .FontSize(13);
+                            }
+                            else
+                            {
+                                column
+                                    .Item()
+                                    .PaddingTop(10)
+                                    .Text("Condiciones por porcentaje")
+                                    .Bold()
+                                    .FontSize(12);
+                                column
+                                    .Item()
+                                    .Text($"Porcentaje acordado: {offer.AgreedPercentage}%");
+                                column.Item().Text($"Qué incluye: {offer.PercentageIncludes}");
+                                column.Item().Text($"Qué no incluye: {offer.PercentageExcludes}");
+                                column
+                                    .Item()
+                                    .Text($"Forma de cálculo: {offer.PercentageCalculationMethod}");
+                                column.Item().Text($"Frecuencia de pago: {offer.PaymentFrequency}");
+                            }
                         });
 
-                        foreach (var chapter in offer.Chapters)
+                    page.Footer()
+                        .AlignCenter()
+                        .Text(text =>
                         {
-                            table.Cell().Text(chapter.ChapterName);
-                            table.Cell().Text(chapter.EstimatedWeeks.ToString());
-                            table.Cell().Text(chapter.ApproxMaterialQuantity?.ToString("N2") ?? "-");
-                        }
-                    });
-
-                    column.Item().PaddingTop(10).Text($"Fecha estimada de inicio: {offer.EstimatedStartDate:dd/MM/yyyy}");
-                    column.Item().Text($"Duración estimada: {offer.EstimatedDurationWeeks} semanas");
-                    column.Item().Text($"Fecha estimada de entrega: {offer.EstimatedDeliveryDate:dd/MM/yyyy}");
-
-                    column.Item().PaddingTop(10).Text("Condiciones comerciales").Bold().FontSize(12);
-                    column.Item().Text($"Forma de pago: {offer.PaymentTerms}");
-                    column.Item().Text($"Garantías: {offer.Warranties}");
-                    column.Item().Text($"Exclusiones: {offer.Exclusions}");
-
-                    if (offer.OfferType == OfferType.Turnkey)
-                    {
-                        column.Item().PaddingTop(10).Text($"Precio total del proyecto: {offer.TotalProjectPrice:C}").Bold().FontSize(13);
-                    }
-                    else
-                    {
-                        column.Item().PaddingTop(10).Text("Condiciones por porcentaje").Bold().FontSize(12);
-                        column.Item().Text($"Porcentaje acordado: {offer.AgreedPercentage}%");
-                        column.Item().Text($"Qué incluye: {offer.PercentageIncludes}");
-                        column.Item().Text($"Qué no incluye: {offer.PercentageExcludes}");
-                        column.Item().Text($"Forma de cálculo: {offer.PercentageCalculationMethod}");
-                        column.Item().Text($"Frecuencia de pago: {offer.PaymentFrequency}");
-                    }
+                            text.CurrentPageNumber();
+                            text.Span(" / ");
+                            text.TotalPages();
+                        });
                 });
-
-                page.Footer().AlignCenter().Text(text =>
-                {
-                    text.CurrentPageNumber();
-                    text.Span(" / ");
-                    text.TotalPages();
-                });
-            });
-        }).GeneratePdf(filePath);
+            })
+            .GeneratePdf(filePath);
 
         return filePath;
     }

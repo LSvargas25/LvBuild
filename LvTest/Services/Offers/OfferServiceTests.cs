@@ -11,21 +11,26 @@ namespace LvTest.Services.Offers;
 
 public class OfferServiceTests
 {
-    private static async Task<Customer> CreateProjectCustomerAsync(LvInfrastructure.Persistence.AppDbContext context)
+    private static async Task<Customer> CreateProjectCustomerAsync(
+        LvInfrastructure.Persistence.AppDbContext context
+    )
     {
         var customer = new Customer
         {
             Name = "Project Customer",
             CustomerType = CustomerType.Project,
             Status = ActiveStatus.Active,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Customers.Add(customer);
         await context.SaveChangesAsync();
         return customer;
     }
 
-    private static async Task<Branch> CreateBranchAsync(LvInfrastructure.Persistence.AppDbContext context, int operationsDirectorId)
+    private static async Task<Branch> CreateBranchAsync(
+        LvInfrastructure.Persistence.AppDbContext context,
+        int operationsDirectorId
+    )
     {
         var branch = new Branch
         {
@@ -35,14 +40,19 @@ public class OfferServiceTests
             Status = BranchStatus.Active,
             BranchType = BranchType.Office,
             OperationsDirectorId = operationsDirectorId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
         context.Branches.Add(branch);
         await context.SaveChangesAsync();
         return branch;
     }
 
-    private static async Task<Budget> CreateSentBudgetAsync(LvInfrastructure.Persistence.AppDbContext context, int customerId, int branchId, int createdByUserId)
+    private static async Task<Budget> CreateSentBudgetAsync(
+        LvInfrastructure.Persistence.AppDbContext context,
+        int customerId,
+        int branchId,
+        int createdByUserId
+    )
     {
         var budget = new Budget
         {
@@ -74,7 +84,7 @@ public class OfferServiceTests
                             LaborCost = 100,
                             EquipmentCost = 50,
                             TotalActivity = 350,
-                            CreatedAt = DateTime.UtcNow
+                            CreatedAt = DateTime.UtcNow,
                         },
                         new()
                         {
@@ -84,11 +94,11 @@ public class OfferServiceTests
                             LaborCost = 40,
                             EquipmentCost = 10,
                             TotalActivity = 150,
-                            CreatedAt = DateTime.UtcNow
-                        }
-                    }
-                }
-            }
+                            CreatedAt = DateTime.UtcNow,
+                        },
+                    },
+                },
+            },
         };
 
         context.Budgets.Add(budget);
@@ -96,7 +106,12 @@ public class OfferServiceTests
         return budget;
     }
 
-    private static async Task<Budget> CreateDraftBudgetAsync(LvInfrastructure.Persistence.AppDbContext context, int customerId, int branchId, int createdByUserId)
+    private static async Task<Budget> CreateDraftBudgetAsync(
+        LvInfrastructure.Persistence.AppDbContext context,
+        int customerId,
+        int branchId,
+        int createdByUserId
+    )
     {
         var budget = new Budget
         {
@@ -108,7 +123,7 @@ public class OfferServiceTests
             IndirectCostsTotal = 50,
             TotalBudget = 500,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         context.Budgets.Add(budget);
@@ -116,85 +131,98 @@ public class OfferServiceTests
         return budget;
     }
 
-    private static CreateOfferDto BuildTurnkeyCreateDto(int budgetId) => new()
-    {
-        BudgetId = budgetId,
-        OfferType = OfferType.Turnkey,
-        IssueDate = new DateTime(2026, 1, 10),
-        ValidityDays = 30,
-        WorkLocation = "San Jose Centro",
-        WorkScope = "Construccion de edificio de 3 niveles",
-        EstimatedStartDate = new DateTime(2026, 2, 1),
-        EstimatedDurationWeeks = 10,
-        PaymentTerms = "50% inicio, 50% entrega",
-        Warranties = "1 año estructural",
-        Exclusions = "No incluye mobiliario",
-        TotalProjectPrice = 100000m
-    };
+    private static CreateOfferDto BuildTurnkeyCreateDto(int budgetId) =>
+        new()
+        {
+            BudgetId = budgetId,
+            OfferType = OfferType.Turnkey,
+            IssueDate = new DateTime(2026, 1, 10),
+            ValidityDays = 30,
+            WorkLocation = "San Jose Centro",
+            WorkScope = "Construccion de edificio de 3 niveles",
+            EstimatedStartDate = new DateTime(2026, 2, 1),
+            EstimatedDurationWeeks = 10,
+            PaymentTerms = "50% inicio, 50% entrega",
+            Warranties = "1 año estructural",
+            Exclusions = "No incluye mobiliario",
+            TotalProjectPrice = 100000m,
+        };
 
-    private static CreateOfferDto BuildPercentageCreateDto(int budgetId) => new()
-    {
-        BudgetId = budgetId,
-        OfferType = OfferType.Percentage,
-        IssueDate = new DateTime(2026, 1, 10),
-        ValidityDays = 30,
-        WorkLocation = "San Jose Centro",
-        WorkScope = "Construccion de edificio de 3 niveles",
-        EstimatedStartDate = new DateTime(2026, 2, 1),
-        EstimatedDurationWeeks = 10,
-        PaymentTerms = "Contra avance",
-        Warranties = "1 año estructural",
-        Exclusions = "No incluye mobiliario",
-        AgreedPercentage = 15m,
-        PercentageIncludes = "Mano de obra y administracion",
-        PercentageExcludes = "Materiales",
-        PercentageCalculationMethod = "Sobre costo directo",
-        PaymentFrequency = PaymentFrequency.Monthly
-    };
+    private static CreateOfferDto BuildPercentageCreateDto(int budgetId) =>
+        new()
+        {
+            BudgetId = budgetId,
+            OfferType = OfferType.Percentage,
+            IssueDate = new DateTime(2026, 1, 10),
+            ValidityDays = 30,
+            WorkLocation = "San Jose Centro",
+            WorkScope = "Construccion de edificio de 3 niveles",
+            EstimatedStartDate = new DateTime(2026, 2, 1),
+            EstimatedDurationWeeks = 10,
+            PaymentTerms = "Contra avance",
+            Warranties = "1 año estructural",
+            Exclusions = "No incluye mobiliario",
+            AgreedPercentage = 15m,
+            PercentageIncludes = "Mano de obra y administracion",
+            PercentageExcludes = "Materiales",
+            PercentageCalculationMethod = "Sobre costo directo",
+            PaymentFrequency = PaymentFrequency.Monthly,
+        };
 
     private static string CreateTempLogoFile()
     {
         // Minimal valid 1x1 transparent PNG, just enough for QuestPDF to load as an image.
-        const string base64Png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
+        const string base64Png =
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
         var path = Path.Combine(Path.GetTempPath(), "LvTestLogos", $"{Guid.NewGuid()}.png");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllBytes(path, Convert.FromBase64String(base64Png));
         return path;
     }
 
-    private static UpdateOfferDto BuildUpdateDtoFrom(OfferResponseDto offer) => new()
-    {
-        OfferType = offer.OfferType,
-        IssueDate = offer.IssueDate,
-        ValidityDays = offer.ValidityDays,
-        WorkLocation = offer.WorkLocation,
-        WorkScope = offer.WorkScope,
-        EstimatedStartDate = offer.EstimatedStartDate,
-        EstimatedDurationWeeks = offer.EstimatedDurationWeeks,
-        EstimatedDeliveryDate = offer.EstimatedDeliveryDate,
-        PaymentTerms = offer.PaymentTerms,
-        Warranties = offer.Warranties,
-        Exclusions = offer.Exclusions,
-        TotalProjectPrice = offer.TotalProjectPrice,
-        AgreedPercentage = offer.AgreedPercentage,
-        PercentageIncludes = offer.PercentageIncludes,
-        PercentageExcludes = offer.PercentageExcludes,
-        PercentageCalculationMethod = offer.PercentageCalculationMethod,
-        PaymentFrequency = offer.PaymentFrequency
-    };
+    private static UpdateOfferDto BuildUpdateDtoFrom(OfferResponseDto offer) =>
+        new()
+        {
+            OfferType = offer.OfferType,
+            IssueDate = offer.IssueDate,
+            ValidityDays = offer.ValidityDays,
+            WorkLocation = offer.WorkLocation,
+            WorkScope = offer.WorkScope,
+            EstimatedStartDate = offer.EstimatedStartDate,
+            EstimatedDurationWeeks = offer.EstimatedDurationWeeks,
+            EstimatedDeliveryDate = offer.EstimatedDeliveryDate,
+            PaymentTerms = offer.PaymentTerms,
+            Warranties = offer.Warranties,
+            Exclusions = offer.Exclusions,
+            TotalProjectPrice = offer.TotalProjectPrice,
+            AgreedPercentage = offer.AgreedPercentage,
+            PercentageIncludes = offer.PercentageIncludes,
+            PercentageExcludes = offer.PercentageExcludes,
+            PercentageCalculationMethod = offer.PercentageCalculationMethod,
+            PaymentFrequency = offer.PaymentFrequency,
+        };
 
     [Fact]
     public async Task CreateAsync_BudgetNotSent_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-notsent@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-notsent@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-notsent@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-notsent@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateDraftBudgetAsync(context, customer.Id, branch.Id, creator.Id);
         var service = ServiceFactory.CreateOfferService(context);
 
-        var act = async () => await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
+        var act = async () =>
+            await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -203,8 +231,16 @@ public class OfferServiceTests
     public async Task CreateAsync_Valid_GeneratesOfferNumberCopiesChaptersAndCalculatesDeliveryDate()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-create@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-create@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-create@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-create@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -226,8 +262,16 @@ public class OfferServiceTests
     public async Task CreateAsync_SecondActiveOfferForSameBudget_ThrowsConflictException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-dup@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-dup@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-dup@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-dup@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -235,7 +279,8 @@ public class OfferServiceTests
 
         await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
 
-        var act = async () => await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
+        var act = async () =>
+            await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
 
         await act.Should().ThrowAsync<ConflictException>();
     }
@@ -244,8 +289,16 @@ public class OfferServiceTests
     public async Task CreateAsync_TurnkeyWithPercentageFields_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-crosstk@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-crosstk@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-crosstk@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-crosstk@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -263,8 +316,16 @@ public class OfferServiceTests
     public async Task CreateAsync_PercentageWithTotalProjectPrice_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-crosspct@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-crosspct@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-crosspct@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-crosspct@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -282,8 +343,16 @@ public class OfferServiceTests
     public async Task UpdateAsync_InDraft_ModifiesFields()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-updateok@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-updateok@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-updateok@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-updateok@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -315,8 +384,16 @@ public class OfferServiceTests
     public async Task UpdateAsync_NotDraft_ThrowsForbiddenException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-update@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-update@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-update@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-update@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -334,8 +411,16 @@ public class OfferServiceTests
     public async Task SendToClientAsync_FromDraft_GeneratesPdfFileOnDisk()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-send@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-send@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-send@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-send@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -355,8 +440,16 @@ public class OfferServiceTests
     public async Task GetPdfFileAsync_StillDraft_ThrowsValidationExceptionWithClearMessage()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-pdfdraft@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-pdfdraft@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-pdfdraft@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-pdfdraft@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -374,8 +467,16 @@ public class OfferServiceTests
     public async Task GetPdfFileAsync_AfterSendToClient_ReturnsExistingFilePathAndFileName()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-pdfsent@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-pdfsent@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-pdfsent@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-pdfsent@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -396,8 +497,16 @@ public class OfferServiceTests
     public async Task SendToClientAsync_PercentageOffer_GeneratesPdfFileOnDisk()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-sendpct@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-sendpct@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-sendpct@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-sendpct@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -417,8 +526,16 @@ public class OfferServiceTests
     public async Task SendToClientAsync_WithConfiguredLogoPath_GeneratesPdfIncludingLogo()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-logo@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-logo@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-logo@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-logo@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -438,8 +555,16 @@ public class OfferServiceTests
     public async Task SendToClientAsync_NotDraft_ThrowsForbiddenException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-sendinvalid@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-sendinvalid@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-sendinvalid@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-sendinvalid@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -457,9 +582,21 @@ public class OfferServiceTests
     public async Task MarkAcceptedAsync_NotSentToClient_ThrowsForbiddenException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-acceptinvalid@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-acceptinvalid@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
-        var manager = await TestUserFactory.CreateAsync(context, "gm-offer-acceptinvalid@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-acceptinvalid@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-acceptinvalid@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
+        var manager = await TestUserFactory.CreateAsync(
+            context,
+            "gm-offer-acceptinvalid@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -476,8 +613,16 @@ public class OfferServiceTests
     public async Task RevertToDraftAsync_NotSentToClient_ThrowsForbiddenException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-revertinvalid@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-revertinvalid@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-revertinvalid@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-revertinvalid@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -494,9 +639,21 @@ public class OfferServiceTests
     public async Task MarkAcceptedAsync_FromSentToClient_TransitionsOfferAndApprovesLinkedBudget()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-accept@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-accept@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
-        var manager = await TestUserFactory.CreateAsync(context, "gm-offer-accept@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-accept@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-accept@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
+        var manager = await TestUserFactory.CreateAsync(
+            context,
+            "gm-offer-accept@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -517,8 +674,16 @@ public class OfferServiceTests
     public async Task RevertToDraftAsync_FromSentToClient_TransitionsToDraft()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-revert@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-revert@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-revert@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-revert@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -536,9 +701,21 @@ public class OfferServiceTests
     public async Task DeleteAsync_ClientAccepted_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-delacc@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-delacc@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
-        var manager = await TestUserFactory.CreateAsync(context, "gm-offer-delacc@example.com", roleId: TestUserFactory.GeneralManagerRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-delacc@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-delacc@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
+        var manager = await TestUserFactory.CreateAsync(
+            context,
+            "gm-offer-delacc@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -557,8 +734,16 @@ public class OfferServiceTests
     public async Task DeleteAsync_SentToClient_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-delsent@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-delsent@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-delsent@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-delsent@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -576,8 +761,16 @@ public class OfferServiceTests
     public async Task GetByIdAsync_ExistingId_ReturnsOffer()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-getbyid@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-getbyid@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-getbyid@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-getbyid@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
@@ -606,8 +799,16 @@ public class OfferServiceTests
     public async Task GetAllAsync_MoreRecordsThanPageSize_PaginatesCorrectly()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-pagination@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-pagination@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-pagination@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-pagination@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var service = ServiceFactory.CreateOfferService(context);
@@ -630,20 +831,35 @@ public class OfferServiceTests
     public async Task GetAllAsync_FilteredByStatus_OnlyReturnsMatchingOffers()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-statusfilter@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-statusfilter@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-statusfilter@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-statusfilter@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var service = ServiceFactory.CreateOfferService(context);
 
         var draftBudget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
-        var draftOffer = await service.CreateAsync(BuildTurnkeyCreateDto(draftBudget.Id), creator.Id);
+        var draftOffer = await service.CreateAsync(
+            BuildTurnkeyCreateDto(draftBudget.Id),
+            creator.Id
+        );
 
         var sentBudget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
         var sentOffer = await service.CreateAsync(BuildTurnkeyCreateDto(sentBudget.Id), creator.Id);
         await service.SendToClientAsync(sentOffer.Id);
 
-        var result = await service.GetAllAsync(pageNumber: 1, pageSize: 10, status: OfferStatus.SentToClient);
+        var result = await service.GetAllAsync(
+            pageNumber: 1,
+            pageSize: 10,
+            status: OfferStatus.SentToClient
+        );
 
         result.TotalCount.Should().Be(1);
         result.Items.Should().OnlyContain(o => o.Id == sentOffer.Id);
@@ -654,14 +870,30 @@ public class OfferServiceTests
     public async Task DeleteAsync_Draft_DeletesSuccessfully()
     {
         using var context = TestDbContextFactory.Create();
-        var director = await TestUserFactory.CreateAsync(context, "director-offer-del@example.com", roleId: TestUserFactory.OperationsDirectorRoleId);
-        var creator = await TestUserFactory.CreateAsync(context, "pa-offer-del@example.com", roleId: TestUserFactory.ProjectAdminRoleId);
+        var director = await TestUserFactory.CreateAsync(
+            context,
+            "director-offer-del@example.com",
+            roleId: TestUserFactory.OperationsDirectorRoleId
+        );
+        var creator = await TestUserFactory.CreateAsync(
+            context,
+            "pa-offer-del@example.com",
+            roleId: TestUserFactory.ProjectAdminRoleId
+        );
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
-        var budgetDraftDelete = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
+        var budgetDraftDelete = await CreateSentBudgetAsync(
+            context,
+            customer.Id,
+            branch.Id,
+            creator.Id
+        );
         var service = ServiceFactory.CreateOfferService(context);
 
-        var draftOffer = await service.CreateAsync(BuildTurnkeyCreateDto(budgetDraftDelete.Id), creator.Id);
+        var draftOffer = await service.CreateAsync(
+            BuildTurnkeyCreateDto(budgetDraftDelete.Id),
+            creator.Id
+        );
         await service.DeleteAsync(draftOffer.Id);
 
         var getDraftAct = async () => await service.GetByIdAsync(draftOffer.Id);

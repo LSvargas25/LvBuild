@@ -15,15 +15,26 @@ public class BudgetRepository : IBudgetRepository
         _context = context;
     }
 
-    private IQueryable<Budget> BudgetsWithGraph => _context.Budgets
-        .Include(b => b.Chapters).ThenInclude(c => c.Activities).ThenInclude(a => a.Materials)
-        .Include(b => b.Chapters).ThenInclude(c => c.Activities).ThenInclude(a => a.Equipment)
-        .Include(b => b.Chapters).ThenInclude(c => c.Activities).ThenInclude(a => a.Labor);
+    private IQueryable<Budget> BudgetsWithGraph =>
+        _context
+            .Budgets.Include(b => b.Chapters)
+                .ThenInclude(c => c.Activities)
+                    .ThenInclude(a => a.Materials)
+            .Include(b => b.Chapters)
+                .ThenInclude(c => c.Activities)
+                    .ThenInclude(a => a.Equipment)
+            .Include(b => b.Chapters)
+                .ThenInclude(c => c.Activities)
+                    .ThenInclude(a => a.Labor);
 
     public Task<Budget?> GetByIdAsync(int id) =>
         BudgetsWithGraph.FirstOrDefaultAsync(b => b.Id == id);
 
-    public async Task<(List<Budget> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, BudgetStatus? status)
+    public async Task<(List<Budget> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        BudgetStatus? status
+    )
     {
         var query = BudgetsWithGraph.AsQueryable();
 
@@ -62,8 +73,8 @@ public class BudgetRepository : IBudgetRepository
     }
 
     public async Task<List<BudgetHistory>> GetHistoryAsync(int budgetId) =>
-        await _context.BudgetHistories
-            .Where(h => h.BudgetId == budgetId)
+        await _context
+            .BudgetHistories.Where(h => h.BudgetId == budgetId)
             .OrderBy(h => h.Timestamp)
             .ToListAsync();
 }

@@ -16,7 +16,8 @@ public class WorkerService : IWorkerService
     public WorkerService(
         IWorkerRepository workerRepository,
         IValidator<CreateWorkerDto> createValidator,
-        IValidator<UpdateWorkerDto> updateValidator)
+        IValidator<UpdateWorkerDto> updateValidator
+    )
     {
         _workerRepository = workerRepository;
         _createValidator = createValidator;
@@ -38,7 +39,7 @@ public class WorkerService : IWorkerService
             Type = request.Type,
             HourlyRate = request.HourlyRate,
             BranchId = request.BranchId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _workerRepository.AddAsync(worker);
@@ -50,7 +51,9 @@ public class WorkerService : IWorkerService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var worker = await _workerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Worker {id} not found.");
+        var worker =
+            await _workerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Worker {id} not found.");
 
         worker.Name = request.Name;
         worker.PersonalId = request.PersonalId;
@@ -70,7 +73,9 @@ public class WorkerService : IWorkerService
 
     public async Task<WorkerResponseDto> GetByIdAsync(int id)
     {
-        var worker = await _workerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Worker {id} not found.");
+        var worker =
+            await _workerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Worker {id} not found.");
         return MapToDto(worker);
     }
 
@@ -83,27 +88,30 @@ public class WorkerService : IWorkerService
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
     public async Task DeleteAsync(int id)
     {
-        var worker = await _workerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Worker {id} not found.");
+        var worker =
+            await _workerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Worker {id} not found.");
         await _workerRepository.DeleteAsync(worker);
     }
 
-    private static WorkerResponseDto MapToDto(Worker worker) => new()
-    {
-        Id = worker.Id,
-        Name = worker.Name,
-        PersonalId = worker.PersonalId,
-        PhoneNumber = worker.PhoneNumber,
-        Birthday = worker.Birthday,
-        Status = worker.Status,
-        Category = worker.Category,
-        Type = worker.Type,
-        HourlyRate = worker.HourlyRate,
-        BranchId = worker.BranchId
-    };
+    private static WorkerResponseDto MapToDto(Worker worker) =>
+        new()
+        {
+            Id = worker.Id,
+            Name = worker.Name,
+            PersonalId = worker.PersonalId,
+            PhoneNumber = worker.PhoneNumber,
+            Birthday = worker.Birthday,
+            Status = worker.Status,
+            Category = worker.Category,
+            Type = worker.Type,
+            HourlyRate = worker.HourlyRate,
+            BranchId = worker.BranchId,
+        };
 }

@@ -14,20 +14,21 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
-    private IQueryable<User> UsersWithRoles => _context.Users
-        .Include(u => u.UserRoles)
-        .ThenInclude(ur => ur.Role);
+    private IQueryable<User> UsersWithRoles =>
+        _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role);
 
     public Task<User?> GetByEmailAsync(string email) =>
         UsersWithRoles.FirstOrDefaultAsync(u => u.Email == email);
 
-    public Task<User?> GetByIdAsync(int id) =>
-        UsersWithRoles.FirstOrDefaultAsync(u => u.Id == id);
+    public Task<User?> GetByIdAsync(int id) => UsersWithRoles.FirstOrDefaultAsync(u => u.Id == id);
 
     public Task<bool> EmailExistsAsync(string email) =>
         _context.Users.AnyAsync(u => u.Email == email);
 
-    public async Task<(List<User> Users, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    public async Task<(List<User> Users, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize
+    )
     {
         var totalCount = await _context.Users.CountAsync();
 

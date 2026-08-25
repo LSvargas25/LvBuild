@@ -7,10 +7,8 @@ public class ResetPasswordRequestDtoValidator : AbstractValidator<ResetPasswordR
 {
     public ResetPasswordRequestDtoValidator()
     {
-        RuleFor(x => x.Token)
-            .NotEmpty();
+        RuleFor(x => x.Token).NotEmpty();
 
-        RuleFor(x => x.NewPassword)
-            .MustBeAValidNewPassword();
+        RuleFor(x => x.NewPassword).MustBeAValidNewPassword();
     }
 }

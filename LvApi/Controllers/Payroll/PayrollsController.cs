@@ -54,7 +54,8 @@ public class PayrollsController : ApiControllerBase
     [HttpGet("payrolls")]
     public async Task<ActionResult<PagedResult<PayrollDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _payrollService.GetAllAsync(pageNumber, pageSize);
         return Ok(result);
@@ -71,7 +72,8 @@ public class PayrollsController : ApiControllerBase
     public async Task<ActionResult<PagedResult<PayrollDto>>> GetAllByProject(
         int projectId,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _payrollService.GetAllByProjectAsync(projectId, pageNumber, pageSize);
         return Ok(result);

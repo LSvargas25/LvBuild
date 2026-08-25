@@ -23,7 +23,12 @@ public class ExceptionMiddleware
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception, "Unhandled exception occurred while processing {Method} {Path}", context.Request.Method, context.Request.Path);
+            _logger.LogError(
+                exception,
+                "Unhandled exception occurred while processing {Method} {Path}",
+                context.Request.Method,
+                context.Request.Path
+            );
             await HandleExceptionAsync(context, exception);
         }
     }
@@ -36,17 +41,13 @@ public class ExceptionMiddleware
             ValidationAppException => (HttpStatusCode.BadRequest, exception.Message),
             ForbiddenException => (HttpStatusCode.Forbidden, exception.Message),
             ConflictException => (HttpStatusCode.Conflict, exception.Message),
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred.")
+            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred."),
         };
 
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var payload = JsonSerializer.Serialize(new
-        {
-            statusCode = (int)statusCode,
-            message
-        });
+        var payload = JsonSerializer.Serialize(new { statusCode = (int)statusCode, message });
 
         return context.Response.WriteAsync(payload);
     }

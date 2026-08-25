@@ -26,7 +26,7 @@ public class NotificationService : INotificationService
                 Type = type,
                 Message = message,
                 IsRead = false,
-                CreatedAt = now
+                CreatedAt = now,
             })
             .ToList();
 
@@ -36,22 +36,31 @@ public class NotificationService : INotificationService
         await _notificationRepository.AddRangeAsync(notifications);
     }
 
-    public async Task<PagedResult<NotificationDto>> GetMyNotificationsAsync(int userId, int pageNumber, int pageSize)
+    public async Task<PagedResult<NotificationDto>> GetMyNotificationsAsync(
+        int userId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _notificationRepository.GetPagedForUserAsync(userId, pageNumber, pageSize);
+        var (items, totalCount) = await _notificationRepository.GetPagedForUserAsync(
+            userId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<NotificationDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
     public async Task MarkAsReadAsync(int id, int userId)
     {
-        var notification = await _notificationRepository.GetByIdAsync(id)
+        var notification =
+            await _notificationRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Notification {id} not found.");
 
         if (notification.UserId != userId)
@@ -65,12 +74,13 @@ public class NotificationService : INotificationService
         await _notificationRepository.UpdateAsync(notification);
     }
 
-    private static NotificationDto MapToDto(Notification notification) => new()
-    {
-        Id = notification.Id,
-        Type = notification.Type,
-        Message = notification.Message,
-        IsRead = notification.IsRead,
-        CreatedAt = notification.CreatedAt
-    };
+    private static NotificationDto MapToDto(Notification notification) =>
+        new()
+        {
+            Id = notification.Id,
+            Type = notification.Type,
+            Message = notification.Message,
+            IsRead = notification.IsRead,
+            CreatedAt = notification.CreatedAt,
+        };
 }

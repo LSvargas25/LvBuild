@@ -14,13 +14,16 @@ public class BranchRepository : IBranchRepository
         _context = context;
     }
 
-    private IQueryable<Branch> BranchesWithIndicator => _context.Branches
-        .Include(b => b.Indicator);
+    private IQueryable<Branch> BranchesWithIndicator => _context.Branches.Include(b => b.Indicator);
 
     public Task<Branch?> GetByIdAsync(int id) =>
         BranchesWithIndicator.FirstOrDefaultAsync(b => b.Id == id);
 
-    public async Task<(List<Branch> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, int? operationsDirectorId)
+    public async Task<(List<Branch> Items, int TotalCount)> GetPagedAsync(
+        int pageNumber,
+        int pageSize,
+        int? operationsDirectorId
+    )
     {
         var query = BranchesWithIndicator.AsQueryable();
 

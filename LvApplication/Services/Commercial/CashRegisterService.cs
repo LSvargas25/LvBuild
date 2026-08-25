@@ -19,7 +19,8 @@ public class CashRegisterService : ICashRegisterService
         ICashRegisterRepository cashRegisterRepository,
         IBranchRepository branchRepository,
         IValidator<OpenCashRegisterDto> openValidator,
-        IValidator<CloseCashRegisterDto> closeValidator)
+        IValidator<CloseCashRegisterDto> closeValidator
+    )
     {
         _cashRegisterRepository = cashRegisterRepository;
         _branchRepository = branchRepository;
@@ -31,18 +32,23 @@ public class CashRegisterService : ICashRegisterService
     {
         await _openValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var branch = await _branchRepository.GetByIdAsync(request.BranchId)
+        var branch =
+            await _branchRepository.GetByIdAsync(request.BranchId)
             ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
 
         if (branch.BranchType != BranchType.Commercial)
         {
-            throw new ValidationAppException("Solo se puede abrir una caja en una sucursal de tipo Comercio.");
+            throw new ValidationAppException(
+                "Solo se puede abrir una caja en una sucursal de tipo Comercio."
+            );
         }
 
         var existingOpen = await _cashRegisterRepository.GetOpenByBranchAsync(request.BranchId);
         if (existingOpen is not null)
         {
-            throw new ConflictException($"La sucursal {request.BranchId} ya tiene una caja abierta.");
+            throw new ConflictException(
+                $"La sucursal {request.BranchId} ya tiene una caja abierta."
+            );
         }
 
         var now = DateTime.UtcNow;
@@ -53,7 +59,7 @@ public class CashRegisterService : ICashRegisterService
             OpeningDate = now,
             OpeningBalance = request.OpeningBalance,
             Status = CashRegisterStatus.Open,
-            CreatedAt = now
+            CreatedAt = now,
         };
 
         await _cashRegisterRepository.AddAsync(register);
@@ -61,11 +67,17 @@ public class CashRegisterService : ICashRegisterService
         return MapToDto(register);
     }
 
-    public async Task<CashRegisterDto> CloseAsync(int id, CloseCashRegisterDto request, int closedByUserId)
+    public async Task<CashRegisterDto> CloseAsync(
+        int id,
+        CloseCashRegisterDto request,
+        int closedByUserId
+    )
     {
         await _closeValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var register = await _cashRegisterRepository.GetByIdAsync(id) ?? throw new NotFoundException($"CashRegister {id} not found.");
+        var register =
+            await _cashRegisterRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"CashRegister {id} not found.");
 
         if (register.Status != CashRegisterStatus.Open)
         {
@@ -90,7 +102,9 @@ public class CashRegisterService : ICashRegisterService
 
     public async Task DeleteAsync(int id)
     {
-        var register = await _cashRegisterRepository.GetByIdAsync(id) ?? throw new NotFoundException($"CashRegister {id} not found.");
+        var register =
+            await _cashRegisterRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"CashRegister {id} not found.");
 
         if (register.Status != CashRegisterStatus.Open)
         {
@@ -99,7 +113,9 @@ public class CashRegisterService : ICashRegisterService
 
         if (await _cashRegisterRepository.HasInvoicesAsync(id))
         {
-            throw new ValidationAppException("No se puede eliminar una caja con facturas asociadas.");
+            throw new ValidationAppException(
+                "No se puede eliminar una caja con facturas asociadas."
+            );
         }
 
         await _cashRegisterRepository.DeleteAsync(register);
@@ -107,22 +123,25 @@ public class CashRegisterService : ICashRegisterService
 
     public async Task<CashRegisterDto> GetByIdAsync(int id)
     {
-        var register = await _cashRegisterRepository.GetByIdAsync(id) ?? throw new NotFoundException($"CashRegister {id} not found.");
+        var register =
+            await _cashRegisterRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"CashRegister {id} not found.");
         return MapToDto(register);
     }
 
-    private static CashRegisterDto MapToDto(CashRegister register) => new()
-    {
-        Id = register.Id,
-        BranchId = register.BranchId,
-        OpenedByUserId = register.OpenedByUserId,
-        OpeningDate = register.OpeningDate,
-        OpeningBalance = register.OpeningBalance,
-        Status = register.Status,
-        ClosedByUserId = register.ClosedByUserId,
-        ClosingDate = register.ClosingDate,
-        ClosingBalance = register.ClosingBalance,
-        ExpectedBalance = register.ExpectedBalance,
-        Difference = register.Difference
-    };
+    private static CashRegisterDto MapToDto(CashRegister register) =>
+        new()
+        {
+            Id = register.Id,
+            BranchId = register.BranchId,
+            OpenedByUserId = register.OpenedByUserId,
+            OpeningDate = register.OpeningDate,
+            OpeningBalance = register.OpeningBalance,
+            Status = register.Status,
+            ClosedByUserId = register.ClosedByUserId,
+            ClosingDate = register.ClosingDate,
+            ClosingBalance = register.ClosingBalance,
+            ExpectedBalance = register.ExpectedBalance,
+            Difference = register.Difference,
+        };
 }

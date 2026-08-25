@@ -38,7 +38,10 @@ public class BudgetsController : ApiControllerBase
 
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPost("{id:int}/submit-for-review")]
-    public async Task<ActionResult<BudgetResponseDto>> SubmitForReview(int id, SubmitForReviewDto request)
+    public async Task<ActionResult<BudgetResponseDto>> SubmitForReview(
+        int id,
+        SubmitForReviewDto request
+    )
     {
         var result = await _budgetService.SubmitForReviewAsync(id, GetCurrentUserId());
         return Ok(result);
@@ -54,7 +57,10 @@ public class BudgetsController : ApiControllerBase
 
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("{id:int}/request-correction")]
-    public async Task<ActionResult<BudgetResponseDto>> RequestCorrection(int id, RequestCorrectionDto request)
+    public async Task<ActionResult<BudgetResponseDto>> RequestCorrection(
+        int id,
+        RequestCorrectionDto request
+    )
     {
         var result = await _budgetService.RequestCorrectionAsync(id, request, GetCurrentUserId());
         return Ok(result);
@@ -62,9 +68,16 @@ public class BudgetsController : ApiControllerBase
 
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("{id:int}/withdraw-from-commercial")]
-    public async Task<ActionResult<BudgetResponseDto>> WithdrawFromCommercial(int id, RequestCorrectionDto request)
+    public async Task<ActionResult<BudgetResponseDto>> WithdrawFromCommercial(
+        int id,
+        RequestCorrectionDto request
+    )
     {
-        var result = await _budgetService.WithdrawFromCommercialAsync(id, request, GetCurrentUserId());
+        var result = await _budgetService.WithdrawFromCommercialAsync(
+            id,
+            request,
+            GetCurrentUserId()
+        );
         return Ok(result);
     }
 
@@ -96,7 +109,8 @@ public class BudgetsController : ApiControllerBase
     public async Task<ActionResult<PagedResult<BudgetResponseDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
-        [FromQuery] BudgetStatus? status = null)
+        [FromQuery] BudgetStatus? status = null
+    )
     {
         var result = await _budgetService.GetAllAsync(pageNumber, pageSize, status);
         return Ok(result);

@@ -13,6 +13,10 @@ public interface IOfferService
     Task<OfferResponseDto> RevertToDraftAsync(int id);
     Task DeleteAsync(int id);
     Task<OfferResponseDto> GetByIdAsync(int id);
-    Task<PagedResult<OfferResponseDto>> GetAllAsync(int pageNumber, int pageSize, OfferStatus? status);
+    Task<PagedResult<OfferResponseDto>> GetAllAsync(
+        int pageNumber,
+        int pageSize,
+        OfferStatus? status
+    );
     Task<(string FilePath, string FileName)> GetPdfFileAsync(int id);
 }

@@ -12,46 +12,45 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.HasKey(p => p.Id);
 
-        builder.Property(p => p.ProjectType)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
+        builder.Property(p => p.ProjectType).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        builder.Property(p => p.Status)
-            .HasConversion<string>()
-            .HasMaxLength(20)
-            .IsRequired();
+        builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
 
         builder.Property(p => p.TotalWorkedHours).HasColumnType("decimal(18,2)");
         builder.Property(p => p.CurrentDirectExpenses).HasColumnType("decimal(18,2)");
         builder.Property(p => p.PendingExpenses).HasColumnType("decimal(18,2)");
         builder.Property(p => p.CurrentProfit).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(p => p.Offer)
+        builder
+            .HasOne(p => p.Offer)
             .WithMany()
             .HasForeignKey(p => p.OfferId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(p => p.OfferId).IsUnique();
 
-        builder.HasOne(p => p.Budget)
+        builder
+            .HasOne(p => p.Budget)
             .WithMany()
             .HasForeignKey(p => p.BudgetId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(p => p.BudgetId);
 
-        builder.HasOne(p => p.Customer)
+        builder
+            .HasOne(p => p.Customer)
             .WithMany()
             .HasForeignKey(p => p.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(p => p.CustomerId);
 
-        builder.HasOne(p => p.Branch)
+        builder
+            .HasOne(p => p.Branch)
             .WithMany()
             .HasForeignKey(p => p.BranchId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(p => p.BranchId);
 
-        builder.HasOne(p => p.CreatedByUser)
+        builder
+            .HasOne(p => p.CreatedByUser)
             .WithMany()
             .HasForeignKey(p => p.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);

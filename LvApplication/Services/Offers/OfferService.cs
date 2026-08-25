@@ -23,7 +23,8 @@ public class OfferService : IOfferService
         IBudgetService budgetService,
         IOfferPdfGenerator pdfGenerator,
         IValidator<CreateOfferDto> createValidator,
-        IValidator<UpdateOfferDto> updateValidator)
+        IValidator<UpdateOfferDto> updateValidator
+    )
     {
         _offerRepository = offerRepository;
         _budgetRepository = budgetRepository;
@@ -37,18 +38,23 @@ public class OfferService : IOfferService
     {
         await _createValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var budget = await _budgetRepository.GetByIdAsync(request.BudgetId)
+        var budget =
+            await _budgetRepository.GetByIdAsync(request.BudgetId)
             ?? throw new NotFoundException($"Budget {request.BudgetId} not found.");
 
         if (budget.Status != BudgetStatus.Sent)
         {
-            throw new ValidationAppException("Solo se puede crear una oferta a partir de un presupuesto en estado Enviado.");
+            throw new ValidationAppException(
+                "Solo se puede crear una oferta a partir de un presupuesto en estado Enviado."
+            );
         }
 
         var existingOffer = await _offerRepository.GetByBudgetIdAsync(request.BudgetId);
         if (existingOffer is not null)
         {
-            throw new ConflictException($"El presupuesto {request.BudgetId} ya tiene una oferta activa (Id {existingOffer.Id}, estado {existingOffer.Status}).");
+            throw new ConflictException(
+                $"El presupuesto {request.BudgetId} ya tiene una oferta activa (Id {existingOffer.Id}, estado {existingOffer.Status})."
+            );
         }
 
         var offer = new Offer
@@ -63,7 +69,8 @@ public class OfferService : IOfferService
             WorkScope = request.WorkScope,
             EstimatedStartDate = request.EstimatedStartDate,
             EstimatedDurationWeeks = request.EstimatedDurationWeeks,
-            EstimatedDeliveryDate = request.EstimatedDeliveryDate
+            EstimatedDeliveryDate =
+                request.EstimatedDeliveryDate
                 ?? request.EstimatedStartDate.AddDays(request.EstimatedDurationWeeks * 7),
             PaymentTerms = request.PaymentTerms,
             Warranties = request.Warranties,
@@ -76,18 +83,20 @@ public class OfferService : IOfferService
             PaymentFrequency = request.PaymentFrequency,
             Status = OfferStatus.Draft,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         foreach (var chapter in budget.Chapters)
         {
-            offer.Chapters.Add(new OfferChapter
-            {
-                ChapterName = chapter.Name,
-                EstimatedWeeks = chapter.EstimatedWeeks,
-                ApproxMaterialQuantity = chapter.Activities.Sum(a => a.MaterialQuantity),
-                CreatedAt = DateTime.UtcNow
-            });
+            offer.Chapters.Add(
+                new OfferChapter
+                {
+                    ChapterName = chapter.Name,
+                    EstimatedWeeks = chapter.EstimatedWeeks,
+                    ApproxMaterialQuantity = chapter.Activities.Sum(a => a.MaterialQuantity),
+                    CreatedAt = DateTime.UtcNow,
+                }
+            );
         }
 
         await _offerRepository.AddAsync(offer);
@@ -99,7 +108,9 @@ public class OfferService : IOfferService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
+        var offer =
+            await _offerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Offer {id} not found.");
 
         if (offer.Status != OfferStatus.Draft)
         {
@@ -113,7 +124,8 @@ public class OfferService : IOfferService
         offer.WorkScope = request.WorkScope;
         offer.EstimatedStartDate = request.EstimatedStartDate;
         offer.EstimatedDurationWeeks = request.EstimatedDurationWeeks;
-        offer.EstimatedDeliveryDate = request.EstimatedDeliveryDate
+        offer.EstimatedDeliveryDate =
+            request.EstimatedDeliveryDate
             ?? request.EstimatedStartDate.AddDays(request.EstimatedDurationWeeks * 7);
         offer.PaymentTerms = request.PaymentTerms;
         offer.Warranties = request.Warranties;
@@ -133,11 +145,15 @@ public class OfferService : IOfferService
 
     public async Task<OfferResponseDto> SendToClientAsync(int id)
     {
-        var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
+        var offer =
+            await _offerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Offer {id} not found.");
 
         if (offer.Status != OfferStatus.Draft)
         {
-            throw new ForbiddenException("Solo se puede enviar al cliente una oferta en estado Borrador.");
+            throw new ForbiddenException(
+                "Solo se puede enviar al cliente una oferta en estado Borrador."
+            );
         }
 
         offer.GeneratedPdfPath = _pdfGenerator.Generate(offer);
@@ -151,11 +167,15 @@ public class OfferService : IOfferService
 
     public async Task<OfferResponseDto> MarkAcceptedAsync(int id, int actingUserId)
     {
-        var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
+        var offer =
+            await _offerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Offer {id} not found.");
 
         if (offer.Status != OfferStatus.SentToClient)
         {
-            throw new ForbiddenException("Solo se puede marcar como aceptada una oferta Enviada al cliente.");
+            throw new ForbiddenException(
+                "Solo se puede marcar como aceptada una oferta Enviada al cliente."
+            );
         }
 
         offer.Status = OfferStatus.ClientAccepted;
@@ -170,11 +190,15 @@ public class OfferService : IOfferService
 
     public async Task<OfferResponseDto> RevertToDraftAsync(int id)
     {
-        var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
+        var offer =
+            await _offerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Offer {id} not found.");
 
         if (offer.Status != OfferStatus.SentToClient)
         {
-            throw new ForbiddenException("Solo se puede regresar a Borrador una oferta Enviada al cliente.");
+            throw new ForbiddenException(
+                "Solo se puede regresar a Borrador una oferta Enviada al cliente."
+            );
         }
 
         offer.Status = OfferStatus.Draft;
@@ -187,11 +211,15 @@ public class OfferService : IOfferService
 
     public async Task DeleteAsync(int id)
     {
-        var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
+        var offer =
+            await _offerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Offer {id} not found.");
 
         if (offer.Status != OfferStatus.Draft)
         {
-            throw new ValidationAppException("Solo se puede eliminar una oferta en estado Borrador; una vez enviada al cliente ya no se puede eliminar.");
+            throw new ValidationAppException(
+                "Solo se puede eliminar una oferta en estado Borrador; una vez enviada al cliente ya no se puede eliminar."
+            );
         }
 
         await _offerRepository.DeleteAsync(offer);
@@ -199,30 +227,44 @@ public class OfferService : IOfferService
 
     public async Task<OfferResponseDto> GetByIdAsync(int id)
     {
-        var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
+        var offer =
+            await _offerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Offer {id} not found.");
         return MapToDto(offer);
     }
 
-    public async Task<PagedResult<OfferResponseDto>> GetAllAsync(int pageNumber, int pageSize, OfferStatus? status)
+    public async Task<PagedResult<OfferResponseDto>> GetAllAsync(
+        int pageNumber,
+        int pageSize,
+        OfferStatus? status
+    )
     {
-        var (items, totalCount) = await _offerRepository.GetPagedAsync(pageNumber, pageSize, status);
+        var (items, totalCount) = await _offerRepository.GetPagedAsync(
+            pageNumber,
+            pageSize,
+            status
+        );
 
         return new PagedResult<OfferResponseDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
     public async Task<(string FilePath, string FileName)> GetPdfFileAsync(int id)
     {
-        var offer = await _offerRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Offer {id} not found.");
+        var offer =
+            await _offerRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Offer {id} not found.");
 
         if (string.IsNullOrEmpty(offer.GeneratedPdfPath) || !File.Exists(offer.GeneratedPdfPath))
         {
-            throw new ValidationAppException("El PDF de esta oferta aún no existe: primero debe enviarse al cliente (send-to-client).");
+            throw new ValidationAppException(
+                "El PDF de esta oferta aún no existe: primero debe enviarse al cliente (send-to-client)."
+            );
         }
 
         return (offer.GeneratedPdfPath, $"{offer.OfferNumber}.pdf");
@@ -235,40 +277,42 @@ public class OfferService : IOfferService
         return $"{prefix}{count + 1:D4}";
     }
 
-    private static OfferResponseDto MapToDto(Offer offer) => new()
-    {
-        Id = offer.Id,
-        BudgetId = offer.BudgetId,
-        CustomerId = offer.CustomerId,
-        OfferNumber = offer.OfferNumber,
-        OfferType = offer.OfferType,
-        IssueDate = offer.IssueDate,
-        ValidityDays = offer.ValidityDays,
-        WorkLocation = offer.WorkLocation,
-        WorkScope = offer.WorkScope,
-        EstimatedStartDate = offer.EstimatedStartDate,
-        EstimatedDurationWeeks = offer.EstimatedDurationWeeks,
-        EstimatedDeliveryDate = offer.EstimatedDeliveryDate,
-        PaymentTerms = offer.PaymentTerms,
-        Warranties = offer.Warranties,
-        Exclusions = offer.Exclusions,
-        TotalProjectPrice = offer.TotalProjectPrice,
-        AgreedPercentage = offer.AgreedPercentage,
-        PercentageIncludes = offer.PercentageIncludes,
-        PercentageExcludes = offer.PercentageExcludes,
-        PercentageCalculationMethod = offer.PercentageCalculationMethod,
-        PaymentFrequency = offer.PaymentFrequency,
-        Status = offer.Status,
-        GeneratedPdfPath = offer.GeneratedPdfPath,
-        CreatedByUserId = offer.CreatedByUserId,
-        Chapters = offer.Chapters
-            .OrderBy(c => c.Id)
-            .Select(c => new OfferChapterResponseDto
-            {
-                Id = c.Id,
-                ChapterName = c.ChapterName,
-                EstimatedWeeks = c.EstimatedWeeks,
-                ApproxMaterialQuantity = c.ApproxMaterialQuantity
-            }).ToList()
-    };
+    private static OfferResponseDto MapToDto(Offer offer) =>
+        new()
+        {
+            Id = offer.Id,
+            BudgetId = offer.BudgetId,
+            CustomerId = offer.CustomerId,
+            OfferNumber = offer.OfferNumber,
+            OfferType = offer.OfferType,
+            IssueDate = offer.IssueDate,
+            ValidityDays = offer.ValidityDays,
+            WorkLocation = offer.WorkLocation,
+            WorkScope = offer.WorkScope,
+            EstimatedStartDate = offer.EstimatedStartDate,
+            EstimatedDurationWeeks = offer.EstimatedDurationWeeks,
+            EstimatedDeliveryDate = offer.EstimatedDeliveryDate,
+            PaymentTerms = offer.PaymentTerms,
+            Warranties = offer.Warranties,
+            Exclusions = offer.Exclusions,
+            TotalProjectPrice = offer.TotalProjectPrice,
+            AgreedPercentage = offer.AgreedPercentage,
+            PercentageIncludes = offer.PercentageIncludes,
+            PercentageExcludes = offer.PercentageExcludes,
+            PercentageCalculationMethod = offer.PercentageCalculationMethod,
+            PaymentFrequency = offer.PaymentFrequency,
+            Status = offer.Status,
+            GeneratedPdfPath = offer.GeneratedPdfPath,
+            CreatedByUserId = offer.CreatedByUserId,
+            Chapters = offer
+                .Chapters.OrderBy(c => c.Id)
+                .Select(c => new OfferChapterResponseDto
+                {
+                    Id = c.Id,
+                    ChapterName = c.ChapterName,
+                    EstimatedWeeks = c.EstimatedWeeks,
+                    ApproxMaterialQuantity = c.ApproxMaterialQuantity,
+                })
+                .ToList(),
+        };
 }

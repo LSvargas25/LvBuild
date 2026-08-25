@@ -12,13 +12,12 @@ public class BudgetChapterConfiguration : IEntityTypeConfiguration<BudgetChapter
 
         builder.HasKey(c => c.Id);
 
-        builder.Property(c => c.Name)
-            .IsRequired()
-            .HasMaxLength(150);
+        builder.Property(c => c.Name).IsRequired().HasMaxLength(150);
 
         builder.Property(c => c.TotalChapter).HasColumnType("decimal(18,2)");
 
-        builder.HasOne(c => c.Budget)
+        builder
+            .HasOne(c => c.Budget)
             .WithMany(b => b.Chapters)
             .HasForeignKey(c => c.BudgetId)
             .OnDelete(DeleteBehavior.Cascade);

@@ -15,8 +15,9 @@ public class InvoiceRepository : IInvoiceRepository
     }
 
     public async Task<Invoice?> GetByIdAsync(int id) =>
-        await _context.Invoices
-            .Include(i => i.Details).ThenInclude(d => d.Product)
+        await _context
+            .Invoices.Include(i => i.Details)
+                .ThenInclude(d => d.Product)
             .Include(i => i.Payments)
             .FirstOrDefaultAsync(i => i.Id == id);
 
@@ -41,10 +42,15 @@ public class InvoiceRepository : IInvoiceRepository
     public async Task<int> CountByBranchAsync(int branchId) =>
         await _context.Invoices.CountAsync(i => i.BranchId == branchId);
 
-    public async Task<(List<Invoice> Items, int TotalCount)> GetPagedByBranchAsync(int branchId, int pageNumber, int pageSize)
+    public async Task<(List<Invoice> Items, int TotalCount)> GetPagedByBranchAsync(
+        int branchId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var query = _context.Invoices
-            .Include(i => i.Details).ThenInclude(d => d.Product)
+        var query = _context
+            .Invoices.Include(i => i.Details)
+                .ThenInclude(d => d.Product)
             .Include(i => i.Payments)
             .Where(i => i.BranchId == branchId);
 

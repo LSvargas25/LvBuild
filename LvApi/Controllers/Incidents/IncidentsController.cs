@@ -54,7 +54,8 @@ public class IncidentsController : ApiControllerBase
     [HttpGet("incidents")]
     public async Task<ActionResult<PagedResult<IncidentDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _incidentService.GetAllAsync(pageNumber, pageSize);
         return Ok(result);
@@ -71,7 +72,8 @@ public class IncidentsController : ApiControllerBase
     public async Task<ActionResult<PagedResult<IncidentDto>>> GetAllByProject(
         int projectId,
         [FromQuery] int pageNumber = 1,
-        [FromQuery] int pageSize = 20)
+        [FromQuery] int pageSize = 20
+    )
     {
         var result = await _incidentService.GetAllByProjectAsync(projectId, pageNumber, pageSize);
         return Ok(result);

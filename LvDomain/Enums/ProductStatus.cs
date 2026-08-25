@@ -4,5 +4,5 @@ public enum ProductStatus
 {
     PendingValidation,
     Validated,
-    Rejected
+    Rejected,
 }

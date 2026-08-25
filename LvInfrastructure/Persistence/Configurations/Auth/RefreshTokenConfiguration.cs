@@ -12,17 +12,14 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
 
         builder.HasKey(rt => rt.Id);
 
-        builder.Property(rt => rt.Token)
-            .IsRequired()
-            .HasMaxLength(400);
+        builder.Property(rt => rt.Token).IsRequired().HasMaxLength(400);
 
-        builder.HasIndex(rt => rt.Token)
-            .IsUnique();
+        builder.HasIndex(rt => rt.Token).IsUnique();
 
-        builder.Property(rt => rt.CreatedByIp)
-            .HasMaxLength(50);
+        builder.Property(rt => rt.CreatedByIp).HasMaxLength(50);
 
-        builder.HasOne(rt => rt.User)
+        builder
+            .HasOne(rt => rt.User)
             .WithMany()
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);

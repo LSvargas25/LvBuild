@@ -14,28 +14,29 @@ public class PayrollConfiguration : IEntityTypeConfiguration<LvDomain.Entities.P
 
         builder.Property(p => p.TotalPayroll).HasColumnType("decimal(18,2)");
 
-        builder.Property(p => p.Status)
-            .HasConversion<string>()
-            .HasMaxLength(30)
-            .IsRequired();
+        builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(30).IsRequired();
 
-        builder.HasOne(p => p.Project)
+        builder
+            .HasOne(p => p.Project)
             .WithMany()
             .HasForeignKey(p => p.ProjectId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(p => p.SiteLog)
+        builder
+            .HasOne(p => p.SiteLog)
             .WithMany()
             .HasForeignKey(p => p.SiteLogId)
             .OnDelete(DeleteBehavior.Restrict);
         builder.HasIndex(p => p.SiteLogId).IsUnique();
 
-        builder.HasOne(p => p.CreatedByUser)
+        builder
+            .HasOne(p => p.CreatedByUser)
             .WithMany()
             .HasForeignKey(p => p.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.HasOne(p => p.Chapter)
+        builder
+            .HasOne(p => p.Chapter)
             .WithMany()
             .HasForeignKey(p => p.ChapterId)
             .OnDelete(DeleteBehavior.Restrict);

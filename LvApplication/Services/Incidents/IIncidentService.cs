@@ -11,5 +11,9 @@ public interface IIncidentService
     Task DeleteAsync(int id);
     Task<IncidentDto> GetByIdAsync(int id);
     Task<PagedResult<IncidentDto>> GetAllAsync(int pageNumber, int pageSize);
-    Task<PagedResult<IncidentDto>> GetAllByProjectAsync(int projectId, int pageNumber, int pageSize);
+    Task<PagedResult<IncidentDto>> GetAllByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    );
 }

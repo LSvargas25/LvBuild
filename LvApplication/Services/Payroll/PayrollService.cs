@@ -29,7 +29,8 @@ public class PayrollService : IPayrollService
         IProjectService projectService,
         IProjectChapterService projectChapterService,
         IValidator<CreatePayrollDto> createValidator,
-        IValidator<UpdatePayrollDto> updateValidator)
+        IValidator<UpdatePayrollDto> updateValidator
+    )
     {
         _payrollRepository = payrollRepository;
         _siteLogService = siteLogService;
@@ -49,7 +50,9 @@ public class PayrollService : IPayrollService
 
         if (siteLog.Status != SiteLogStatus.Approved)
         {
-            throw new ValidationAppException("Solo se puede crear una planilla a partir de una bitácora Aprobada.");
+            throw new ValidationAppException(
+                "Solo se puede crear una planilla a partir de una bitácora Aprobada."
+            );
         }
 
         if (await _payrollRepository.ExistsForSiteLogAsync(request.SiteLogId))
@@ -59,7 +62,8 @@ public class PayrollService : IPayrollService
 
         if (request.ChapterId.HasValue)
         {
-            var project = await _projectRepository.GetByIdAsync(siteLog.ProjectId)
+            var project =
+                await _projectRepository.GetByIdAsync(siteLog.ProjectId)
                 ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
             await ValidateChapterAsync(project.BudgetId, request.ChapterId);
         }
@@ -73,7 +77,7 @@ public class PayrollService : IPayrollService
             Status = PayrollStatus.Pending,
             ChapterId = request.ChapterId,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         SyncDetails(payroll, request.Details);
@@ -88,16 +92,21 @@ public class PayrollService : IPayrollService
     {
         await _updateValidator.ValidateAndThrowAppExceptionAsync(request);
 
-        var payroll = await _payrollRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Payroll {id} not found.");
+        var payroll =
+            await _payrollRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Payroll {id} not found.");
 
         if (payroll.Status != PayrollStatus.Pending)
         {
-            throw new ValidationAppException("Solo se puede editar una planilla en estado Pendiente.");
+            throw new ValidationAppException(
+                "Solo se puede editar una planilla en estado Pendiente."
+            );
         }
 
         if (request.ChapterId.HasValue)
         {
-            var project = await _projectRepository.GetByIdAsync(payroll.ProjectId)
+            var project =
+                await _projectRepository.GetByIdAsync(payroll.ProjectId)
                 ?? throw new NotFoundException($"Project {payroll.ProjectId} not found.");
             await ValidateChapterAsync(project.BudgetId, request.ChapterId);
         }
@@ -115,11 +124,15 @@ public class PayrollService : IPayrollService
 
     public async Task<PayrollDto> MarkAsPaidAsync(int id)
     {
-        var payroll = await _payrollRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Payroll {id} not found.");
+        var payroll =
+            await _payrollRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Payroll {id} not found.");
 
         if (payroll.Status != PayrollStatus.Pending)
         {
-            throw new ValidationAppException("Solo se puede marcar como pagada una planilla en estado Pendiente.");
+            throw new ValidationAppException(
+                "Solo se puede marcar como pagada una planilla en estado Pendiente."
+            );
         }
 
         payroll.Status = PayrollStatus.Paid;
@@ -127,7 +140,8 @@ public class PayrollService : IPayrollService
         payroll.UpdatedAt = DateTime.UtcNow;
         await _payrollRepository.UpdateAsync(payroll);
 
-        var project = await _projectRepository.GetByIdAsync(payroll.ProjectId)
+        var project =
+            await _projectRepository.GetByIdAsync(payroll.ProjectId)
             ?? throw new NotFoundException($"Project {payroll.ProjectId} not found.");
         project.CurrentDirectExpenses += payroll.TotalPayroll;
         project.UpdatedAt = DateTime.UtcNow;
@@ -138,7 +152,10 @@ public class PayrollService : IPayrollService
 
         if (payroll.ChapterId.HasValue)
         {
-            await _projectChapterService.RecalculateActualCostAsync(payroll.ProjectId, payroll.ChapterId.Value);
+            await _projectChapterService.RecalculateActualCostAsync(
+                payroll.ProjectId,
+                payroll.ChapterId.Value
+            );
         }
 
         return MapToDto(payroll);
@@ -146,11 +163,15 @@ public class PayrollService : IPayrollService
 
     public async Task DeleteAsync(int id)
     {
-        var payroll = await _payrollRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Payroll {id} not found.");
+        var payroll =
+            await _payrollRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Payroll {id} not found.");
 
         if (payroll.Status != PayrollStatus.Pending)
         {
-            throw new ValidationAppException("Solo se puede eliminar una planilla en estado Pendiente.");
+            throw new ValidationAppException(
+                "Solo se puede eliminar una planilla en estado Pendiente."
+            );
         }
 
         await _payrollRepository.DeleteAsync(payroll);
@@ -158,7 +179,9 @@ public class PayrollService : IPayrollService
 
     public async Task<PayrollDto> GetByIdAsync(int id)
     {
-        var payroll = await _payrollRepository.GetByIdAsync(id) ?? throw new NotFoundException($"Payroll {id} not found.");
+        var payroll =
+            await _payrollRepository.GetByIdAsync(id)
+            ?? throw new NotFoundException($"Payroll {id} not found.");
         return MapToDto(payroll);
     }
 
@@ -171,30 +194,42 @@ public class PayrollService : IPayrollService
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
-    public async Task<PagedResult<PayrollDto>> GetAllByProjectAsync(int projectId, int pageNumber, int pageSize)
+    public async Task<PagedResult<PayrollDto>> GetAllByProjectAsync(
+        int projectId,
+        int pageNumber,
+        int pageSize
+    )
     {
-        var (items, totalCount) = await _payrollRepository.GetPagedByProjectAsync(projectId, pageNumber, pageSize);
+        var (items, totalCount) = await _payrollRepository.GetPagedByProjectAsync(
+            projectId,
+            pageNumber,
+            pageSize
+        );
 
         return new PagedResult<PayrollDto>
         {
             Items = items.Select(MapToDto).ToList(),
             TotalCount = totalCount,
             PageNumber = pageNumber,
-            PageSize = pageSize
+            PageSize = pageSize,
         };
     }
 
-    private static void SyncDetails(LvDomain.Entities.Payroll.Payroll payroll, List<PayrollDetailDto> detailDtos)
+    private static void SyncDetails(
+        LvDomain.Entities.Payroll.Payroll payroll,
+        List<PayrollDetailDto> detailDtos
+    )
     {
         payroll.Details.Clear();
 
         foreach (var dto in detailDtos)
         {
-            var finalAmountToPay = (dto.HoursWorked * dto.HourlyRate) - (dto.AdvanceAmountApplied ?? 0);
+            var finalAmountToPay =
+                (dto.HoursWorked * dto.HourlyRate) - (dto.AdvanceAmountApplied ?? 0);
 
             var detail = new PayrollDetail
             {
@@ -205,53 +240,60 @@ public class PayrollService : IPayrollService
                 PaymentType = dto.PaymentType,
                 AdvanceAmountApplied = dto.AdvanceAmountApplied,
                 FinalAmountToPay = finalAmountToPay,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             foreach (var paymentDto in dto.Payments)
             {
-                detail.Payments.Add(new PayrollDetailPayment
-                {
-                    PaymentMethod = paymentDto.PaymentMethod,
-                    Amount = paymentDto.Amount,
-                    CreatedAt = DateTime.UtcNow
-                });
+                detail.Payments.Add(
+                    new PayrollDetailPayment
+                    {
+                        PaymentMethod = paymentDto.PaymentMethod,
+                        Amount = paymentDto.Amount,
+                        CreatedAt = DateTime.UtcNow,
+                    }
+                );
             }
 
             payroll.Details.Add(detail);
         }
     }
 
-    private static PayrollDto MapToDto(LvDomain.Entities.Payroll.Payroll payroll) => new()
-    {
-        Id = payroll.Id,
-        ProjectId = payroll.ProjectId,
-        SiteLogId = payroll.SiteLogId,
-        ChapterId = payroll.ChapterId,
-        WeekStart = payroll.WeekStart,
-        WeekEnd = payroll.WeekEnd,
-        TotalPayroll = payroll.TotalPayroll,
-        Status = payroll.Status,
-        CreatedByUserId = payroll.CreatedByUserId,
-        PaidAt = payroll.PaidAt,
-        Details = payroll.Details.Select(d => new PayrollDetailResponseDto
+    private static PayrollDto MapToDto(LvDomain.Entities.Payroll.Payroll payroll) =>
+        new()
         {
-            Id = d.Id,
-            WorkerId = d.WorkerId,
-            Date = d.Date,
-            HoursWorked = d.HoursWorked,
-            HourlyRate = d.HourlyRate,
-            PaymentType = d.PaymentType,
-            AdvanceAmountApplied = d.AdvanceAmountApplied,
-            FinalAmountToPay = d.FinalAmountToPay,
-            Payments = d.Payments.Select(p => new PayrollDetailPaymentResponseDto
-            {
-                Id = p.Id,
-                PaymentMethod = p.PaymentMethod,
-                Amount = p.Amount
-            }).ToList()
-        }).ToList()
-    };
+            Id = payroll.Id,
+            ProjectId = payroll.ProjectId,
+            SiteLogId = payroll.SiteLogId,
+            ChapterId = payroll.ChapterId,
+            WeekStart = payroll.WeekStart,
+            WeekEnd = payroll.WeekEnd,
+            TotalPayroll = payroll.TotalPayroll,
+            Status = payroll.Status,
+            CreatedByUserId = payroll.CreatedByUserId,
+            PaidAt = payroll.PaidAt,
+            Details = payroll
+                .Details.Select(d => new PayrollDetailResponseDto
+                {
+                    Id = d.Id,
+                    WorkerId = d.WorkerId,
+                    Date = d.Date,
+                    HoursWorked = d.HoursWorked,
+                    HourlyRate = d.HourlyRate,
+                    PaymentType = d.PaymentType,
+                    AdvanceAmountApplied = d.AdvanceAmountApplied,
+                    FinalAmountToPay = d.FinalAmountToPay,
+                    Payments = d
+                        .Payments.Select(p => new PayrollDetailPaymentResponseDto
+                        {
+                            Id = p.Id,
+                            PaymentMethod = p.PaymentMethod,
+                            Amount = p.Amount,
+                        })
+                        .ToList(),
+                })
+                .ToList(),
+        };
 
     private async Task ValidateChapterAsync(int budgetId, int? chapterId)
     {
@@ -260,12 +302,15 @@ public class PayrollService : IPayrollService
             return;
         }
 
-        var budget = await _budgetRepository.GetByIdAsync(budgetId)
+        var budget =
+            await _budgetRepository.GetByIdAsync(budgetId)
             ?? throw new NotFoundException($"Budget {budgetId} not found.");
 
         if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
         {
-            throw new ValidationAppException($"El capítulo {chapterId} no pertenece al presupuesto de este proyecto.");
+            throw new ValidationAppException(
+                $"El capítulo {chapterId} no pertenece al presupuesto de este proyecto."
+            );
         }
     }
 }
