@@ -16,6 +16,7 @@ using Serilog;
 using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.UsePortFromEnvironment();
 
 builder.Host.UseSerilog(
     (context, services, configuration) =>
@@ -24,7 +25,14 @@ builder.Host.UseSerilog(
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
+            .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
+
+        // Containers log to stdout (collected by the platform); their disk is ephemeral and the
+        // non-root app user cannot write next to the binaries. Rolling files are a dev aid only.
+        if (!context.HostingEnvironment.IsDevelopment())
+            return;
+
+        configuration
             .WriteTo.File(
                 Path.Combine(context.HostingEnvironment.ContentRootPath, "Logs", "app-.log"),
                 rollingInterval: RollingInterval.Day,
@@ -152,6 +160,8 @@ builder
             )
     );
 
+builder.Services.AddReverseProxySupport();
+
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -187,6 +197,9 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// First, so request logging and the per-IP login rate limiter see the real client address.
+app.UseTransportSecurity();
+
 app.UseSerilogRequestLogging();
 
 // Configure the HTTP request pipeline.
@@ -200,8 +213,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionMiddleware>();
-
-app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
