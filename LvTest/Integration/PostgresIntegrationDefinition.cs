@@ -5,7 +5,7 @@ namespace LvTest.Integration;
 /// (<see cref="PostgresFixture"/>) and run sequentially, since each test resets the database.
 /// </summary>
 [CollectionDefinition(Name, DisableParallelization = true)]
-public class PostgresIntegrationCollection : ICollectionFixture<PostgresFixture>
+public class PostgresIntegrationDefinition : ICollectionFixture<PostgresFixture>
 {
     public const string Name = "PostgresIntegration";
 }

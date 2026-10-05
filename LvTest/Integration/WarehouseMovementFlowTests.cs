@@ -16,7 +16,7 @@ namespace LvTest.Integration;
 /// check constraint (added with the warehouse module in Tarea 1), which until
 /// now had never been applied against a real engine.
 /// </summary>
-[Collection(PostgresIntegrationCollection.Name)]
+[Collection(PostgresIntegrationDefinition.Name)]
 public class WarehouseMovementFlowTests : IAsyncLifetime
 {
     private readonly PostgresFixture _db;

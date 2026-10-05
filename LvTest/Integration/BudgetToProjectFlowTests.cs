@@ -17,7 +17,7 @@ namespace LvTest.Integration;
 /// (schema created by applying the real migrations), not
 /// EF Core InMemory. Catches FK/constraint behavior InMemory can't validate.
 /// </summary>
-[Collection(PostgresIntegrationCollection.Name)]
+[Collection(PostgresIntegrationDefinition.Name)]
 public class BudgetToProjectFlowTests : IAsyncLifetime
 {
     private readonly PostgresFixture _db;

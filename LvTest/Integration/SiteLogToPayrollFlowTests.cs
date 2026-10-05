@@ -20,7 +20,7 @@ namespace LvTest.Integration;
 /// This is the dependency the team called out explicitly (Payroll cannot be created
 /// without an Approved SiteLog); worth proving against the real engine, not just InMemory.
 /// </summary>
-[Collection(PostgresIntegrationCollection.Name)]
+[Collection(PostgresIntegrationDefinition.Name)]
 public class SiteLogToPayrollFlowTests : IAsyncLifetime
 {
     private readonly PostgresFixture _db;

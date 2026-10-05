@@ -1,0 +1,4 @@
+# Generated EF Core migrations: exclude them from code analysis (they are rewritten by
+# `dotnet ef migrations add`, so analyzer fixes there would be lost).
+[**/Migrations/*.cs]
+generated_code = true

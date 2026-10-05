@@ -16,7 +16,7 @@ namespace LvTest.Integration;
 /// Invoice.InvoiceNumber behaves differently for NULL on a real database engine vs InMemory) -
 /// the second test below is a direct regression test for that fix against the real engine.
 /// </summary>
-[Collection(PostgresIntegrationCollection.Name)]
+[Collection(PostgresIntegrationDefinition.Name)]
 public class InvoiceStockControlFlowTests : IAsyncLifetime
 {
     private readonly PostgresFixture _db;

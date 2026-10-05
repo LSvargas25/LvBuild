@@ -9,6 +9,8 @@ namespace LvTest.Services.Commercial;
 
 public class ProductServiceTests
 {
+    private static readonly string[] GeneralManagerRoles = ["GeneralManager"];
+
     private static CreateProductDto BuildCreateDto(string sku = "SKU-001") =>
         new()
         {
@@ -139,10 +141,9 @@ public class ProductServiceTests
             roleId: TestUserFactory.GeneralManagerRoleId
         );
         var service = ServiceFactory.CreateProductService(context);
-        await service.CreateAsync(BuildCreateDto("dup-2"), user.Id, new[] { "GeneralManager" });
+        await service.CreateAsync(BuildCreateDto("dup-2"), user.Id, GeneralManagerRoles);
 
-        var act = () =>
-            service.CreateAsync(BuildCreateDto("DUP-2"), user.Id, new[] { "GeneralManager" });
+        var act = () => service.CreateAsync(BuildCreateDto("DUP-2"), user.Id, GeneralManagerRoles);
 
         await act.Should().ThrowAsync<ConflictException>();
     }

@@ -7,6 +7,8 @@ namespace LvTest.Services.Auth;
 
 public class UserServiceTests
 {
+    private static readonly string[] GeneralManagerRoles = ["GeneralManager"];
+
     [Fact]
     public async Task CreateUserAsync_DuplicateEmail_ThrowsConflictException()
     {
@@ -51,7 +53,7 @@ public class UserServiceTests
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
             },
-            new[] { "GeneralManager" }
+            GeneralManagerRoles
         );
 
         var act = async () =>
@@ -63,7 +65,7 @@ public class UserServiceTests
                     Password = "Password#456",
                     RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
                 },
-                new[] { "GeneralManager" }
+                GeneralManagerRoles
             );
 
         await act.Should().ThrowAsync<ConflictException>();
@@ -83,7 +85,7 @@ public class UserServiceTests
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
             },
-            new[] { "GeneralManager" }
+            GeneralManagerRoles
         );
 
         context.Users.Should().ContainSingle(u => u.Email == "mixed.case@example.com");

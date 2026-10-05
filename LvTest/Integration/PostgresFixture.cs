@@ -9,7 +9,7 @@ namespace LvTest.Integration;
 
 /// <summary>
 /// One disposable PostgreSQL 16 container (Testcontainers, requires Docker) shared by every
-/// test in <see cref="PostgresIntegrationCollection"/>. The real migrations are applied once;
+/// test in <see cref="PostgresIntegrationDefinition"/>. The real migrations are applied once;
 /// <see cref="ResetDatabaseAsync"/> then wipes all data with Respawn before each test while
 /// keeping the schema, the migrations history and the seeded role catalog.
 /// </summary>
