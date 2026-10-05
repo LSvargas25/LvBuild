@@ -130,6 +130,24 @@ public class ProductServiceTests
     }
 
     [Fact]
+    public async Task CreateAsync_DuplicateSkuWithDifferentCase_ThrowsConflict()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "gm3@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
+        var service = ServiceFactory.CreateProductService(context);
+        await service.CreateAsync(BuildCreateDto("dup-2"), user.Id, new[] { "GeneralManager" });
+
+        var act = () =>
+            service.CreateAsync(BuildCreateDto("DUP-2"), user.Id, new[] { "GeneralManager" });
+
+        await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
     public async Task ValidateAsync_ApproveByGeneralManager_SetsValidated()
     {
         using var context = TestDbContextFactory.Create();

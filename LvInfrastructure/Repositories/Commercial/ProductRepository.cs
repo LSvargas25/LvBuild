@@ -17,8 +17,12 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetByIdAsync(int id) =>
         await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
 
+    // Case-insensitive like the previous SQL Server collation, so "abc-1" and "ABC-1" are
+    // still treated as the same SKU by the duplicate check. Translates to lower() on PostgreSQL.
+#pragma warning disable CA1304, CA1311, CA1862 // culture-aware/OrdinalIgnoreCase overloads are not translatable to SQL
     public async Task<Product?> GetBySkuAsync(string sku) =>
-        await _context.Products.FirstOrDefaultAsync(p => p.Sku == sku);
+        await _context.Products.FirstOrDefaultAsync(p => p.Sku.ToLower() == sku.ToLower());
+#pragma warning restore CA1304, CA1311, CA1862
 
     public async Task AddAsync(Product product)
     {
