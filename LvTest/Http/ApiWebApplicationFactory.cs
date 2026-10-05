@@ -32,7 +32,7 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
         // mirrors exactly how production is meant to supply these values anyway.
         Environment.SetEnvironmentVariable(
             "ConnectionStrings__DefaultConnection",
-            "Server=(local);Database=Unused;Trusted_Connection=True;"
+            "Host=localhost;Database=unused;Username=unused;Password=unused"
         );
         Environment.SetEnvironmentVariable("Jwt__Key", TestJwtKey);
         Environment.SetEnvironmentVariable("Jwt__Issuer", TestJwtIssuer);

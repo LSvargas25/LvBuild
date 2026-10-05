@@ -20,7 +20,7 @@ public static class SqlServerTestDbContextFactory
     public static async Task<AppDbContext> CreateAsync()
     {
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseSqlServer(ConnectionString)
+            .UseNpgsql(ConnectionString).UseSnakeCaseNamingConvention()
             .Options;
 
         var context = new AppDbContext(options);
