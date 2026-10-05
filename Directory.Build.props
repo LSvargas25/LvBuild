@@ -10,4 +10,12 @@
     <AnalysisMode>Recommended</AnalysisMode>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+
+  <!--
+    The solution builds with 0 warnings. CI (GitHub Actions sets CI=true) keeps it that way by
+    failing on any new warning; local builds only warn so work in progress isn't blocked.
+  -->
+  <PropertyGroup Condition="'$(CI)' == 'true'">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
 </Project>

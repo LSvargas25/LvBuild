@@ -115,7 +115,7 @@ public class ProductIncorporationTicketServiceTests
             service.CreateAsync(
                 BuildDto(officeBranch.Id, product.Id, supplier.Id),
                 user.Id,
-                new[] { "GeneralManager" }
+                TestRoles.GeneralManager
             );
 
         await act.Should().ThrowAsync<ValidationAppException>();
@@ -149,7 +149,7 @@ public class ProductIncorporationTicketServiceTests
         var result = await service.CreateAsync(
             BuildDto(warehouseBranch.Id, product.Id, supplier.Id),
             user.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         result.Status.Should().Be(ProductIncorporationTicketStatus.Validated);
@@ -172,7 +172,7 @@ public class ProductIncorporationTicketServiceTests
         var result = await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id, 10),
             user.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         result.Status.Should().Be(ProductIncorporationTicketStatus.Validated);
@@ -204,7 +204,7 @@ public class ProductIncorporationTicketServiceTests
         var result = await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id),
             branchAdmin.Id,
-            new[] { "BranchAdmin" }
+            TestRoles.BranchAdmin
         );
 
         result.Status.Should().Be(ProductIncorporationTicketStatus.Validated);
@@ -232,7 +232,7 @@ public class ProductIncorporationTicketServiceTests
         var result = await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id),
             businessManager.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         result.Status.Should().Be(ProductIncorporationTicketStatus.PendingValidation);
@@ -263,7 +263,7 @@ public class ProductIncorporationTicketServiceTests
             service.CreateAsync(
                 BuildDto(branch.Id, product.Id, supplier.Id),
                 user.Id,
-                new[] { "GeneralManager" }
+                TestRoles.GeneralManager
             );
 
         await act.Should().ThrowAsync<ValidationAppException>();
@@ -291,19 +291,19 @@ public class ProductIncorporationTicketServiceTests
         await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id, 5),
             manager.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
         var second = await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id, 3),
             businessManager.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         var validated = await service.ValidateAsync(
             second.Id,
             true,
             manager.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         validated.Status.Should().Be(ProductIncorporationTicketStatus.Validated);
@@ -336,14 +336,14 @@ public class ProductIncorporationTicketServiceTests
         var ticket = await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id, 5),
             businessManager.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         var rejected = await service.ValidateAsync(
             ticket.Id,
             false,
             manager.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         rejected.Status.Should().Be(ProductIncorporationTicketStatus.Rejected);
@@ -372,7 +372,7 @@ public class ProductIncorporationTicketServiceTests
         var ticket = await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id),
             manager.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         var act = () => service.DeleteAsync(ticket.Id);
@@ -401,7 +401,7 @@ public class ProductIncorporationTicketServiceTests
         var ticket = await service.CreateAsync(
             BuildDto(branch.Id, product.Id, supplier.Id),
             businessManager.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         await service.DeleteAsync(ticket.Id);

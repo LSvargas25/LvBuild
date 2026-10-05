@@ -12,7 +12,7 @@ public interface ISiteLogRepository
         int pageNumber,
         int pageSize
     );
-    Task<List<SiteLog>> GetInRangeAsync(int projectId, DateTime from, DateTime to);
+    Task<List<SiteLog>> GetInRangeAsync(int projectId, DateTime fromDate, DateTime toDate);
     Task AddAsync(SiteLog siteLog);
     Task UpdateAsync(SiteLog siteLog);
     Task DeleteAsync(SiteLog siteLog);

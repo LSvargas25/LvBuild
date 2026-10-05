@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using LvApplication.Common;
 using LvApplication.DTOs.Branches;
@@ -88,7 +89,7 @@ public class BranchesController : ControllerBase
     private (int UserId, List<string> Roles) GetCurrentUser()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        var userId = int.Parse(userIdClaim!.Value);
+        var userId = int.Parse(userIdClaim!.Value, CultureInfo.InvariantCulture);
         var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
         return (userId, roles);
     }

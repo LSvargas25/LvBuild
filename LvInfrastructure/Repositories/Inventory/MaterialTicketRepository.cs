@@ -50,13 +50,13 @@ public class MaterialTicketRepository : IMaterialTicketRepository
 
     public Task<List<MaterialTicket>> GetAppliedInRangeAsync(
         int projectId,
-        DateTime from,
-        DateTime to
+        DateTime fromDate,
+        DateTime toDate
     )
     {
-        // from/to are Costa Rica calendar days; CreatedAt is a UTC timestamp.
-        var fromUtc = CostaRicaTime.StartOfDayUtc(from);
-        var toUtcExclusive = CostaRicaTime.StartOfDayUtc(to.AddDays(1));
+        // fromDate/toDate are Costa Rica calendar days; CreatedAt is a UTC timestamp.
+        var fromUtc = CostaRicaTime.StartOfDayUtc(fromDate);
+        var toUtcExclusive = CostaRicaTime.StartOfDayUtc(toDate.AddDays(1));
 
         return _context
             .MaterialTickets.Include(t => t.Supplier)

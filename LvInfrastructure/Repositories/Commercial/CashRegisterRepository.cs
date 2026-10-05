@@ -23,21 +23,21 @@ public class CashRegisterRepository : ICashRegisterRepository
             c.BranchId == branchId && c.Status == CashRegisterStatus.Open
         );
 
-    public async Task AddAsync(CashRegister register)
+    public async Task AddAsync(CashRegister cashRegister)
     {
-        _context.CashRegisters.Add(register);
+        _context.CashRegisters.Add(cashRegister);
         await _context.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(CashRegister register)
+    public async Task UpdateAsync(CashRegister cashRegister)
     {
-        _context.CashRegisters.Update(register);
+        _context.CashRegisters.Update(cashRegister);
         await _context.SaveChangesAsync();
     }
 
-    public async Task DeleteAsync(CashRegister register)
+    public async Task DeleteAsync(CashRegister cashRegister)
     {
-        _context.CashRegisters.Remove(register);
+        _context.CashRegisters.Remove(cashRegister);
         await _context.SaveChangesAsync();
     }
 

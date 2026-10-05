@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -20,17 +21,19 @@ builder.Host.UseSerilog(
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.Console()
+            .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture)
             .WriteTo.File(
                 Path.Combine(context.HostingEnvironment.ContentRootPath, "Logs", "app-.log"),
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 30
+                retainedFileCountLimit: 30,
+                formatProvider: CultureInfo.InvariantCulture
             )
             .WriteTo.File(
                 Path.Combine(context.HostingEnvironment.ContentRootPath, "Logs", "errors-.log"),
                 restrictedToMinimumLevel: LogEventLevel.Error,
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 90
+                retainedFileCountLimit: 90,
+                formatProvider: CultureInfo.InvariantCulture
             );
     }
 );

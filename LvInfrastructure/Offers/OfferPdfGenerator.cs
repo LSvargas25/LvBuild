@@ -1,3 +1,4 @@
+using System.Globalization;
 using LvApplication.Services.Offers;
 using LvDomain.Entities.Offers;
 using LvDomain.Enums;
@@ -10,6 +11,10 @@ namespace LvInfrastructure.Offers;
 
 public class OfferPdfGenerator : IOfferPdfGenerator
 {
+    // The PDF is read by Costa Rican customers: format numbers the local way regardless of
+    // the server culture (containers usually run with the invariant culture).
+    private static readonly CultureInfo CostaRicaCulture = CultureInfo.GetCultureInfo("es-CR");
+
     private readonly IConfiguration _configuration;
 
     static OfferPdfGenerator()
@@ -106,12 +111,18 @@ public class OfferPdfGenerator : IOfferPdfGenerator
                                     foreach (var chapter in offer.Chapters)
                                     {
                                         table.Cell().Text(chapter.ChapterName);
-                                        table.Cell().Text(chapter.EstimatedWeeks.ToString());
                                         table
                                             .Cell()
                                             .Text(
-                                                chapter.ApproxMaterialQuantity?.ToString("N2")
-                                                    ?? "-"
+                                                chapter.EstimatedWeeks.ToString(CostaRicaCulture)
+                                            );
+                                        table
+                                            .Cell()
+                                            .Text(
+                                                chapter.ApproxMaterialQuantity?.ToString(
+                                                    "N2",
+                                                    CostaRicaCulture
+                                                ) ?? "-"
                                             );
                                     }
                                 });

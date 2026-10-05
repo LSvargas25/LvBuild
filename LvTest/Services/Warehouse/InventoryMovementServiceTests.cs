@@ -420,7 +420,7 @@ public class InventoryMovementServiceTests
             sent.Id,
             true,
             user.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         validated.Status.Should().Be(InventoryMovementStatus.Accepted);
@@ -463,7 +463,7 @@ public class InventoryMovementServiceTests
             sent.Id,
             true,
             user.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         validated.Status.Should().Be(InventoryMovementStatus.Accepted);
@@ -502,12 +502,7 @@ public class InventoryMovementServiceTests
             user.Id
         );
 
-        var denied = await service.ValidateAsync(
-            sent.Id,
-            false,
-            user.Id,
-            new[] { "GeneralManager" }
-        );
+        var denied = await service.ValidateAsync(sent.Id, false, user.Id, TestRoles.GeneralManager);
 
         denied.Status.Should().Be(InventoryMovementStatus.Denied);
         var origin = await context.BranchInventories.FirstAsync(i =>
@@ -542,7 +537,7 @@ public class InventoryMovementServiceTests
             user.Id
         );
 
-        var act = () => service.ValidateAsync(sent.Id, true, user.Id, new[] { "GeneralManager" });
+        var act = () => service.ValidateAsync(sent.Id, true, user.Id, TestRoles.GeneralManager);
 
         await act.Should().ThrowAsync<ValidationAppException>();
         var origin = await context.BranchInventories.FirstAsync(i =>
@@ -585,8 +580,7 @@ public class InventoryMovementServiceTests
             director.Id
         );
 
-        var act = () =>
-            service.ValidateAsync(sent.Id, true, branchAdmin.Id, new[] { "BranchAdmin" });
+        var act = () => service.ValidateAsync(sent.Id, true, branchAdmin.Id, TestRoles.BranchAdmin);
 
         await act.Should().ThrowAsync<ForbiddenException>();
     }
@@ -610,7 +604,7 @@ public class InventoryMovementServiceTests
             user.Id
         );
 
-        await service.DeleteAsync(sent.Id, new[] { "GeneralManager" });
+        await service.DeleteAsync(sent.Id, TestRoles.GeneralManager);
 
         (await context.InventoryMovements.FindAsync(sent.Id)).Should().BeNull();
     }
@@ -633,9 +627,9 @@ public class InventoryMovementServiceTests
             BuildDtoToBranch(warehouse.Id, commerce.Id, product.Id, 5),
             user.Id
         );
-        await service.ValidateAsync(sent.Id, true, user.Id, new[] { "GeneralManager" });
+        await service.ValidateAsync(sent.Id, true, user.Id, TestRoles.GeneralManager);
 
-        var act = () => service.DeleteAsync(sent.Id, new[] { "GeneralManager" });
+        var act = () => service.DeleteAsync(sent.Id, TestRoles.GeneralManager);
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -674,7 +668,7 @@ public class InventoryMovementServiceTests
             director.Id
         );
 
-        var act = () => service.DeleteAsync(sent.Id, new[] { "BranchAdmin" });
+        var act = () => service.DeleteAsync(sent.Id, TestRoles.BranchAdmin);
 
         await act.Should().ThrowAsync<ForbiddenException>();
     }

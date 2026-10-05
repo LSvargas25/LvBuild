@@ -10,7 +10,7 @@ public class User : BaseEntity
     public string PasswordHash { get; set; } = string.Empty;
     public UserStatus Status { get; set; }
     public DateTime? LastLoginAt { get; set; }
-    public int FailedLoginAttempts { get; set; } = 0;
+    public int FailedLoginAttempts { get; set; }
     public DateTime? BlockedAt { get; set; }
     public string? ProfilePhotoPath { get; set; }
 

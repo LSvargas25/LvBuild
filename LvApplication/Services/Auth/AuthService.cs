@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LvApplication.Services.Auth;
 
-public class AuthService : IAuthService
+public partial class AuthService : IAuthService
 {
     private const string InvalidCredentialsMessage = "Invalid email or password.";
     private const string ProfilePhotoSubfolder = "profile-photos";
@@ -167,11 +167,7 @@ public class AuthService : IAuthService
         await _passwordResetTokenRepository.AddAsync(resetToken);
 
         // Never log the raw token: anyone with log access could hijack the reset flow without touching email.
-        _logger.LogInformation(
-            "Password reset requested for user {UserId} ({Email}).",
-            user.Id,
-            user.Email
-        );
+        LogPasswordResetRequested(_logger, user.Id, user.Email);
 
         // Temporary until the real email module exists (Fase 14): expose the token in the response,
         // but only in Development, where there is no mail server to deliver it otherwise.
@@ -344,4 +340,10 @@ public class AuthService : IAuthService
             Roles = roles,
         };
     }
+
+    [LoggerMessage(
+        Level = LogLevel.Information,
+        Message = "Password reset requested for user {UserId} ({Email})."
+    )]
+    private static partial void LogPasswordResetRequested(ILogger logger, int userId, string email);
 }

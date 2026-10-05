@@ -112,7 +112,7 @@ public class WarehouseMovementFlowTests : IAsyncLifetime
             sent.Id,
             true,
             user.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         validated.Status.Should().Be(InventoryMovementStatus.Accepted);

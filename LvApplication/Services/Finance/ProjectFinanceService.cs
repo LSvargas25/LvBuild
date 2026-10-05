@@ -27,14 +27,14 @@ public class ProjectFinanceService : IProjectFinanceService
     public async Task<ProjectFinanceDto> GetFinanceAsync(
         int projectId,
         FinancePeriod period,
-        DateTime date
+        DateTime referenceDate
     )
     {
         var project =
             await _projectRepository.GetByIdAsync(projectId)
             ?? throw new NotFoundException($"Project {projectId} not found.");
 
-        var (periodStart, periodEnd) = ComputePeriodRange(period, date);
+        var (periodStart, periodEnd) = ComputePeriodRange(period, referenceDate);
 
         var tickets = await _ticketRepository.GetAppliedInRangeAsync(
             projectId,
