@@ -12,6 +12,11 @@ public class OfferConfiguration : IEntityTypeConfiguration<Offer>
 
         builder.HasKey(o => o.Id);
 
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(o => o.IssueDate).HasColumnType("date");
+        builder.Property(o => o.EstimatedStartDate).HasColumnType("date");
+        builder.Property(o => o.EstimatedDeliveryDate).HasColumnType("date");
+
         builder.Property(o => o.OfferNumber).IsRequired().HasMaxLength(30);
 
         builder.HasIndex(o => o.OfferNumber).IsUnique();

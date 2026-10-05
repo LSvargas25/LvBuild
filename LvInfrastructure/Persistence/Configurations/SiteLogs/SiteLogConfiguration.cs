@@ -12,6 +12,10 @@ public class SiteLogConfiguration : IEntityTypeConfiguration<SiteLog>
 
         builder.HasKey(s => s.Id);
 
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(s => s.WeekStart).HasColumnType("date");
+        builder.Property(s => s.WeekEnd).HasColumnType("date");
+
         builder.Property(s => s.TaskDescription).IsRequired();
 
         builder.Property(s => s.TotalPayroll).HasColumnType("decimal(18,2)");

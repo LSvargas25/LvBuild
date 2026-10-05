@@ -12,6 +12,10 @@ public class PayrollConfiguration : IEntityTypeConfiguration<LvDomain.Entities.P
 
         builder.HasKey(p => p.Id);
 
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(p => p.WeekStart).HasColumnType("date");
+        builder.Property(p => p.WeekEnd).HasColumnType("date");
+
         builder.Property(p => p.TotalPayroll).HasColumnType("decimal(18,2)");
 
         builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(30).IsRequired();

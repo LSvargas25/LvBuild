@@ -1,3 +1,4 @@
+using LvApplication.Common;
 using LvApplication.Services.Inventory;
 using LvDomain.Entities.Inventory;
 using LvDomain.Enums;
@@ -51,17 +52,23 @@ public class MaterialTicketRepository : IMaterialTicketRepository
         int projectId,
         DateTime from,
         DateTime to
-    ) =>
-        _context
+    )
+    {
+        // from/to are Costa Rica calendar days; CreatedAt is a UTC timestamp.
+        var fromUtc = CostaRicaTime.StartOfDayUtc(from);
+        var toUtcExclusive = CostaRicaTime.StartOfDayUtc(to.AddDays(1));
+
+        return _context
             .MaterialTickets.Include(t => t.Supplier)
             .Where(t =>
                 t.ProjectId == projectId
                 && t.Status == MaterialTicketStatus.Applied
-                && t.CreatedAt >= from
-                && t.CreatedAt < to.AddDays(1)
+                && t.CreatedAt >= fromUtc
+                && t.CreatedAt < toUtcExclusive
             )
             .OrderBy(t => t.CreatedAt)
             .ToListAsync();
+    }
 
     public async Task AddAsync(MaterialTicket ticket)
     {

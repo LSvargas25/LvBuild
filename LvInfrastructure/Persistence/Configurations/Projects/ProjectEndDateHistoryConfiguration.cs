@@ -12,6 +12,10 @@ public class ProjectEndDateHistoryConfiguration : IEntityTypeConfiguration<Proje
 
         builder.HasKey(h => h.Id);
 
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(h => h.PreviousDate).HasColumnType("date");
+        builder.Property(h => h.NewDate).HasColumnType("date");
+
         builder.Property(h => h.Reason).IsRequired().HasMaxLength(500);
 
         builder
