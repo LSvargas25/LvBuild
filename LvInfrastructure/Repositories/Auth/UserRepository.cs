@@ -1,3 +1,4 @@
+using LvApplication.Common;
 using LvApplication.Services.Auth;
 using LvDomain.Entities.Auth;
 using LvInfrastructure.Persistence;
@@ -17,13 +18,19 @@ public class UserRepository : IUserRepository
     private IQueryable<User> UsersWithRoles =>
         _context.Users.Include(u => u.UserRoles).ThenInclude(ur => ur.Role);
 
-    public Task<User?> GetByEmailAsync(string email) =>
-        UsersWithRoles.FirstOrDefaultAsync(u => u.Email == email);
+    public Task<User?> GetByEmailAsync(string email)
+    {
+        var normalized = EmailNormalizer.Normalize(email);
+        return UsersWithRoles.FirstOrDefaultAsync(u => u.Email == normalized);
+    }
 
     public Task<User?> GetByIdAsync(int id) => UsersWithRoles.FirstOrDefaultAsync(u => u.Id == id);
 
-    public Task<bool> EmailExistsAsync(string email) =>
-        _context.Users.AnyAsync(u => u.Email == email);
+    public Task<bool> EmailExistsAsync(string email)
+    {
+        var normalized = EmailNormalizer.Normalize(email);
+        return _context.Users.AnyAsync(u => u.Email == normalized);
+    }
 
     public async Task<(List<User> Users, int TotalCount)> GetPagedAsync(
         int pageNumber,

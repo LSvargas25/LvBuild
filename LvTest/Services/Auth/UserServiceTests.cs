@@ -38,6 +38,58 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task CreateUserAsync_DuplicateEmailWithDifferentCase_ThrowsConflictException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var userService = ServiceFactory.CreateUserService(context);
+
+        await userService.CreateUserAsync(
+            new CreateUserDto
+            {
+                Name = "Jane Doe",
+                Email = "jane.case@example.com",
+                Password = "Password#123",
+                RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+            },
+            new[] { "GeneralManager" }
+        );
+
+        var act = async () =>
+            await userService.CreateUserAsync(
+                new CreateUserDto
+                {
+                    Name = "Jane Doe Upper",
+                    Email = "Jane.Case@Example.com",
+                    Password = "Password#456",
+                    RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+                },
+                new[] { "GeneralManager" }
+            );
+
+        await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_MixedCaseEmail_StoresEmailLowercased()
+    {
+        using var context = TestDbContextFactory.Create();
+        var userService = ServiceFactory.CreateUserService(context);
+
+        await userService.CreateUserAsync(
+            new CreateUserDto
+            {
+                Name = "Mixed Case",
+                Email = "  Mixed.Case@Example.COM ",
+                Password = "Password#123",
+                RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+            },
+            new[] { "GeneralManager" }
+        );
+
+        context.Users.Should().ContainSingle(u => u.Email == "mixed.case@example.com");
+    }
+
+    [Fact]
     public async Task CreateUserAsync_AssigningGeneralManagerRoleByNonGeneralManager_ThrowsValidationException()
     {
         using var context = TestDbContextFactory.Create();
