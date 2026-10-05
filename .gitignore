@@ -367,3 +367,6 @@ FodyWeavers.xsd
 
 # Serilog file sink output (Tarea 8)
 LvApi/Logs/
+# Test results and runtime-generated files
+TestResults/
+LvApi/GeneratedFiles/
