@@ -3,10 +3,13 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using LvApi;
+using LvApi.Configuration;
 using LvApi.Extensions;
 using LvApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -102,11 +105,9 @@ static string GetSchemaId(Type type)
     return $"{type.Namespace}.{genericTypeName}Of{string.Join("And", genericArgNames)}";
 }
 
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddAppOptions(builder.Configuration);
+builder.Services.AddInfrastructureServices();
 builder.Services.AddApplicationServices();
-
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
 
 builder
     .Services.AddAuthentication(options =>
@@ -114,36 +115,42 @@ builder
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        };
-    });
+    .AddJwtBearer();
+
+// Configured from the validated JwtOptions instead of reading raw configuration up front, so a
+// missing key is reported by options validation at startup with an actionable message.
+builder
+    .Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>(
+        (options, jwt) =>
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwt.Value.Issuer,
+                ValidAudience = jwt.Value.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Value.Key)),
+            }
+    );
 
 builder.Services.AddAuthorization();
 
-var corsAllowedOrigins =
-    builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? Array.Empty<string>();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        CorsPolicies.Default,
-        policy =>
-        {
-            policy.WithOrigins(corsAllowedOrigins).AllowAnyHeader().AllowAnyMethod();
-        }
+builder.Services.AddCors();
+builder
+    .Services.AddOptions<CorsOptions>()
+    .Configure<IOptions<CorsOriginsOptions>>(
+        (options, origins) =>
+            options.AddPolicy(
+                CorsPolicies.Default,
+                policy =>
+                    policy
+                        .WithOrigins(origins.Value.AllowedOrigins)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+            )
     );
-});
 
 builder.Services.AddRateLimiter(options =>
 {
