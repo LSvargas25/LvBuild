@@ -8,7 +8,7 @@ public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 {
     public void Configure(EntityTypeBuilder<Incident> builder)
     {
-        builder.ToTable("Incidents");
+        builder.ToTable("incidents");
 
         builder.HasKey(i => i.Id);
 

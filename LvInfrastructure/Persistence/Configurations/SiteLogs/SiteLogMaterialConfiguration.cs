@@ -8,7 +8,7 @@ public class SiteLogMaterialConfiguration : IEntityTypeConfiguration<SiteLogMate
 {
     public void Configure(EntityTypeBuilder<SiteLogMaterial> builder)
     {
-        builder.ToTable("SiteLogMaterials");
+        builder.ToTable("site_log_materials");
 
         builder.HasKey(m => m.Id);
 

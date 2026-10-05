@@ -9,9 +9,13 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("Users");
+        builder.ToTable("users");
 
         builder.HasKey(u => u.Id);
+
+        // HasData inserts explicit Ids, which do not advance a PostgreSQL identity sequence;
+        // start after the highest seeded Id so the first real insert does not collide.
+        builder.Property(u => u.Id).HasIdentityOptions(startValue: 2);
 
         builder.Property(u => u.Name).IsRequired().HasMaxLength(150);
 

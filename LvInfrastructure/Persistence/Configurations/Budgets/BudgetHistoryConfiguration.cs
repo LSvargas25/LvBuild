@@ -8,7 +8,7 @@ public class BudgetHistoryConfiguration : IEntityTypeConfiguration<BudgetHistory
 {
     public void Configure(EntityTypeBuilder<BudgetHistory> builder)
     {
-        builder.ToTable("BudgetHistories");
+        builder.ToTable("budget_histories");
 
         builder.HasKey(h => h.Id);
 

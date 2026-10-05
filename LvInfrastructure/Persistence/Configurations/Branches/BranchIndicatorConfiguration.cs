@@ -8,7 +8,7 @@ public class BranchIndicatorConfiguration : IEntityTypeConfiguration<BranchIndic
 {
     public void Configure(EntityTypeBuilder<BranchIndicator> builder)
     {
-        builder.ToTable("BranchIndicators");
+        builder.ToTable("branch_indicators");
 
         builder.HasKey(bi => bi.Id);
 

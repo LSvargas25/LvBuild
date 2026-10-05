@@ -8,7 +8,7 @@ public class ProjectEndDateHistoryConfiguration : IEntityTypeConfiguration<Proje
 {
     public void Configure(EntityTypeBuilder<ProjectEndDateHistory> builder)
     {
-        builder.ToTable("ProjectEndDateHistories");
+        builder.ToTable("project_end_date_histories");
 
         builder.HasKey(h => h.Id);
 

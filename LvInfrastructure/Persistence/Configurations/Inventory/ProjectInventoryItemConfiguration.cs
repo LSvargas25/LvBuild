@@ -9,11 +9,11 @@ public class ProjectInventoryItemConfiguration : IEntityTypeConfiguration<Projec
     public void Configure(EntityTypeBuilder<ProjectInventoryItem> builder)
     {
         builder.ToTable(
-            "ProjectInventoryItems",
+            "project_inventory_items",
             t =>
                 t.HasCheckConstraint(
-                    "CK_ProjectInventoryItems_ExactlyOneCatalogReference",
-                    "([MaterialId] IS NOT NULL AND [ProductId] IS NULL) OR ([MaterialId] IS NULL AND [ProductId] IS NOT NULL)"
+                    "ck_project_inventory_items_exactly_one_catalog_reference",
+                    "(material_id IS NOT NULL AND product_id IS NULL) OR (material_id IS NULL AND product_id IS NOT NULL)"
                 )
         );
 
@@ -45,10 +45,10 @@ public class ProjectInventoryItemConfiguration : IEntityTypeConfiguration<Projec
         builder
             .HasIndex(i => new { i.ProjectId, i.MaterialId })
             .IsUnique()
-            .HasFilter("[MaterialId] IS NOT NULL");
+            .HasFilter("material_id IS NOT NULL");
         builder
             .HasIndex(i => new { i.ProjectId, i.ProductId })
             .IsUnique()
-            .HasFilter("[ProductId] IS NOT NULL");
+            .HasFilter("product_id IS NOT NULL");
     }
 }

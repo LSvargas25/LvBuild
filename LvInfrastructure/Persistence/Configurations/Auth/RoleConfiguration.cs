@@ -8,9 +8,13 @@ public class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
     public void Configure(EntityTypeBuilder<Role> builder)
     {
-        builder.ToTable("Roles");
+        builder.ToTable("roles");
 
         builder.HasKey(r => r.Id);
+
+        // HasData inserts explicit Ids, which do not advance a PostgreSQL identity sequence;
+        // start after the highest seeded Id so the first real insert does not collide.
+        builder.Property(r => r.Id).HasIdentityOptions(startValue: 6);
 
         builder.Property(r => r.Name).IsRequired().HasMaxLength(100);
 

@@ -8,7 +8,7 @@ public class CashRegisterConfiguration : IEntityTypeConfiguration<CashRegister>
 {
     public void Configure(EntityTypeBuilder<CashRegister> builder)
     {
-        builder.ToTable("CashRegisters");
+        builder.ToTable("cash_registers");
         builder.HasKey(c => c.Id);
 
         builder.Property(c => c.OpeningBalance).HasColumnType("decimal(18,2)");

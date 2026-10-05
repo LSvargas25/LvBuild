@@ -8,7 +8,7 @@ public class SiteLogWorkerConfiguration : IEntityTypeConfiguration<SiteLogWorker
 {
     public void Configure(EntityTypeBuilder<SiteLogWorker> builder)
     {
-        builder.ToTable("SiteLogWorkers");
+        builder.ToTable("site_log_workers");
 
         builder.HasKey(w => w.Id);
 

@@ -8,7 +8,7 @@ public class PasswordResetTokenConfiguration : IEntityTypeConfiguration<Password
 {
     public void Configure(EntityTypeBuilder<PasswordResetToken> builder)
     {
-        builder.ToTable("PasswordResetTokens");
+        builder.ToTable("password_reset_tokens");
 
         builder.HasKey(prt => prt.Id);
 

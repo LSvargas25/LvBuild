@@ -8,7 +8,7 @@ public class IncidentMaterialConfiguration : IEntityTypeConfiguration<IncidentMa
 {
     public void Configure(EntityTypeBuilder<IncidentMaterial> builder)
     {
-        builder.ToTable("IncidentMaterials");
+        builder.ToTable("incident_materials");
 
         builder.HasKey(m => m.Id);
 

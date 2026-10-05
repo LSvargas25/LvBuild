@@ -8,7 +8,7 @@ public class PayrollConfiguration : IEntityTypeConfiguration<LvDomain.Entities.P
 {
     public void Configure(EntityTypeBuilder<LvDomain.Entities.Payroll.Payroll> builder)
     {
-        builder.ToTable("Payrolls");
+        builder.ToTable("payrolls");
 
         builder.HasKey(p => p.Id);
 

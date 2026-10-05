@@ -8,7 +8,7 @@ public class ProjectProgressConfiguration : IEntityTypeConfiguration<ProjectProg
 {
     public void Configure(EntityTypeBuilder<ProjectProgress> builder)
     {
-        builder.ToTable("ProjectProgresses");
+        builder.ToTable("project_progresses");
 
         builder.HasKey(p => p.Id);
 

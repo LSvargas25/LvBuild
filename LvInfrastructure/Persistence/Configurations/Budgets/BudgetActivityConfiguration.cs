@@ -8,7 +8,7 @@ public class BudgetActivityConfiguration : IEntityTypeConfiguration<BudgetActivi
 {
     public void Configure(EntityTypeBuilder<BudgetActivity> builder)
     {
-        builder.ToTable("BudgetActivities");
+        builder.ToTable("budget_activities");
 
         builder.HasKey(a => a.Id);
 

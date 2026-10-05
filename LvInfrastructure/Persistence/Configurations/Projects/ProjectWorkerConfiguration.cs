@@ -8,7 +8,7 @@ public class ProjectWorkerConfiguration : IEntityTypeConfiguration<ProjectWorker
 {
     public void Configure(EntityTypeBuilder<ProjectWorker> builder)
     {
-        builder.ToTable("ProjectWorkers");
+        builder.ToTable("project_workers");
 
         builder.HasKey(pw => pw.Id);
 

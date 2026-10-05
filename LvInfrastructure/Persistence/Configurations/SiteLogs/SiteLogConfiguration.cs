@@ -8,7 +8,7 @@ public class SiteLogConfiguration : IEntityTypeConfiguration<SiteLog>
 {
     public void Configure(EntityTypeBuilder<SiteLog> builder)
     {
-        builder.ToTable("SiteLogs");
+        builder.ToTable("site_logs");
 
         builder.HasKey(s => s.Id);
 

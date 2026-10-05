@@ -8,7 +8,7 @@ public class OfferConfiguration : IEntityTypeConfiguration<Offer>
 {
     public void Configure(EntityTypeBuilder<Offer> builder)
     {
-        builder.ToTable("Offers");
+        builder.ToTable("offers");
 
         builder.HasKey(o => o.Id);
 

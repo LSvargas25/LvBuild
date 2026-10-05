@@ -9,7 +9,7 @@ public class BudgetActivityEquipmentConfiguration
 {
     public void Configure(EntityTypeBuilder<BudgetActivityEquipment> builder)
     {
-        builder.ToTable("BudgetActivityEquipment");
+        builder.ToTable("budget_activity_equipment");
 
         builder.HasKey(e => e.Id);
 

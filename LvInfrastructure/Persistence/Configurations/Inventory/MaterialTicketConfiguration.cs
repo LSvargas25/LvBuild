@@ -8,7 +8,7 @@ public class MaterialTicketConfiguration : IEntityTypeConfiguration<MaterialTick
 {
     public void Configure(EntityTypeBuilder<MaterialTicket> builder)
     {
-        builder.ToTable("MaterialTickets");
+        builder.ToTable("material_tickets");
 
         builder.HasKey(t => t.Id);
 
