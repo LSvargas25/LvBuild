@@ -13,17 +13,28 @@ using Xunit;
 namespace LvTest.Integration;
 
 /// <summary>
-/// Exercises Presupuesto -> Oferta -> Proyecto against a real SQL Server database
-/// (via the AddWarehouseModule-era schema applied through real migrations), not
+/// Exercises Presupuesto -> Oferta -> Proyecto against a real PostgreSQL database
+/// (schema created by applying the real migrations), not
 /// EF Core InMemory. Catches FK/constraint behavior InMemory can't validate.
 /// </summary>
-[Collection("SqlServerIntegration")]
-public class BudgetToProjectFlowTests
+[Collection(PostgresIntegrationCollection.Name)]
+public class BudgetToProjectFlowTests : IAsyncLifetime
 {
-    [Fact]
-    public async Task CreateProjectAsync_FromApprovedBudgetAndAcceptedOffer_PersistsAgainstRealSqlServer()
+    private readonly PostgresFixture _db;
+
+    public BudgetToProjectFlowTests(PostgresFixture db)
     {
-        await using var context = await SqlServerTestDbContextFactory.CreateAsync();
+        _db = db;
+    }
+
+    public Task InitializeAsync() => _db.ResetDatabaseAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task CreateProjectAsync_FromApprovedBudgetAndAcceptedOffer_PersistsAgainstRealPostgres()
+    {
+        await using var context = _db.CreateContext();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
         var director = await TestUserFactory.CreateAsync(

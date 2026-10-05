@@ -11,18 +11,29 @@ using Xunit;
 namespace LvTest.Integration;
 
 /// <summary>
-/// Exercises the Bodega -> Sucursal movement flow against real SQL Server, directly
-/// covering the InventoryMovements table + CK_InventoryMovements_ExactlyOneDestination
-/// check constraint added in the AddWarehouseModule migration (Tarea 1), which until
+/// Exercises the Bodega -> Sucursal movement flow against real PostgreSQL, directly
+/// covering the inventory_movements table + ck_inventory_movements_exactly_one_destination
+/// check constraint (added with the warehouse module in Tarea 1), which until
 /// now had never been applied against a real engine.
 /// </summary>
-[Collection("SqlServerIntegration")]
-public class WarehouseMovementFlowTests
+[Collection(PostgresIntegrationCollection.Name)]
+public class WarehouseMovementFlowTests : IAsyncLifetime
 {
-    [Fact]
-    public async Task ValidateAsync_ApprovedMovementBetweenBranches_MovesStockAgainstRealSqlServer()
+    private readonly PostgresFixture _db;
+
+    public WarehouseMovementFlowTests(PostgresFixture db)
     {
-        await using var context = await SqlServerTestDbContextFactory.CreateAsync();
+        _db = db;
+    }
+
+    public Task InitializeAsync() => _db.ResetDatabaseAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task ValidateAsync_ApprovedMovementBetweenBranches_MovesStockAgainstRealPostgres()
+    {
+        await using var context = _db.CreateContext();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
         var user = await TestUserFactory.CreateAsync(
@@ -123,7 +134,7 @@ public class WarehouseMovementFlowTests
     [Fact]
     public async Task CreateAsync_MovementWithNeitherOrBothDestinations_IsRejectedByRealCheckConstraint()
     {
-        await using var context = await SqlServerTestDbContextFactory.CreateAsync();
+        await using var context = _db.CreateContext();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
         var user = await TestUserFactory.CreateAsync(
@@ -162,7 +173,7 @@ public class WarehouseMovementFlowTests
         await context.SaveChangesAsync();
 
         // Bypasses the service-layer validation on purpose: writes directly to prove
-        // the database-level CK_InventoryMovements_ExactlyOneDestination itself
+        // the database-level ck_inventory_movements_exactly_one_destination itself
         // rejects an invalid row, as a second line of defense beyond application code.
         context.InventoryMovements.Add(
             new LvDomain.Entities.Warehouse.InventoryMovement

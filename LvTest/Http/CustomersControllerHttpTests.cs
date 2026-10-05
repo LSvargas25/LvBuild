@@ -16,7 +16,7 @@ namespace LvTest.Http;
 /// HTTP/controller-level tests: real Program.cs host, real middleware pipeline,
 /// real JWT issuance/validation, real [Authorize(Roles=...)] enforcement. Complements
 /// the service-level unit tests (which never exercise the auth/authorization layer at all)
-/// and the SQL Server integration tests (which never go through HTTP).
+/// and the PostgreSQL integration tests (which never go through HTTP).
 /// </summary>
 public class CustomersControllerHttpTests
 {
