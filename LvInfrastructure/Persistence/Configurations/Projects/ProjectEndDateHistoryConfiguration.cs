@@ -8,9 +8,13 @@ public class ProjectEndDateHistoryConfiguration : IEntityTypeConfiguration<Proje
 {
     public void Configure(EntityTypeBuilder<ProjectEndDateHistory> builder)
     {
-        builder.ToTable("ProjectEndDateHistories");
+        builder.ToTable("project_end_date_histories");
 
         builder.HasKey(h => h.Id);
+
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(h => h.PreviousDate).HasColumnType("date");
+        builder.Property(h => h.NewDate).HasColumnType("date");
 
         builder.Property(h => h.Reason).IsRequired().HasMaxLength(500);
 

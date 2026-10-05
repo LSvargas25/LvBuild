@@ -8,9 +8,14 @@ public class OfferConfiguration : IEntityTypeConfiguration<Offer>
 {
     public void Configure(EntityTypeBuilder<Offer> builder)
     {
-        builder.ToTable("Offers");
+        builder.ToTable("offers");
 
         builder.HasKey(o => o.Id);
+
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(o => o.IssueDate).HasColumnType("date");
+        builder.Property(o => o.EstimatedStartDate).HasColumnType("date");
+        builder.Property(o => o.EstimatedDeliveryDate).HasColumnType("date");
 
         builder.Property(o => o.OfferNumber).IsRequired().HasMaxLength(30);
 

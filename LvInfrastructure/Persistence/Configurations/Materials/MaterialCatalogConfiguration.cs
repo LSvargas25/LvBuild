@@ -8,7 +8,7 @@ public class MaterialCatalogConfiguration : IEntityTypeConfiguration<MaterialCat
 {
     public void Configure(EntityTypeBuilder<MaterialCatalog> builder)
     {
-        builder.ToTable("MaterialCatalogs");
+        builder.ToTable("material_catalogs");
 
         builder.HasKey(m => m.Id);
 

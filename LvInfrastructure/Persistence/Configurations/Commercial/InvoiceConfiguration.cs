@@ -8,7 +8,7 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
 {
     public void Configure(EntityTypeBuilder<Invoice> builder)
     {
-        builder.ToTable("Invoices");
+        builder.ToTable("invoices");
         builder.HasKey(i => i.Id);
 
         builder.Property(i => i.InvoiceNumber).HasMaxLength(30);
@@ -43,6 +43,6 @@ public class InvoiceConfiguration : IEntityTypeConfiguration<Invoice>
         builder
             .HasIndex(i => new { i.BranchId, i.InvoiceNumber })
             .IsUnique()
-            .HasFilter("[InvoiceNumber] IS NOT NULL");
+            .HasFilter("invoice_number IS NOT NULL");
     }
 }

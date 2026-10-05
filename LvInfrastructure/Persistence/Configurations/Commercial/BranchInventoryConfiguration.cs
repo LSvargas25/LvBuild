@@ -8,7 +8,7 @@ public class BranchInventoryConfiguration : IEntityTypeConfiguration<BranchInven
 {
     public void Configure(EntityTypeBuilder<BranchInventory> builder)
     {
-        builder.ToTable("BranchInventories");
+        builder.ToTable("branch_inventories");
         builder.HasKey(i => i.Id);
 
         builder.Property(i => i.Quantity).HasColumnType("decimal(18,2)");

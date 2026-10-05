@@ -8,9 +8,13 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
 {
     public void Configure(EntityTypeBuilder<Project> builder)
     {
-        builder.ToTable("Projects");
+        builder.ToTable("projects");
 
         builder.HasKey(p => p.Id);
+
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(p => p.StartDate).HasColumnType("date");
+        builder.Property(p => p.EndDate).HasColumnType("date");
 
         builder.Property(p => p.ProjectType).HasConversion<string>().HasMaxLength(20).IsRequired();
 

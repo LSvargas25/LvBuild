@@ -8,7 +8,7 @@ public class BudgetChapterConfiguration : IEntityTypeConfiguration<BudgetChapter
 {
     public void Configure(EntityTypeBuilder<BudgetChapter> builder)
     {
-        builder.ToTable("BudgetChapters");
+        builder.ToTable("budget_chapters");
 
         builder.HasKey(c => c.Id);
 

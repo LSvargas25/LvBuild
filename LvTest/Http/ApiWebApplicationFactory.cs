@@ -32,7 +32,7 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
         // mirrors exactly how production is meant to supply these values anyway.
         Environment.SetEnvironmentVariable(
             "ConnectionStrings__DefaultConnection",
-            "Server=(local);Database=Unused;Trusted_Connection=True;"
+            "Host=localhost;Database=unused;Username=unused;Password=unused"
         );
         Environment.SetEnvironmentVariable("Jwt__Key", TestJwtKey);
         Environment.SetEnvironmentVariable("Jwt__Issuer", TestJwtIssuer);
@@ -48,7 +48,7 @@ public class ApiWebApplicationFactory : WebApplicationFactory<Program>
             // Removing only DbContextOptions<AppDbContext> isn't enough: EF Core composes
             // every registered IDbContextOptionsConfiguration<AppDbContext> (one per
             // AddDbContext call) onto the same options instance rather than replacing it,
-            // so the original UseSqlServer configuration from Program.cs would still apply
+            // so the original UseNpgsql configuration from Program.cs would still apply
             // alongside UseInMemoryDatabase below and EF throws on the two providers.
             // Stripping every descriptor generic over AppDbContext clears all of that.
             var toRemove = services

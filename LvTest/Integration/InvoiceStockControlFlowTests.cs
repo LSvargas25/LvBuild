@@ -11,14 +11,25 @@ using Xunit;
 namespace LvTest.Integration;
 
 /// <summary>
-/// Exercises invoice issuance with stock control against real SQL Server. This is
+/// Exercises invoice issuance with stock control against real PostgreSQL. This is
 /// specifically the area that already bit the team once (a filtered unique index on
-/// Invoice.InvoiceNumber behaves differently for NULL under SQL Server vs InMemory) -
+/// Invoice.InvoiceNumber behaves differently for NULL on a real database engine vs InMemory) -
 /// the second test below is a direct regression test for that fix against the real engine.
 /// </summary>
-[Collection("SqlServerIntegration")]
-public class InvoiceStockControlFlowTests
+[Collection(PostgresIntegrationDefinition.Name)]
+public class InvoiceStockControlFlowTests : IAsyncLifetime
 {
+    private readonly PostgresFixture _db;
+
+    public InvoiceStockControlFlowTests(PostgresFixture db)
+    {
+        _db = db;
+    }
+
+    public Task InitializeAsync() => _db.ResetDatabaseAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
     private static async Task<(
         Branch Branch,
         CashRegister CashRegister,
@@ -88,9 +99,9 @@ public class InvoiceStockControlFlowTests
     }
 
     [Fact]
-    public async Task IssueAsync_ValidDraft_DecrementsStockAndAssignsNumberAgainstRealSqlServer()
+    public async Task IssueAsync_ValidDraft_DecrementsStockAndAssignsNumberAgainstRealPostgres()
     {
-        await using var context = await SqlServerTestDbContextFactory.CreateAsync();
+        await using var context = _db.CreateContext();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
         var (branch, register, product, user) = await SeedContextAsync(context, "inv1");
@@ -125,9 +136,9 @@ public class InvoiceStockControlFlowTests
     }
 
     [Fact]
-    public async Task CreateAsync_TwoDraftInvoices_BothWithNullInvoiceNumber_DoNotViolateFilteredUniqueIndexOnRealSqlServer()
+    public async Task CreateAsync_TwoDraftInvoices_BothWithNullInvoiceNumber_DoNotViolateFilteredUniqueIndexOnRealPostgres()
     {
-        await using var context = await SqlServerTestDbContextFactory.CreateAsync();
+        await using var context = _db.CreateContext();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
         var (branch, register, product, user) = await SeedContextAsync(context, "inv2");

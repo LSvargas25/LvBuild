@@ -16,17 +16,28 @@ using Xunit;
 namespace LvTest.Integration;
 
 /// <summary>
-/// Exercises Bitacora aprobada -> Planilla pagada against a real SQL Server database.
+/// Exercises Bitacora aprobada -> Planilla pagada against a real PostgreSQL database.
 /// This is the dependency the team called out explicitly (Payroll cannot be created
 /// without an Approved SiteLog); worth proving against the real engine, not just InMemory.
 /// </summary>
-[Collection("SqlServerIntegration")]
-public class SiteLogToPayrollFlowTests
+[Collection(PostgresIntegrationDefinition.Name)]
+public class SiteLogToPayrollFlowTests : IAsyncLifetime
 {
-    [Fact]
-    public async Task MarkAsPaidAsync_ForPayrollFromApprovedSiteLog_UpdatesProjectExpensesAgainstRealSqlServer()
+    private readonly PostgresFixture _db;
+
+    public SiteLogToPayrollFlowTests(PostgresFixture db)
     {
-        await using var context = await SqlServerTestDbContextFactory.CreateAsync();
+        _db = db;
+    }
+
+    public Task InitializeAsync() => _db.ResetDatabaseAsync();
+
+    public Task DisposeAsync() => Task.CompletedTask;
+
+    [Fact]
+    public async Task MarkAsPaidAsync_ForPayrollFromApprovedSiteLog_UpdatesProjectExpensesAgainstRealPostgres()
+    {
+        await using var context = _db.CreateContext();
         await using var transaction = await context.Database.BeginTransactionAsync();
 
         var director = await TestUserFactory.CreateAsync(

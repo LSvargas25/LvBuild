@@ -8,9 +8,13 @@ public class SiteLogConfiguration : IEntityTypeConfiguration<SiteLog>
 {
     public void Configure(EntityTypeBuilder<SiteLog> builder)
     {
-        builder.ToTable("SiteLogs");
+        builder.ToTable("site_logs");
 
         builder.HasKey(s => s.Id);
+
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(s => s.WeekStart).HasColumnType("date");
+        builder.Property(s => s.WeekEnd).HasColumnType("date");
 
         builder.Property(s => s.TaskDescription).IsRequired();
 

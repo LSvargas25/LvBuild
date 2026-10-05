@@ -7,6 +7,8 @@ namespace LvTest.Services.Auth;
 
 public class UserServiceTests
 {
+    private static readonly string[] GeneralManagerRoles = ["GeneralManager"];
+
     [Fact]
     public async Task CreateUserAsync_DuplicateEmail_ThrowsConflictException()
     {
@@ -35,6 +37,58 @@ public class UserServiceTests
             await userService.CreateUserAsync(duplicate, new[] { "GeneralManager" });
 
         await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_DuplicateEmailWithDifferentCase_ThrowsConflictException()
+    {
+        using var context = TestDbContextFactory.Create();
+        var userService = ServiceFactory.CreateUserService(context);
+
+        await userService.CreateUserAsync(
+            new CreateUserDto
+            {
+                Name = "Jane Doe",
+                Email = "jane.case@example.com",
+                Password = "Password#123",
+                RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+            },
+            GeneralManagerRoles
+        );
+
+        var act = async () =>
+            await userService.CreateUserAsync(
+                new CreateUserDto
+                {
+                    Name = "Jane Doe Upper",
+                    Email = "Jane.Case@Example.com",
+                    Password = "Password#456",
+                    RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+                },
+                GeneralManagerRoles
+            );
+
+        await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task CreateUserAsync_MixedCaseEmail_StoresEmailLowercased()
+    {
+        using var context = TestDbContextFactory.Create();
+        var userService = ServiceFactory.CreateUserService(context);
+
+        await userService.CreateUserAsync(
+            new CreateUserDto
+            {
+                Name = "Mixed Case",
+                Email = "  Mixed.Case@Example.COM ",
+                Password = "Password#123",
+                RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
+            },
+            GeneralManagerRoles
+        );
+
+        context.Users.Should().ContainSingle(u => u.Email == "mixed.case@example.com");
     }
 
     [Fact]

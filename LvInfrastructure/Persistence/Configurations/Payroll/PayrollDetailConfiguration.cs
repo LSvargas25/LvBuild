@@ -8,9 +8,12 @@ public class PayrollDetailConfiguration : IEntityTypeConfiguration<PayrollDetail
 {
     public void Configure(EntityTypeBuilder<PayrollDetail> builder)
     {
-        builder.ToTable("PayrollDetails");
+        builder.ToTable("payroll_details");
 
         builder.HasKey(d => d.Id);
+
+        // Calendar date without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(d => d.Date).HasColumnType("date");
 
         builder.Property(d => d.HoursWorked).HasColumnType("decimal(5,2)");
         builder.Property(d => d.HourlyRate).HasColumnType("decimal(18,2)");

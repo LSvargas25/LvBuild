@@ -8,7 +8,7 @@ public class ProjectChapterConfiguration : IEntityTypeConfiguration<ProjectChapt
 {
     public void Configure(EntityTypeBuilder<ProjectChapter> builder)
     {
-        builder.ToTable("ProjectChapters");
+        builder.ToTable("project_chapters");
 
         builder.HasKey(c => c.Id);
 

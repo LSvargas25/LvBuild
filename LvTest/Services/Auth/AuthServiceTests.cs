@@ -41,6 +41,20 @@ public class AuthServiceTests
     }
 
     [Fact]
+    public async Task LoginAsync_WithEmailInDifferentCase_Succeeds()
+    {
+        using var context = TestDbContextFactory.Create();
+        await TestUserFactory.CreateAsync(context, "login-case@example.com", Password);
+        var authService = ServiceFactory.CreateAuthService(context);
+
+        var result = await authService.LoginAsync(
+            new LoginRequestDto { Email = "Login-Case@Example.com", Password = Password }
+        );
+
+        result.AccessToken.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
     public async Task LoginAsync_WithWrongPassword_IncrementsFailedAttemptsAndDoesNotReturnTokens()
     {
         using var context = TestDbContextFactory.Create();

@@ -8,9 +8,12 @@ public class WorkerConfiguration : IEntityTypeConfiguration<Worker>
 {
     public void Configure(EntityTypeBuilder<Worker> builder)
     {
-        builder.ToTable("Workers");
+        builder.ToTable("workers");
 
         builder.HasKey(w => w.Id);
+
+        // Calendar date without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(w => w.Birthday).HasColumnType("date");
 
         builder.Property(w => w.Name).IsRequired().HasMaxLength(200);
 

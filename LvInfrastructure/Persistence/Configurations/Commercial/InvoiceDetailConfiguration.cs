@@ -8,7 +8,7 @@ public class InvoiceDetailConfiguration : IEntityTypeConfiguration<InvoiceDetail
 {
     public void Configure(EntityTypeBuilder<InvoiceDetail> builder)
     {
-        builder.ToTable("InvoiceDetails");
+        builder.ToTable("invoice_details");
         builder.HasKey(d => d.Id);
 
         builder.Property(d => d.Quantity).HasColumnType("decimal(18,2)");

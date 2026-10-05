@@ -8,9 +8,12 @@ public class IncidentConfiguration : IEntityTypeConfiguration<Incident>
 {
     public void Configure(EntityTypeBuilder<Incident> builder)
     {
-        builder.ToTable("Incidents");
+        builder.ToTable("incidents");
 
         builder.HasKey(i => i.Id);
+
+        // Calendar date without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(i => i.Date).HasColumnType("date");
 
         builder.Property(i => i.Description).IsRequired();
         builder.Property(i => i.TotalCost).HasColumnType("decimal(18,2)");

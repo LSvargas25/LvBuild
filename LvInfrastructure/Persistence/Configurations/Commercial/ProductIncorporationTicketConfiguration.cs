@@ -9,7 +9,7 @@ public class ProductIncorporationTicketConfiguration
 {
     public void Configure(EntityTypeBuilder<ProductIncorporationTicket> builder)
     {
-        builder.ToTable("ProductIncorporationTickets");
+        builder.ToTable("product_incorporation_tickets");
         builder.HasKey(t => t.Id);
 
         builder.Property(t => t.Quantity).HasColumnType("decimal(18,2)");

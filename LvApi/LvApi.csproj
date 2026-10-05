@@ -13,13 +13,19 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+    <!--
+      EF Core Design (private) makes LvApi compile against System.Text.Json 9.x. The SQL Server
+      provider used to bring that version to every consumer; Npgsql does not, so pin it here
+      (non-private) so LvTest/WebApplicationFactory loads the same version at runtime.
+    -->
+    <PackageReference Include="System.Text.Json" Version="9.0.20" />
   </ItemGroup>
 
   <ItemGroup>

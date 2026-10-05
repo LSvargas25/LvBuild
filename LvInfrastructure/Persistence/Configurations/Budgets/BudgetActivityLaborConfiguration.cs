@@ -8,7 +8,7 @@ public class BudgetActivityLaborConfiguration : IEntityTypeConfiguration<BudgetA
 {
     public void Configure(EntityTypeBuilder<BudgetActivityLabor> builder)
     {
-        builder.ToTable("BudgetActivityLabor");
+        builder.ToTable("budget_activity_labor");
 
         builder.HasKey(l => l.Id);
 

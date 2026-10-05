@@ -8,9 +8,13 @@ public class PayrollConfiguration : IEntityTypeConfiguration<LvDomain.Entities.P
 {
     public void Configure(EntityTypeBuilder<LvDomain.Entities.Payroll.Payroll> builder)
     {
-        builder.ToTable("Payrolls");
+        builder.ToTable("payrolls");
 
         builder.HasKey(p => p.Id);
+
+        // Calendar dates without time of day: PostgreSQL "date", not timestamptz.
+        builder.Property(p => p.WeekStart).HasColumnType("date");
+        builder.Property(p => p.WeekEnd).HasColumnType("date");
 
         builder.Property(p => p.TotalPayroll).HasColumnType("decimal(18,2)");
 

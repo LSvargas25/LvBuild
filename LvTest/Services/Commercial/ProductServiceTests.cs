@@ -9,6 +9,8 @@ namespace LvTest.Services.Commercial;
 
 public class ProductServiceTests
 {
+    private static readonly string[] GeneralManagerRoles = ["GeneralManager"];
+
     private static CreateProductDto BuildCreateDto(string sku = "SKU-001") =>
         new()
         {
@@ -125,6 +127,23 @@ public class ProductServiceTests
 
         var act = () =>
             service.CreateAsync(BuildCreateDto("DUP-1"), user.Id, new[] { "GeneralManager" });
+
+        await act.Should().ThrowAsync<ConflictException>();
+    }
+
+    [Fact]
+    public async Task CreateAsync_DuplicateSkuWithDifferentCase_ThrowsConflict()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "gm3@example.com",
+            roleId: TestUserFactory.GeneralManagerRoleId
+        );
+        var service = ServiceFactory.CreateProductService(context);
+        await service.CreateAsync(BuildCreateDto("dup-2"), user.Id, GeneralManagerRoles);
+
+        var act = () => service.CreateAsync(BuildCreateDto("DUP-2"), user.Id, GeneralManagerRoles);
 
         await act.Should().ThrowAsync<ConflictException>();
     }

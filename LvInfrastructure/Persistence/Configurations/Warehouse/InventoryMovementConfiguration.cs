@@ -9,11 +9,11 @@ public class InventoryMovementConfiguration : IEntityTypeConfiguration<Inventory
     public void Configure(EntityTypeBuilder<InventoryMovement> builder)
     {
         builder.ToTable(
-            "InventoryMovements",
+            "inventory_movements",
             t =>
                 t.HasCheckConstraint(
-                    "CK_InventoryMovements_ExactlyOneDestination",
-                    "([DestinationBranchId] IS NOT NULL AND [DestinationProjectId] IS NULL) OR ([DestinationBranchId] IS NULL AND [DestinationProjectId] IS NOT NULL)"
+                    "ck_inventory_movements_exactly_one_destination",
+                    "(destination_branch_id IS NOT NULL AND destination_project_id IS NULL) OR (destination_branch_id IS NULL AND destination_project_id IS NOT NULL)"
                 )
         );
 

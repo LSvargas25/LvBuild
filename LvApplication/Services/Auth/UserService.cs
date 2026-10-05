@@ -47,7 +47,7 @@ public class UserService : IUserService
         var user = new User
         {
             Name = request.Name,
-            Email = request.Email,
+            Email = EmailNormalizer.Normalize(request.Email),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Status = UserStatus.Active,
             CreatedAt = DateTime.UtcNow,
