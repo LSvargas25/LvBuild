@@ -25,4 +25,7 @@ public interface IBranchService
         int currentUserId,
         IEnumerable<string> currentUserRoles
     );
+
+    /// <summary>Active branches as id + name, for selection lists in other modules.</summary>
+    Task<List<BranchOptionDto>> GetOptionsAsync();
 }

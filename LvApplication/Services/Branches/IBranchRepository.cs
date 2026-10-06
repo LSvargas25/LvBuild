@@ -10,6 +10,7 @@ public interface IBranchRepository
         int pageSize,
         int? operationsDirectorId
     );
+    Task<List<Branch>> GetActiveAsync();
     Task AddAsync(Branch branch);
     Task UpdateAsync(Branch branch);
     Task DeleteAsync(Branch branch);
