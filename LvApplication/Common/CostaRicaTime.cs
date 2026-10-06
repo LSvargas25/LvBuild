@@ -14,6 +14,9 @@ public static class CostaRicaTime
 
     public static readonly TimeZoneInfo Zone = ResolveZone();
 
+    /// <summary>Today's calendar date in Costa Rica.</summary>
+    public static DateTime Today => TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, Zone).Date;
+
     /// <summary>The UTC instant at which the given Costa Rica calendar day starts.</summary>
     public static DateTime StartOfDayUtc(DateTime costaRicaDate) =>
         TimeZoneInfo.ConvertTimeToUtc(

@@ -44,18 +44,23 @@ public sealed class PostgresFixture : IAsyncLifetime
         );
     }
 
-    /// <param name="databaseName">
-    /// Another (possibly not yet existing) database in the same container; defaults to the
-    /// shared, already migrated one.
-    /// </param>
+    /// <summary>
+    /// Connection string for another (possibly not yet existing) database in the same container;
+    /// null means the shared, already migrated one.
+    /// </summary>
+    public string ConnectionStringFor(string? databaseName = null)
+    {
+        var builder = new NpgsqlConnectionStringBuilder(_container.GetConnectionString());
+        if (databaseName is not null)
+            builder.Database = databaseName;
+        return builder.ConnectionString;
+    }
+
+    /// <param name="databaseName">See <see cref="ConnectionStringFor"/>.</param>
     public AppDbContext CreateContext(string? databaseName = null)
     {
-        var connectionString = new NpgsqlConnectionStringBuilder(_container.GetConnectionString());
-        if (databaseName is not null)
-            connectionString.Database = databaseName;
-
         var options = new DbContextOptionsBuilder<AppDbContext>()
-            .UseNpgsql(connectionString.ConnectionString)
+            .UseNpgsql(ConnectionStringFor(databaseName))
             .UseSnakeCaseNamingConvention()
             .Options;
 

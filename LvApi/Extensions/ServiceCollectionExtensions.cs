@@ -39,6 +39,7 @@ using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
 using LvInfrastructure.Repositories.Warehouse;
 using LvInfrastructure.Repositories.Workers;
+using LvInfrastructure.Seeding;
 using LvInfrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -63,6 +64,7 @@ public static class ServiceCollectionExtensions
         );
 
         services.AddScoped<DatabaseInitializer>();
+        services.AddScoped<DemoDataSeeder>();
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
