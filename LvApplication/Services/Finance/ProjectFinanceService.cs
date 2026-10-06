@@ -1,6 +1,8 @@
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Finance;
+using LvApplication.Services.Incidents;
 using LvApplication.Services.Inventory;
+using LvApplication.Services.Payroll;
 using LvApplication.Services.Projects;
 using LvApplication.Services.SiteLogs;
 using LvDomain.Enums;
@@ -12,16 +14,22 @@ public class ProjectFinanceService : IProjectFinanceService
     private readonly IProjectRepository _projectRepository;
     private readonly IMaterialTicketRepository _ticketRepository;
     private readonly ISiteLogRepository _siteLogRepository;
+    private readonly IPayrollRepository _payrollRepository;
+    private readonly IIncidentRepository _incidentRepository;
 
     public ProjectFinanceService(
         IProjectRepository projectRepository,
         IMaterialTicketRepository ticketRepository,
-        ISiteLogRepository siteLogRepository
+        ISiteLogRepository siteLogRepository,
+        IPayrollRepository payrollRepository,
+        IIncidentRepository incidentRepository
     )
     {
         _projectRepository = projectRepository;
         _ticketRepository = ticketRepository;
         _siteLogRepository = siteLogRepository;
+        _payrollRepository = payrollRepository;
+        _incidentRepository = incidentRepository;
     }
 
     public async Task<ProjectFinanceDto> GetFinanceAsync(
@@ -43,14 +51,44 @@ public class ProjectFinanceService : IProjectFinanceService
         );
         var siteLogs = await _siteLogRepository.GetInRangeAsync(projectId, periodStart, periodEnd);
 
+        // Period totals, not the project's running totals (Project.CurrentDirectExpenses /
+        // PendingExpenses), so different periods show different figures.
+        var payrolls = await _payrollRepository.SumPaidInRangeAsync(
+            projectId,
+            periodStart,
+            periodEnd
+        );
+        var materials = tickets.Sum(t => t.Total);
+        var incidents = await _incidentRepository.SumInRangeAsync(
+            projectId,
+            IncidentStatus.Approved,
+            periodStart,
+            periodEnd
+        );
+        var pendingTickets = await _ticketRepository.SumInRangeAsync(
+            projectId,
+            MaterialTicketStatus.Review,
+            periodStart,
+            periodEnd
+        );
+        var pendingIncidents = await _incidentRepository.SumInRangeAsync(
+            projectId,
+            IncidentStatus.Draft,
+            periodStart,
+            periodEnd
+        );
+
         return new ProjectFinanceDto
         {
             ProjectId = project.Id,
             Period = period,
             PeriodStart = periodStart,
             PeriodEnd = periodEnd,
-            CurrentDirectExpenses = project.CurrentDirectExpenses,
-            PendingExpenses = project.PendingExpenses,
+            CurrentDirectExpenses = payrolls + materials + incidents,
+            PayrollExpenses = payrolls,
+            MaterialExpenses = materials,
+            IncidentExpenses = incidents,
+            PendingExpenses = pendingTickets + pendingIncidents,
             TotalHoursWorked = siteLogs.SelectMany(s => s.Workers).Sum(w => w.HoursWorked),
             Materials = tickets
                 .Select(t => new ProjectFinanceMaterialDto

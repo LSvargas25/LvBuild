@@ -1,4 +1,5 @@
 using LvDomain.Entities.Inventory;
+using LvDomain.Enums;
 
 namespace LvApplication.Services.Inventory;
 
@@ -13,6 +14,14 @@ public interface IMaterialTicketRepository
     Task<decimal> SumAppliedTotalByChapterAsync(int projectId, int chapterId);
     Task<List<MaterialTicket>> GetAppliedInRangeAsync(
         int projectId,
+        DateTime fromDate,
+        DateTime toDate
+    );
+
+    /// <summary>Total of the project's tickets in a status created on the given Costa Rica days.</summary>
+    Task<decimal> SumInRangeAsync(
+        int projectId,
+        MaterialTicketStatus status,
         DateTime fromDate,
         DateTime toDate
     );

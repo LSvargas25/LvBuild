@@ -74,6 +74,28 @@ public class IncidentRepository : IIncidentRepository
         return (count, totalCost);
     }
 
+    public async Task<decimal> SumInRangeAsync(
+        int projectId,
+        IncidentStatus status,
+        DateTime fromDate,
+        DateTime toDate
+    )
+    {
+        // Incident.Date is the Costa Rica calendar day the event happened.
+        var from = fromDate.Date;
+        var toExclusive = toDate.Date.AddDays(1);
+
+        return await _context
+                .Incidents.Where(i =>
+                    i.ProjectId == projectId
+                    && i.Status == status
+                    && i.Date >= from
+                    && i.Date < toExclusive
+                )
+                .SumAsync(i => (decimal?)i.TotalCost)
+            ?? 0m;
+    }
+
     public async Task AddAsync(Incident incident)
     {
         _context.Incidents.Add(incident);

@@ -1,3 +1,4 @@
+using LvApplication.Common;
 using LvApplication.Services.Payroll;
 using LvDomain.Enums;
 using LvInfrastructure.Persistence;
@@ -67,6 +68,27 @@ public class PayrollRepository : IPayrollRepository
             )
             .SumAsync(p => (decimal?)p.TotalPayroll)
         ?? 0m;
+
+    public async Task<decimal> SumPaidInRangeAsync(
+        int projectId,
+        DateTime fromDate,
+        DateTime toDate
+    )
+    {
+        // fromDate/toDate are Costa Rica calendar days; PaidAt is a UTC timestamp.
+        var fromUtc = CostaRicaTime.StartOfDayUtc(fromDate);
+        var toUtcExclusive = CostaRicaTime.StartOfDayUtc(toDate.AddDays(1));
+
+        return await _context
+                .Payrolls.Where(p =>
+                    p.ProjectId == projectId
+                    && p.Status == PayrollStatus.Paid
+                    && p.PaidAt >= fromUtc
+                    && p.PaidAt < toUtcExclusive
+                )
+                .SumAsync(p => (decimal?)p.TotalPayroll)
+            ?? 0m;
+    }
 
     public async Task AddAsync(LvDomain.Entities.Payroll.Payroll payroll)
     {
