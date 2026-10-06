@@ -71,6 +71,7 @@ public class ProjectFinanceService : IProjectFinanceService
             periodStart,
             periodEnd
         );
+        var pendingPayrolls = await _payrollRepository.SumUnpaidAtAsync(projectId, periodEnd);
         var pendingIncidents = await _incidentRepository.SumInRangeAsync(
             projectId,
             IncidentStatus.Draft,
@@ -88,7 +89,8 @@ public class ProjectFinanceService : IProjectFinanceService
             PayrollExpenses = payrolls,
             MaterialExpenses = materials,
             IncidentExpenses = incidents,
-            PendingExpenses = pendingTickets + pendingIncidents,
+            PendingExpenses = pendingPayrolls + pendingTickets + pendingIncidents,
+            PendingPayrollExpenses = pendingPayrolls,
             TotalHoursWorked = siteLogs.SelectMany(s => s.Workers).Sum(w => w.HoursWorked),
             Materials = tickets
                 .Select(t => new ProjectFinanceMaterialDto

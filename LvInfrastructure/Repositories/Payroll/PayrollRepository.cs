@@ -90,6 +90,21 @@ public class PayrollRepository : IPayrollRepository
             ?? 0m;
     }
 
+    public async Task<decimal> SumUnpaidAtAsync(int projectId, DateTime asOfDate)
+    {
+        var day = asOfDate.Date;
+        var endOfDayUtc = CostaRicaTime.StartOfDayUtc(day.AddDays(1));
+
+        return await _context
+                .Payrolls.Where(p =>
+                    p.ProjectId == projectId
+                    && p.WeekEnd <= day
+                    && (p.Status == PayrollStatus.Pending || p.PaidAt >= endOfDayUtc)
+                )
+                .SumAsync(p => (decimal?)p.TotalPayroll)
+            ?? 0m;
+    }
+
     public async Task AddAsync(LvDomain.Entities.Payroll.Payroll payroll)
     {
         _context.Payrolls.Add(payroll);

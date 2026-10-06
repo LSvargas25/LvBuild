@@ -20,9 +20,11 @@ namespace LvTest.Common;
 /// and PostgreSQL finance tests). The services stamp "now", so the dates are moved afterwards:
 ///
 /// September 2026: payroll ₡8 000 paid 30/09 21:00 CR (= 01/10 03:00 UTC), ticket ₡5 000 applied,
-///                 incident ₡3 000 approved. Direct ₡16 000, pending ₡0.
+///                 incident ₡3 000 approved. Direct ₡16 000. Payroll of the week 07–13/09
+///                 (₡6 000) still unpaid: pending ₡6 000 (balance at 30/09).
 /// October 2026:   payroll ₡10 000 paid, ticket ₡4 000 applied, ticket ₡600 in review,
-///                 incident ₡2 000 not approved. Direct ₡14 000, pending ₡2 600.
+///                 incident ₡2 000 not approved. Direct ₡14 000, pending ₡2 600 + the unpaid
+///                 ₡6 000 payroll carried over = ₡8 600.
 /// </summary>
 public static class FinancePeriodScenario
 {
@@ -33,12 +35,15 @@ public static class FinancePeriodScenario
     public const decimal OctoberDirect = 14_000m;
     public const decimal OctoberPayroll = 10_000m;
     public const decimal OctoberMaterials = 4_000m;
-    public const decimal OctoberPending = 2_600m;
+    public const decimal UnpaidPayroll = 6_000m;
+    public const decimal SeptemberPending = UnpaidPayroll;
+    public const decimal OctoberPending = 2_600m + UnpaidPayroll;
 
     private static DateTime Utc(int year, int month, int day, int hour, int minute, int second) =>
         new(year, month, day, hour, minute, second, DateTimeKind.Utc);
 
-    public static async Task<int> BuildAsync(AppDbContext context)
+    /// <returns>The project and the payroll that is left unpaid (week 07–13/09).</returns>
+    public static async Task<(int ProjectId, int UnpaidPayrollId)> BuildAsync(AppDbContext context)
     {
         var director = await TestUserFactory.CreateAsync(
             context,
@@ -146,7 +151,7 @@ public static class FinancePeriodScenario
         // ---- payrolls (one approved site log each), paid then re-dated
         var siteLogs = ServiceFactory.CreateSiteLogService(context);
         var payrolls = ServiceFactory.CreatePayrollService(context);
-        async Task PaidPayrollAsync(DateTime weekStart, decimal hours, DateTime paidAtUtc)
+        async Task<int> PayrollAsync(DateTime weekStart, decimal hours, DateTime? paidAtUtc)
         {
             var siteLog = await siteLogs.CreateAsync(
                 new CreateSiteLogDto
@@ -186,13 +191,18 @@ public static class FinancePeriodScenario
                 },
                 admin.Id
             );
-            await payrolls.MarkAsPaidAsync(payroll.Id);
-            (await context.Payrolls.FindAsync(payroll.Id))!.PaidAt = paidAtUtc;
+            if (paidAtUtc is not null)
+            {
+                await payrolls.MarkAsPaidAsync(payroll.Id);
+                (await context.Payrolls.FindAsync(payroll.Id))!.PaidAt = paidAtUtc;
+            }
+            return payroll.Id;
         }
 
         // Paid on the evening of 30/09 in Costa Rica, already 01/10 in UTC: belongs to September.
-        await PaidPayrollAsync(new DateTime(2026, 9, 21), 8, Utc(2026, 10, 1, 3, 0, 0));
-        await PaidPayrollAsync(new DateTime(2026, 10, 5), 10, Utc(2026, 10, 9, 21, 0, 0));
+        await PayrollAsync(new DateTime(2026, 9, 21), 8, Utc(2026, 10, 1, 3, 0, 0));
+        await PayrollAsync(new DateTime(2026, 10, 5), 10, Utc(2026, 10, 9, 21, 0, 0));
+        var unpaidPayrollId = await PayrollAsync(new DateTime(2026, 9, 7), 6, paidAtUtc: null);
 
         // ---- material tickets
         var tickets = ServiceFactory.CreateMaterialTicketService(context);
@@ -248,6 +258,6 @@ public static class FinancePeriodScenario
         );
 
         await context.SaveChangesAsync();
-        return project.Id;
+        return (project.Id, unpaidPayrollId);
     }
 }

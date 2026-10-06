@@ -20,10 +20,17 @@ public class ProjectFinanceDto
     public decimal IncidentExpenses { get; set; }
 
     /// <summary>
-    /// Pending expenses of the period, same composition as Project.PendingExpenses: material
-    /// tickets still in review and incidents not yet approved, dated within the period.
+    /// Pending expenses of the period, same composition as Project.PendingExpenses: payrolls
+    /// still unpaid at the end of the period (balance; see PendingPayrollExpenses), plus material
+    /// tickets in review and incidents not yet approved dated within the period.
     /// </summary>
     public decimal PendingExpenses { get; set; }
+
+    /// <summary>
+    /// Payrolls whose week closed by the end of the period and were not paid by then. It is a
+    /// balance: an unpaid payroll keeps appearing in later periods until the one it is paid in.
+    /// </summary>
+    public decimal PendingPayrollExpenses { get; set; }
     public decimal TotalHoursWorked { get; set; }
     public List<ProjectFinanceMaterialDto> Materials { get; set; } = new();
 }

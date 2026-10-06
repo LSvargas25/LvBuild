@@ -17,6 +17,12 @@ public interface IPayrollRepository
 
     /// <summary>Total of the project's payrolls paid (PaidAt) on the given Costa Rica days.</summary>
     Task<decimal> SumPaidInRangeAsync(int projectId, DateTime fromDate, DateTime toDate);
+
+    /// <summary>
+    /// Balance of unpaid payrolls at the end of a Costa Rica day: weeks closed on or before it
+    /// that were not yet paid by then (still pending, or paid later).
+    /// </summary>
+    Task<decimal> SumUnpaidAtAsync(int projectId, DateTime asOfDate);
     Task AddAsync(LvDomain.Entities.Payroll.Payroll payroll);
     Task UpdateAsync(LvDomain.Entities.Payroll.Payroll payroll);
     Task DeleteAsync(LvDomain.Entities.Payroll.Payroll payroll);
