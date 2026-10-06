@@ -1,0 +1,29 @@
+# Render Blueprint: LvBuild API (Docker, free plan) backed by Neon PostgreSQL.
+# Secrets marked sync: false are entered in the Render dashboard on first deploy.
+services:
+  - type: web
+    name: lvbuild-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__Key
+        generateValue: true
+      - key: Jwt__Issuer
+        value: LvConstruccionesApi
+      - key: Jwt__Audience
+        value: LvConstruccionesClient
+      - key: Cors__AllowedOrigins__0
+        sync: false
+      - key: Database__MigrateOnStartup
+        value: "true"
+      - key: Seed__Demo
+        value: "true"
+      - key: Swagger__Enabled
+        value: "true"
+      - key: ReverseProxy__Enabled
+        value: "true"
