@@ -27,7 +27,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.Status).HasConversion<string>().HasMaxLength(20).IsRequired();
 
-        builder.Property(u => u.ProfilePhotoPath).HasMaxLength(300);
+        builder
+            .HasOne(u => u.ProfilePhotoFile)
+            .WithMany()
+            .HasForeignKey(u => u.ProfilePhotoFileId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasData(
             new User

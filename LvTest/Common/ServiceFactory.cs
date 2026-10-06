@@ -66,26 +66,14 @@ public static class ServiceFactory
         IHostEnvironment? hostEnvironment = null
     )
     {
-        string? storagePath = null;
-
-        if (configuration is null)
-        {
-            storagePath = Path.Combine(
-                Path.GetTempPath(),
-                "LvTestStorage",
-                Guid.NewGuid().ToString()
-            );
-            configuration = TestConfigurationFactory.Create(
-                new Dictionary<string, string?> { ["Storage:WebRootPath"] = storagePath }
-            );
-        }
+        configuration ??= TestConfigurationFactory.Create();
 
         return new AuthService(
             new UserRepository(context),
             new RefreshTokenRepository(context),
             new PasswordResetTokenRepository(context),
             new JwtTokenService(configuration),
-            fileStorageService ?? new LocalFileStorageService(configuration),
+            fileStorageService ?? new DatabaseFileStorageService(context),
             hostEnvironment ?? new FakeHostEnvironment(),
             configuration,
             NullLogger<AuthService>.Instance,

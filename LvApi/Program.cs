@@ -234,8 +234,6 @@ if (
 
 app.UseMiddleware<ExceptionMiddleware>();
 
-app.UseStaticFiles();
-
 app.UseCors(CorsPolicies.Default);
 
 app.UseAuthentication();

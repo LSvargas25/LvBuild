@@ -85,7 +85,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProjectProgressRepository, ProjectProgressRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IProjectChapterRepository, ProjectChapterRepository>();
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<IFileStorageService, DatabaseFileStorageService>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IBranchInventoryRepository, BranchInventoryRepository>();

@@ -12,6 +12,7 @@ using LvDomain.Entities.Payroll;
 using LvDomain.Entities.Progress;
 using LvDomain.Entities.Projects;
 using LvDomain.Entities.SiteLogs;
+using LvDomain.Entities.Storage;
 using LvDomain.Entities.Suppliers;
 using LvDomain.Entities.Warehouse;
 using LvDomain.Entities.Workers;
@@ -86,6 +87,8 @@ public class AppDbContext : DbContext
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
 
     public DbSet<Notification> Notifications => Set<Notification>();
+
+    public DbSet<StoredFile> StoredFiles => Set<StoredFile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -1,4 +1,5 @@
 using LvApplication.DTOs.Auth;
+using LvApplication.Services.Storage;
 
 namespace LvApplication.Services.Auth;
 
@@ -22,4 +23,5 @@ public interface IAuthService
         string fileName,
         string contentType
     );
+    Task<StoredFileContent> GetProfilePhotoAsync(int userId);
 }

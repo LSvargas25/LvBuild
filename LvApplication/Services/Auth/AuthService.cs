@@ -14,7 +14,6 @@ namespace LvApplication.Services.Auth;
 public partial class AuthService : IAuthService
 {
     private const string InvalidCredentialsMessage = "Invalid email or password.";
-    private const string ProfilePhotoSubfolder = "profile-photos";
 
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
@@ -259,27 +258,40 @@ public partial class AuthService : IAuthService
             await _userRepository.GetByIdAsync(userId)
             ?? throw new NotFoundException($"User {userId} not found.");
 
-        // Save the new photo BEFORE deleting the old one: SaveFileAsync can reject the upload
-        // (bad content-type / over 5MB), and we never want a failed upload to cost the user their
-        // existing photo. Only delete the old file once the new one is safely on disk and persisted.
-        var previousPhotoPath = user.ProfilePhotoPath;
-        var savedPath = await _fileStorageService.SaveFileAsync(
-            fileStream,
-            fileName,
-            contentType,
-            ProfilePhotoSubfolder
-        );
+        var content = await ProfilePhotoRules.ReadAndValidateAsync(fileStream, contentType);
 
-        user.ProfilePhotoPath = savedPath;
+        // Store the new photo BEFORE deleting the old one, so a failure never costs the user
+        // their existing photo.
+        var previousFileId = user.ProfilePhotoFileId;
+        user.ProfilePhotoFileId = await _fileStorageService.SaveAsync(
+            content,
+            fileName,
+            contentType
+        );
         user.UpdatedAt = DateTime.UtcNow;
         await _userRepository.UpdateAsync(user);
 
-        if (!string.IsNullOrEmpty(previousPhotoPath))
+        if (previousFileId is not null)
         {
-            _fileStorageService.DeleteFile(previousPhotoPath);
+            await _fileStorageService.DeleteAsync(previousFileId.Value);
         }
 
         return MapToProfileDto(user);
+    }
+
+    public async Task<StoredFileContent> GetProfilePhotoAsync(int userId)
+    {
+        var user =
+            await _userRepository.GetByIdAsync(userId)
+            ?? throw new NotFoundException($"User {userId} not found.");
+
+        if (user.ProfilePhotoFileId is null)
+        {
+            throw new NotFoundException($"User {userId} has no profile photo.");
+        }
+
+        return await _fileStorageService.GetAsync(user.ProfilePhotoFileId.Value)
+            ?? throw new NotFoundException($"User {userId} has no profile photo.");
     }
 
     private static UserProfileDto MapToProfileDto(User user) =>
@@ -289,7 +301,9 @@ public partial class AuthService : IAuthService
             Name = user.Name,
             Email = user.Email,
             Status = user.Status.ToString(),
-            ProfilePhotoPath = user.ProfilePhotoPath,
+            ProfilePhotoUrl = user.ProfilePhotoFileId is null
+                ? null
+                : $"/api/users/{user.Id}/photo",
             Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
             CreatedAt = user.CreatedAt,
             LastLoginAt = user.LastLoginAt,
