@@ -11,7 +11,11 @@ public interface IMaterialTicketRepository
         int pageSize
     );
     Task<decimal> SumAppliedTotalByChapterAsync(int projectId, int chapterId);
-    Task<List<MaterialTicket>> GetAppliedInRangeAsync(int projectId, DateTime from, DateTime to);
+    Task<List<MaterialTicket>> GetAppliedInRangeAsync(
+        int projectId,
+        DateTime fromDate,
+        DateTime toDate
+    );
     Task AddAsync(MaterialTicket ticket);
     Task UpdateAsync(MaterialTicket ticket);
     Task DeleteAsync(MaterialTicket ticket);

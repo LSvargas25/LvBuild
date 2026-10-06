@@ -705,7 +705,7 @@ public class ProjectServiceTests
         await service.IncrementWeekCounterAsync(created.Id);
 
         var act = async () =>
-            await service.DecrementWeekCounterAsync(created.Id, new[] { "OperationsDirector" });
+            await service.DecrementWeekCounterAsync(created.Id, TestRoles.OperationsDirector);
 
         await act.Should().ThrowAsync<ForbiddenException>();
     }
@@ -749,7 +749,7 @@ public class ProjectServiceTests
         await service.IncrementWeekCounterAsync(created.Id);
         await service.IncrementWeekCounterAsync(created.Id);
 
-        await service.DecrementWeekCounterAsync(created.Id, new[] { "GeneralManager" });
+        await service.DecrementWeekCounterAsync(created.Id, TestRoles.GeneralManager);
 
         var result = await service.GetByIdAsync(created.Id);
         result.WeeksCounter.Should().Be(1);

@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentValidation;
 using LvApplication.Common;
 using LvApplication.Common.Exceptions;
@@ -223,7 +224,7 @@ public class InvoiceService : IInvoiceService
         }
 
         var nextNumber = await _invoiceRepository.CountByBranchAsync(invoice.BranchId) + 1;
-        invoice.InvoiceNumber = nextNumber.ToString("D6");
+        invoice.InvoiceNumber = nextNumber.ToString("D6", CultureInfo.InvariantCulture);
         invoice.Status = InvoiceStatus.Issued;
         invoice.UpdatedAt = DateTime.UtcNow;
 

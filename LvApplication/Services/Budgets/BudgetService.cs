@@ -103,7 +103,7 @@ public class BudgetService : IBudgetService
             );
         }
 
-        if (!budget.Chapters.Any())
+        if (budget.Chapters.Count == 0)
         {
             throw new ValidationAppException(
                 "El presupuesto debe tener al menos un capítulo para enviarse a revisión."

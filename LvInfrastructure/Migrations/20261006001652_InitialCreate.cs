@@ -145,6 +145,43 @@ namespace LvInfrastructure.Migrations
             );
 
             migrationBuilder.CreateTable(
+                name: "stored_files",
+                columns: table => new
+                {
+                    id = table
+                        .Column<int>(type: "integer", nullable: false)
+                        .Annotation(
+                            "Npgsql:ValueGenerationStrategy",
+                            NpgsqlValueGenerationStrategy.IdentityByDefaultColumn
+                        ),
+                    file_name = table.Column<string>(
+                        type: "character varying(255)",
+                        maxLength: 255,
+                        nullable: false
+                    ),
+                    content_type = table.Column<string>(
+                        type: "character varying(100)",
+                        maxLength: 100,
+                        nullable: false
+                    ),
+                    size_bytes = table.Column<long>(type: "bigint", nullable: false),
+                    content = table.Column<byte[]>(type: "bytea", nullable: false),
+                    created_at = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    updated_at = table.Column<DateTime>(
+                        type: "timestamp with time zone",
+                        nullable: true
+                    ),
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("pk_stored_files", x => x.id);
+                }
+            );
+
+            migrationBuilder.CreateTable(
                 name: "suppliers",
                 columns: table => new
                 {
@@ -238,11 +275,7 @@ namespace LvInfrastructure.Migrations
                         type: "timestamp with time zone",
                         nullable: true
                     ),
-                    profile_photo_path = table.Column<string>(
-                        type: "character varying(300)",
-                        maxLength: 300,
-                        nullable: true
-                    ),
+                    profile_photo_file_id = table.Column<int>(type: "integer", nullable: true),
                     created_at = table.Column<DateTime>(
                         type: "timestamp with time zone",
                         nullable: false
@@ -255,6 +288,13 @@ namespace LvInfrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("pk_users", x => x.id);
+                    table.ForeignKey(
+                        name: "fk_users_stored_files_profile_photo_file_id",
+                        column: x => x.profile_photo_file_id,
+                        principalTable: "stored_files",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.SetNull
+                    );
                 }
             );
 
@@ -1133,11 +1173,6 @@ namespace LvInfrastructure.Migrations
                         type: "character varying(30)",
                         maxLength: 30,
                         nullable: false
-                    ),
-                    generated_pdf_path = table.Column<string>(
-                        type: "character varying(300)",
-                        maxLength: 300,
-                        nullable: true
                     ),
                     created_by_user_id = table.Column<int>(type: "integer", nullable: false),
                     created_at = table.Column<DateTime>(
@@ -2667,7 +2702,7 @@ namespace LvInfrastructure.Migrations
                     "last_login_at",
                     "name",
                     "password_hash",
-                    "profile_photo_path",
+                    "profile_photo_file_id",
                     "status",
                     "updated_at",
                 },
@@ -3355,6 +3390,12 @@ namespace LvInfrastructure.Migrations
             );
 
             migrationBuilder.CreateIndex(
+                name: "ix_users_profile_photo_file_id",
+                table: "users",
+                column: "profile_photo_file_id"
+            );
+
+            migrationBuilder.CreateIndex(
                 name: "ix_workers_branch_id",
                 table: "workers",
                 column: "branch_id"
@@ -3461,6 +3502,8 @@ namespace LvInfrastructure.Migrations
             migrationBuilder.DropTable(name: "customers");
 
             migrationBuilder.DropTable(name: "users");
+
+            migrationBuilder.DropTable(name: "stored_files");
         }
     }
 }

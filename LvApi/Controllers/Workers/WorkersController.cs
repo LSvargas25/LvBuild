@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Workers;
 
+/// <summary>Workers (employees and contractors) with their hourly rate.</summary>
 [ApiController]
 [Route("api/workers")]
 [Authorize]

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Warehouse;
 
+/// <summary>Stock movements from a warehouse to a branch or a project, validated on arrival.</summary>
 [ApiController]
 [Route("api/inventory-movements")]
 [Authorize]

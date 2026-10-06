@@ -2,13 +2,12 @@ using System.Text;
 using FluentAssertions;
 using LvApplication.Common.Exceptions;
 using LvApplication.DTOs.Auth;
-using LvApplication.Services.Storage;
+using LvApplication.Services.Auth;
 using LvDomain.Entities.Auth;
 using LvDomain.Enums;
 using LvTest.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
-using Moq;
 
 namespace LvTest.Services.Auth;
 
@@ -507,12 +506,65 @@ public class AuthServiceTests
         );
         var authService = ServiceFactory.CreateAuthService(context);
 
-        using var stream = new MemoryStream(new byte[(5 * 1024 * 1024) + 1]);
+        var oversized = new byte[ProfilePhotoRules.MaxSizeBytes + 1];
+        JpegHeader.CopyTo(oversized, 0);
+        using var stream = new MemoryStream(oversized);
+
+        var act = async () =>
+            await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "photo.jpg", "image/jpeg");
+
+        await act.Should().ThrowAsync<ValidationAppException>().WithMessage("*1 MB*");
+        context.StoredFiles.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task UpdateMyProfilePhotoAsync_DeclaredJpegButContentIsNotAnImage_Throws()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-photo-spoof@example.com",
+            Password
+        );
+        var authService = ServiceFactory.CreateAuthService(context);
+
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("<script>alert(1)</script>"));
 
         var act = async () =>
             await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "photo.jpg", "image/jpeg");
 
         await act.Should().ThrowAsync<ValidationAppException>();
+        context.StoredFiles.Should().BeEmpty();
+    }
+
+    [Theory]
+    [InlineData("image/png")]
+    [InlineData("image/webp")]
+    public async Task UpdateMyProfilePhotoAsync_ValidPngOrWebp_IsStoredInTheDatabase(
+        string contentType
+    )
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            $"me-photo-{contentType.Replace('/', '-')}@example.com",
+            Password
+        );
+        var authService = ServiceFactory.CreateAuthService(context);
+        var content = contentType == "image/png" ? PngHeader : WebpHeader;
+
+        using var stream = new MemoryStream(content);
+        var result = await authService.UpdateMyProfilePhotoAsync(
+            user.Id,
+            stream,
+            "photo",
+            contentType
+        );
+
+        result.ProfilePhotoUrl.Should().Be($"/api/users/{user.Id}/photo");
+        var photo = await authService.GetProfilePhotoAsync(user.Id);
+        photo.ContentType.Should().Be(contentType);
+        photo.Content.Should().Equal(content);
     }
 
     [Fact]
@@ -524,43 +576,36 @@ public class AuthServiceTests
             "me-photo-replace@example.com",
             Password
         );
-        user.ProfilePhotoPath = "/uploads/profile-photos/old-photo.jpg";
-        await context.SaveChangesAsync();
+        var authService = ServiceFactory.CreateAuthService(context);
 
-        var fileStorageServiceMock = new Mock<IFileStorageService>();
-        fileStorageServiceMock
-            .Setup(s =>
-                s.SaveFileAsync(
-                    It.IsAny<Stream>(),
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    "profile-photos"
-                )
-            )
-            .ReturnsAsync("/uploads/profile-photos/new-photo.jpg");
+        byte[] first = [.. JpegHeader, 1];
+        byte[] second = [.. JpegHeader, 2];
+        using (var stream = new MemoryStream(first))
+            await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "a.jpg", "image/jpeg");
+        using (var stream = new MemoryStream(second))
+            await authService.UpdateMyProfilePhotoAsync(user.Id, stream, "b.jpg", "image/jpeg");
 
-        var authService = ServiceFactory.CreateAuthService(
-            context,
-            fileStorageService: fileStorageServiceMock.Object
-        );
-
-        using var stream = new MemoryStream(new byte[100]);
-
-        var result = await authService.UpdateMyProfilePhotoAsync(
-            user.Id,
-            stream,
-            "new-photo.jpg",
-            "image/jpeg"
-        );
-
-        result.ProfilePhotoPath.Should().Be("/uploads/profile-photos/new-photo.jpg");
-
-        var updatedUser = await context.Users.FindAsync(user.Id);
-        updatedUser!.ProfilePhotoPath.Should().Be("/uploads/profile-photos/new-photo.jpg");
-
-        fileStorageServiceMock.Verify(
-            s => s.DeleteFile("/uploads/profile-photos/old-photo.jpg"),
-            Times.Once
-        );
+        context.StoredFiles.Should().ContainSingle().Which.Content.Should().Equal(second);
+        (await authService.GetProfilePhotoAsync(user.Id)).Content.Should().Equal(second);
     }
+
+    [Fact]
+    public async Task GetProfilePhotoAsync_UserWithoutPhoto_ThrowsNotFound()
+    {
+        using var context = TestDbContextFactory.Create();
+        var user = await TestUserFactory.CreateAsync(
+            context,
+            "me-photo-none@example.com",
+            Password
+        );
+        var authService = ServiceFactory.CreateAuthService(context);
+
+        var act = async () => await authService.GetProfilePhotoAsync(user.Id);
+
+        await act.Should().ThrowAsync<NotFoundException>();
+    }
+
+    private static readonly byte[] JpegHeader = [0xFF, 0xD8, 0xFF, 0xE0];
+    private static readonly byte[] PngHeader = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0];
+    private static readonly byte[] WebpHeader = [.. "RIFF"u8, 0, 0, 0, 0, .. "WEBP"u8, 0];
 }

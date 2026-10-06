@@ -35,7 +35,6 @@ public class OfferConfiguration : IEntityTypeConfiguration<Offer>
         builder.Property(o => o.PercentageIncludes).HasMaxLength(1000);
         builder.Property(o => o.PercentageExcludes).HasMaxLength(1000);
         builder.Property(o => o.PercentageCalculationMethod).HasMaxLength(500);
-        builder.Property(o => o.GeneratedPdfPath).HasMaxLength(300);
 
         builder.Property(o => o.TotalProjectPrice).HasColumnType("decimal(18,2)");
         builder.Property(o => o.AgreedPercentage).HasColumnType("decimal(5,2)");

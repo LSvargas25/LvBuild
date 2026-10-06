@@ -7,16 +7,28 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Auth;
 
+/// <summary>User administration (create users and assign roles).</summary>
 [ApiController]
 [Route("api/users")]
 [Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IAuthService _authService;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, IAuthService authService)
     {
         _userService = userService;
+        _authService = authService;
+    }
+
+    /// <summary>Returns a user's profile photo (any authenticated user may see it).</summary>
+    [HttpGet("{id:int}/photo")]
+    public async Task<IActionResult> GetPhoto(int id)
+    {
+        var photo = await _authService.GetProfilePhotoAsync(id);
+        Response.Headers.CacheControl = "private, max-age=300";
+        return File(photo.Content, photo.ContentType);
     }
 
     [Authorize(Roles = "GeneralManager")]

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Projects;
 
+/// <summary>Project chapters: sold vs actual cost per chapter.</summary>
 [ApiController]
 [Route("api")]
 [Authorize]

@@ -1,17 +1,22 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using LvApi;
+using LvApi.Configuration;
 using LvApi.Extensions;
 using LvApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.UsePortFromEnvironment();
 
 builder.Host.UseSerilog(
     (context, services, configuration) =>
@@ -20,17 +25,26 @@ builder.Host.UseSerilog(
             .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
             .Enrich.FromLogContext()
-            .WriteTo.Console()
+            .WriteTo.Console(formatProvider: CultureInfo.InvariantCulture);
+
+        // Containers log to stdout (collected by the platform); their disk is ephemeral and the
+        // non-root app user cannot write next to the binaries. Rolling files are a dev aid only.
+        if (!context.HostingEnvironment.IsDevelopment())
+            return;
+
+        configuration
             .WriteTo.File(
                 Path.Combine(context.HostingEnvironment.ContentRootPath, "Logs", "app-.log"),
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 30
+                retainedFileCountLimit: 30,
+                formatProvider: CultureInfo.InvariantCulture
             )
             .WriteTo.File(
                 Path.Combine(context.HostingEnvironment.ContentRootPath, "Logs", "errors-.log"),
                 restrictedToMinimumLevel: LogEventLevel.Error,
                 rollingInterval: RollingInterval.Day,
-                retainedFileCountLimit: 90
+                retainedFileCountLimit: 90,
+                formatProvider: CultureInfo.InvariantCulture
             );
     }
 );
@@ -53,14 +67,29 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "LVConstrucciones", Version = "v1" });
+    options.SwaggerDoc(
+        "v1",
+        new OpenApiInfo
+        {
+            Title = "LvBuild API",
+            Version = "v1",
+            Description = ApiDocumentation.Description,
+        }
+    );
+
+    // XML comments of the controllers (GenerateDocumentationFile in LvApi.csproj); controller
+    // summaries become the tag descriptions.
+    options.IncludeXmlComments(
+        Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
+        includeControllerXmlComments: true
+    );
 
     options.AddSecurityDefinition(
         "Bearer",
         new OpenApiSecurityScheme
         {
             Description =
-                "Pega solo el token JWT (sin la palabra 'Bearer', Swagger la agrega sola).",
+                "Paste only the accessToken from POST /api/auth/login (Swagger adds 'Bearer').",
             Name = "Authorization",
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.Http,
@@ -99,11 +128,9 @@ static string GetSchemaId(Type type)
     return $"{type.Namespace}.{genericTypeName}Of{string.Join("And", genericArgNames)}";
 }
 
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.Services.AddAppOptions(builder.Configuration);
+builder.Services.AddInfrastructureServices();
 builder.Services.AddApplicationServices();
-
-var jwtSection = builder.Configuration.GetSection("Jwt");
-var jwtKey = jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key is not configured.");
 
 builder
     .Services.AddAuthentication(options =>
@@ -111,36 +138,45 @@ builder
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSection["Issuer"],
-            ValidAudience = jwtSection["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-        };
-    });
+    .AddJwtBearer();
+
+// Configured from the validated JwtOptions instead of reading raw configuration up front, so a
+// missing key is reported by options validation at startup with an actionable message.
+builder
+    .Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    .Configure<IOptions<JwtOptions>>(
+        (options, jwt) =>
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwt.Value.Issuer,
+                ValidAudience = jwt.Value.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Value.Key)),
+            }
+    );
 
 builder.Services.AddAuthorization();
 
-var corsAllowedOrigins =
-    builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? Array.Empty<string>();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(
-        CorsPolicies.Default,
-        policy =>
-        {
-            policy.WithOrigins(corsAllowedOrigins).AllowAnyHeader().AllowAnyMethod();
-        }
+builder.Services.AddCors();
+builder
+    .Services.AddOptions<CorsOptions>()
+    .Configure<IOptions<CorsOriginsOptions>>(
+        (options, origins) =>
+            options.AddPolicy(
+                CorsPolicies.Default,
+                policy =>
+                    policy
+                        .WithOrigins(origins.Value.AllowedOrigins)
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+            )
     );
-});
+
+builder.Services.AddReverseProxySupport();
+builder.Services.AddAppHealthChecks();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -177,23 +213,26 @@ builder.Services.AddRateLimiter(options =>
 
 var app = builder.Build();
 
+// First, so request logging and the per-IP login rate limiter see the real client address.
+app.UseTransportSecurity();
+
 app.UseSerilogRequestLogging();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Swagger: always in Development; elsewhere only with Swagger:Enabled=true (the public demo).
+if (
+    app.Environment.IsDevelopment()
+    || app.Services.GetRequiredService<IOptions<ApiDocsOptions>>().Value.Enabled
+)
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi API v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "LvBuild API v1");
+        options.DocumentTitle = "LvBuild API";
     });
 }
 
 app.UseMiddleware<ExceptionMiddleware>();
-
-app.UseHttpsRedirection();
-
-app.UseStaticFiles();
 
 app.UseCors(CorsPolicies.Default);
 
@@ -203,7 +242,10 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapControllers();
+app.MapAppHealthChecks();
 
-app.Run();
+await app.InitializeDatabaseAsync();
+
+await app.RunAsync();
 
 public partial class Program { }

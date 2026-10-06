@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Finance;
 
+/// <summary>Project finance: budget vs actual.</summary>
 [ApiController]
 [Route("api")]
 [Authorize]
@@ -18,6 +19,7 @@ public class ProjectFinanceController : ControllerBase
         _financeService = financeService;
     }
 
+    /// <summary>Returns the project's direct and pending expenses, applied material tickets and hours worked for the week, month or year that contains the given date (Costa Rica calendar).</summary>
     [HttpGet("projects/{projectId:int}/finance")]
     public async Task<ActionResult<ProjectFinanceDto>> GetFinance(
         int projectId,

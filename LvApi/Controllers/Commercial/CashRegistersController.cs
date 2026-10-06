@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Commercial;
 
+/// <summary>Point of sale cash registers: open, close and expected vs counted balance.</summary>
 [ApiController]
 [Route("api/cash-registers")]
 [Authorize]

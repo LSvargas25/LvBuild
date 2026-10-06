@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Customers;
 
+/// <summary>Customers (people and companies).</summary>
 [ApiController]
 [Route("api/customers")]
 [Authorize]

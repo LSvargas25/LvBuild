@@ -7,8 +7,6 @@ namespace LvTest.Services.Auth;
 
 public class UserServiceTests
 {
-    private static readonly string[] GeneralManagerRoles = ["GeneralManager"];
-
     [Fact]
     public async Task CreateUserAsync_DuplicateEmail_ThrowsConflictException()
     {
@@ -23,7 +21,7 @@ public class UserServiceTests
             RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
         };
 
-        await userService.CreateUserAsync(first, new[] { "GeneralManager" });
+        await userService.CreateUserAsync(first, TestRoles.GeneralManager);
 
         var duplicate = new CreateUserDto
         {
@@ -34,7 +32,7 @@ public class UserServiceTests
         };
 
         var act = async () =>
-            await userService.CreateUserAsync(duplicate, new[] { "GeneralManager" });
+            await userService.CreateUserAsync(duplicate, TestRoles.GeneralManager);
 
         await act.Should().ThrowAsync<ConflictException>();
     }
@@ -53,7 +51,7 @@ public class UserServiceTests
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
             },
-            GeneralManagerRoles
+            TestRoles.GeneralManager
         );
 
         var act = async () =>
@@ -65,7 +63,7 @@ public class UserServiceTests
                     Password = "Password#456",
                     RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
                 },
-                GeneralManagerRoles
+                TestRoles.GeneralManager
             );
 
         await act.Should().ThrowAsync<ConflictException>();
@@ -85,7 +83,7 @@ public class UserServiceTests
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
             },
-            GeneralManagerRoles
+            TestRoles.GeneralManager
         );
 
         context.Users.Should().ContainSingle(u => u.Email == "mixed.case@example.com");
@@ -106,7 +104,7 @@ public class UserServiceTests
                     Password = "Password#123",
                     RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId },
                 },
-                new[] { "OperationsDirector" }
+                TestRoles.OperationsDirector
             );
 
         await act.Should().ThrowAsync<ValidationAppException>();
@@ -126,7 +124,7 @@ public class UserServiceTests
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.GeneralManagerRoleId },
             },
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         result.Roles.Should().Contain("GeneralManager");
@@ -146,7 +144,7 @@ public class UserServiceTests
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
             },
-            new[] { "OperationsDirector" }
+            TestRoles.OperationsDirector
         );
 
         result.Roles.Should().Contain("ProjectAdmin");
@@ -166,7 +164,7 @@ public class UserServiceTests
                 Password = "Password#123",
                 RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
             },
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         var result = await userService.GetByIdAsync(created.Id);
@@ -204,7 +202,7 @@ public class UserServiceTests
                     Password = "Password#123",
                     RoleIds = new List<int> { TestUserFactory.ProjectAdminRoleId },
                 },
-                new[] { "GeneralManager" }
+                TestRoles.GeneralManager
             );
         }
 

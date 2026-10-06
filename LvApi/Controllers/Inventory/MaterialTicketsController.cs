@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Inventory;
 
+/// <summary>Material purchase tickets per project and the project inventory they feed.</summary>
 [ApiController]
 [Route("api")]
 [Authorize]

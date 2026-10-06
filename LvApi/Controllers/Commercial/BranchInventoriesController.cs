@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Commercial;
 
+/// <summary>Stock of products per branch.</summary>
 [ApiController]
 [Route("api/branches/{branchId:int}/inventory")]
 [Authorize]

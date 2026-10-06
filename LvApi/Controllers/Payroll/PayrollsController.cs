@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Payroll;
 
+/// <summary>Weekly payrolls generated from approved site logs.</summary>
 [ApiController]
 [Route("api")]
 [Authorize]
@@ -19,6 +20,7 @@ public class PayrollsController : ApiControllerBase
         _payrollService = payrollService;
     }
 
+    /// <summary>Creates a Pending payroll from an approved site log.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPost("payrolls")]
     public async Task<ActionResult<PayrollDto>> Create(CreatePayrollDto request)
@@ -27,6 +29,7 @@ public class PayrollsController : ApiControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    /// <summary>Updates a Pending payroll.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPut("payrolls/{id:int}")]
     public async Task<ActionResult<PayrollDto>> Update(int id, UpdatePayrollDto request)
@@ -35,6 +38,7 @@ public class PayrollsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Pending -&gt; Paid; adds the payroll total to the project's direct expenses.</summary>
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("payrolls/{id:int}/mark-paid")]
     public async Task<ActionResult<PayrollDto>> MarkAsPaid(int id)
@@ -43,6 +47,7 @@ public class PayrollsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Deletes a payroll.</summary>
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpDelete("payrolls/{id:int}")]
     public async Task<IActionResult> Delete(int id)
@@ -51,6 +56,7 @@ public class PayrollsController : ApiControllerBase
         return NoContent();
     }
 
+    /// <summary>Lists payrolls (paged).</summary>
     [HttpGet("payrolls")]
     public async Task<ActionResult<PagedResult<PayrollDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -61,6 +67,7 @@ public class PayrollsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Returns a payroll with its details and payments.</summary>
     [HttpGet("payrolls/{id:int}")]
     public async Task<ActionResult<PayrollDto>> GetById(int id)
     {
@@ -68,6 +75,7 @@ public class PayrollsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Lists the payrolls of a project (paged).</summary>
     [HttpGet("projects/{projectId:int}/payrolls")]
     public async Task<ActionResult<PagedResult<PayrollDto>>> GetAllByProject(
         int projectId,

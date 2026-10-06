@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Commercial;
 
+/// <summary>Requests to add stock of a product to a branch, validated by management.</summary>
 [ApiController]
 [Route("api/product-incorporation-tickets")]
 [Authorize]

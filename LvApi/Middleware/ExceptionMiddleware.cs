@@ -4,7 +4,7 @@ using LvApplication.Common.Exceptions;
 
 namespace LvApi.Middleware;
 
-public class ExceptionMiddleware
+public partial class ExceptionMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ExceptionMiddleware> _logger;
@@ -23,15 +23,21 @@ public class ExceptionMiddleware
         }
         catch (Exception exception)
         {
-            _logger.LogError(
-                exception,
-                "Unhandled exception occurred while processing {Method} {Path}",
-                context.Request.Method,
-                context.Request.Path
-            );
+            LogUnhandledException(_logger, exception, context.Request.Method, context.Request.Path);
             await HandleExceptionAsync(context, exception);
         }
     }
+
+    [LoggerMessage(
+        Level = LogLevel.Error,
+        Message = "Unhandled exception occurred while processing {Method} {Path}"
+    )]
+    private static partial void LogUnhandledException(
+        ILogger logger,
+        Exception exception,
+        string method,
+        PathString path
+    );
 
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
     {

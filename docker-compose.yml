@@ -1,0 +1,43 @@
+# Local development: PostgreSQL 16 + the API built from the Dockerfile.
+#
+#   cp .env.example .env      # then set POSTGRES_PASSWORD and JWT_KEY
+#   docker compose up --build
+#
+# API: http://localhost:8080/swagger  ·  health: http://localhost:8080/health/ready
+# The schema is migrated and the demo company loaded on startup (see README for the logins).
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: lvbuild
+      POSTGRES_USER: lvbuild
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
+    ports:
+      - "5432:5432"
+    volumes:
+      - lvbuild-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lvbuild -d lvbuild"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      ConnectionStrings__DefaultConnection: Host=db;Port=5432;Database=lvbuild;Username=lvbuild;Password=${POSTGRES_PASSWORD}
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY in .env (at least 32 characters)}
+      Jwt__Issuer: LvConstruccionesApi
+      Jwt__Audience: LvConstruccionesClient
+      Cors__AllowedOrigins__0: http://localhost:5173
+      Database__MigrateOnStartup: "true"
+      Seed__Demo: "true"
+      Swagger__Enabled: "true"
+
+volumes:
+  lvbuild-pgdata:

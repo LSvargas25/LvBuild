@@ -4,5 +4,6 @@ namespace LvApplication.Services.Offers;
 
 public interface IOfferPdfGenerator
 {
-    string Generate(Offer offer);
+    /// <summary>Renders the offer as a PDF document in memory.</summary>
+    byte[] Generate(Offer offer);
 }

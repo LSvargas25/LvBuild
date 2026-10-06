@@ -1,3 +1,4 @@
+using System.Globalization;
 using LvApplication.Services.Offers;
 using LvDomain.Entities.Offers;
 using LvDomain.Enums;
@@ -10,6 +11,10 @@ namespace LvInfrastructure.Offers;
 
 public class OfferPdfGenerator : IOfferPdfGenerator
 {
+    // The PDF is read by Costa Rican customers: format numbers the local way regardless of
+    // the server culture (containers usually run with the invariant culture).
+    private static readonly CultureInfo CostaRicaCulture = CultureInfo.GetCultureInfo("es-CR");
+
     private readonly IConfiguration _configuration;
 
     static OfferPdfGenerator()
@@ -22,17 +27,14 @@ public class OfferPdfGenerator : IOfferPdfGenerator
         _configuration = configuration;
     }
 
-    public string Generate(Offer offer)
+    // Rendered in memory on every request: the host disk (Render) is ephemeral, and the
+    // offer data is the source of truth, so there is no file to keep in sync.
+    public byte[] Generate(Offer offer)
     {
-        var outputFolder = _configuration["Storage:GeneratedOffersPath"] ?? "GeneratedFiles/Offers";
-        Directory.CreateDirectory(outputFolder);
-
-        var filePath = Path.Combine(outputFolder, $"{offer.OfferNumber}.pdf");
-
         var companyName = _configuration["Company:Name"] ?? "LV Construcciones";
         var logoPath = _configuration["Company:LogoPath"];
 
-        Document
+        return Document
             .Create(container =>
             {
                 container.Page(page =>
@@ -106,12 +108,18 @@ public class OfferPdfGenerator : IOfferPdfGenerator
                                     foreach (var chapter in offer.Chapters)
                                     {
                                         table.Cell().Text(chapter.ChapterName);
-                                        table.Cell().Text(chapter.EstimatedWeeks.ToString());
                                         table
                                             .Cell()
                                             .Text(
-                                                chapter.ApproxMaterialQuantity?.ToString("N2")
-                                                    ?? "-"
+                                                chapter.EstimatedWeeks.ToString(CostaRicaCulture)
+                                            );
+                                        table
+                                            .Cell()
+                                            .Text(
+                                                chapter.ApproxMaterialQuantity?.ToString(
+                                                    "N2",
+                                                    CostaRicaCulture
+                                                ) ?? "-"
                                             );
                                     }
                                 });
@@ -180,8 +188,6 @@ public class OfferPdfGenerator : IOfferPdfGenerator
                         });
                 });
             })
-            .GeneratePdf(filePath);
-
-        return filePath;
+            .GeneratePdf();
     }
 }

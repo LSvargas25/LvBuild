@@ -1,4 +1,5 @@
 using FluentValidation;
+using LvApi.Configuration;
 using LvApplication.Services.Auth;
 using LvApplication.Services.Branches;
 using LvApplication.Services.Budgets;
@@ -38,27 +39,32 @@ using LvInfrastructure.Repositories.SiteLogs;
 using LvInfrastructure.Repositories.Suppliers;
 using LvInfrastructure.Repositories.Warehouse;
 using LvInfrastructure.Repositories.Workers;
+using LvInfrastructure.Seeding;
 using LvInfrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace LvApi.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddInfrastructureServices(
-        this IServiceCollection services,
-        IConfiguration configuration
-    )
+    public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException(
-                "ConnectionStrings:DefaultConnection is not configured."
-            );
-
-        services.AddDbContext<AppDbContext>(options =>
-            options.UseNpgsql(connectionString).UseSnakeCaseNamingConvention()
+        // The connection string is read lazily from the validated DatabaseOptions, so a missing
+        // value surfaces as a clear startup validation error (see AddAppOptions).
+        services.AddDbContext<AppDbContext>(
+            (serviceProvider, options) =>
+                options
+                    .UseNpgsql(
+                        serviceProvider
+                            .GetRequiredService<IOptions<DatabaseOptions>>()
+                            .Value.ConnectionString
+                    )
+                    .UseSnakeCaseNamingConvention()
         );
+
+        services.AddScoped<DatabaseInitializer>();
+        services.AddScoped<DemoDataSeeder>();
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
@@ -81,7 +87,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IProjectProgressRepository, ProjectProgressRepository>();
         services.AddScoped<IIncidentRepository, IncidentRepository>();
         services.AddScoped<IProjectChapterRepository, ProjectChapterRepository>();
-        services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<IFileStorageService, DatabaseFileStorageService>();
 
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IBranchInventoryRepository, BranchInventoryRepository>();

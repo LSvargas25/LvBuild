@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace LvApi.Controllers.Auth;
 
+/// <summary>Authentication: JWT login with refresh-token rotation, password reset and the current user's profile.</summary>
 [ApiController]
 [Route("api/auth")]
 [Authorize]
@@ -19,6 +20,7 @@ public class AuthController : ApiControllerBase
         _authService = authService;
     }
 
+    /// <summary>Logs in with email and password. Returns an access token (Bearer) and a refresh token. Rate limited to 5 attempts per minute per IP; the account is blocked after 5 consecutive failures.</summary>
     [AllowAnonymous]
     [EnableRateLimiting(RateLimiterPolicies.Login)]
     [HttpPost("login")]
@@ -29,6 +31,7 @@ public class AuthController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Exchanges a valid refresh token for a new access/refresh token pair (the old refresh token is revoked).</summary>
     [AllowAnonymous]
     [HttpPost("refresh-token")]
     public async Task<ActionResult<LoginResponseDto>> RefreshToken(RefreshTokenRequestDto request)
@@ -38,6 +41,7 @@ public class AuthController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Revokes the given refresh token.</summary>
     [HttpPost("logout")]
     public async Task<IActionResult> Logout(RefreshTokenRequestDto request)
     {
@@ -45,6 +49,7 @@ public class AuthController : ApiControllerBase
         return NoContent();
     }
 
+    /// <summary>Starts the password reset flow. Always answers 200 so it cannot be used to discover registered emails.</summary>
     [AllowAnonymous]
     [EnableRateLimiting(RateLimiterPolicies.ForgotPassword)]
     [HttpPost("forgot-password")]
@@ -56,6 +61,7 @@ public class AuthController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Sets a new password using a reset token.</summary>
     [AllowAnonymous]
     [HttpPost("reset-password")]
     public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto request)
@@ -64,6 +70,7 @@ public class AuthController : ApiControllerBase
         return NoContent();
     }
 
+    /// <summary>Returns the profile of the authenticated user.</summary>
     [HttpGet("me")]
     public async Task<ActionResult<UserProfileDto>> GetMe()
     {
@@ -71,6 +78,7 @@ public class AuthController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Updates the name of the authenticated user.</summary>
     [HttpPut("me")]
     public async Task<ActionResult<UserProfileDto>> UpdateMe(UpdateProfileDto request)
     {
@@ -78,6 +86,7 @@ public class AuthController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Changes the password of the authenticated user (requires the current password).</summary>
     [HttpPost("me/change-password")]
     public async Task<IActionResult> ChangeMyPassword(ChangePasswordDto request)
     {
@@ -85,6 +94,7 @@ public class AuthController : ApiControllerBase
         return NoContent();
     }
 
+    /// <summary>Uploads the authenticated user's profile photo (JPEG, PNG or WEBP, max 1 MB).</summary>
     [HttpPost("me/photo")]
     public async Task<ActionResult<UserProfileDto>> UploadMyPhoto(IFormFile file)
     {

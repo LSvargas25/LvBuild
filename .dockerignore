@@ -1,0 +1,25 @@
+# Only the four source projects and the build props are needed in the image build context.
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/Logs/
+**/GeneratedFiles/
+**/wwwroot/uploads/
+
+.git/
+.github/
+.remember/
+.claude/
+docs/
+scripts/
+LvTest/
+TestResults/
+CoverageReport/
+
+.env
+.env.*
+!.env.example
+docker-compose*.yml
+render.yaml
+*.md

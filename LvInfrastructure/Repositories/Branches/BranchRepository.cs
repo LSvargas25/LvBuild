@@ -1,5 +1,6 @@
 using LvApplication.Services.Branches;
 using LvDomain.Entities.Branches;
+using LvDomain.Enums;
 using LvInfrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +43,13 @@ public class BranchRepository : IBranchRepository
 
         return (items, totalCount);
     }
+
+    public Task<List<Branch>> GetActiveAsync() =>
+        _context
+            .Branches.AsNoTracking()
+            .Where(b => b.Status == BranchStatus.Active)
+            .OrderBy(b => b.Name)
+            .ToListAsync();
 
     public async Task AddAsync(Branch branch)
     {

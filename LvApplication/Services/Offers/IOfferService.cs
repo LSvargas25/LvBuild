@@ -18,5 +18,5 @@ public interface IOfferService
         int pageSize,
         OfferStatus? status
     );
-    Task<(string FilePath, string FileName)> GetPdfFileAsync(int id);
+    Task<(byte[] Content, string FileName)> GetPdfAsync(int id);
 }

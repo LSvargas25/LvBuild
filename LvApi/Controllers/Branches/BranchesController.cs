@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Claims;
 using LvApplication.Common;
 using LvApplication.DTOs.Branches;
@@ -7,11 +8,15 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Branches;
 
+/// <summary>Branches (offices, stores, warehouses) and their indicators.</summary>
 [ApiController]
 [Route("api/branches")]
-[Authorize(Roles = "GeneralManager,OperationsDirector")]
+[Authorize]
 public class BranchesController : ControllerBase
 {
+    // Managing branches is for management; the options list is for everyone (selects).
+    private const string ManagementRoles = "GeneralManager,OperationsDirector";
+
     private readonly IBranchService _branchService;
 
     public BranchesController(IBranchService branchService)
@@ -19,6 +24,7 @@ public class BranchesController : ControllerBase
         _branchService = branchService;
     }
 
+    [Authorize(Roles = ManagementRoles)]
     [HttpPost]
     public async Task<ActionResult<BranchResponseDto>> Create(CreateBranchDto request)
     {
@@ -26,6 +32,7 @@ public class BranchesController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    [Authorize(Roles = ManagementRoles)]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<BranchResponseDto>> Update(int id, UpdateBranchDto request)
     {
@@ -44,6 +51,7 @@ public class BranchesController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = ManagementRoles)]
     [HttpPost("{id:int}/activate")]
     public async Task<ActionResult<BranchResponseDto>> Activate(int id)
     {
@@ -51,6 +59,7 @@ public class BranchesController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = ManagementRoles)]
     [HttpPost("{id:int}/deactivate")]
     public async Task<ActionResult<BranchResponseDto>> Deactivate(int id)
     {
@@ -58,6 +67,7 @@ public class BranchesController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = ManagementRoles)]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
@@ -66,6 +76,7 @@ public class BranchesController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = ManagementRoles)]
     [HttpGet]
     public async Task<ActionResult<PagedResult<BranchResponseDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -77,6 +88,7 @@ public class BranchesController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = ManagementRoles)]
     [HttpGet("{id:int}")]
     public async Task<ActionResult<BranchResponseDto>> GetById(int id)
     {
@@ -85,10 +97,18 @@ public class BranchesController : ControllerBase
         return Ok(result);
     }
 
+    /// <summary>Active branches (id, name, type) for selection lists. Any authenticated user.</summary>
+    [HttpGet("options")]
+    public async Task<ActionResult<List<BranchOptionDto>>> GetOptions()
+    {
+        var result = await _branchService.GetOptionsAsync();
+        return Ok(result);
+    }
+
     private (int UserId, List<string> Roles) GetCurrentUser()
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("sub");
-        var userId = int.Parse(userIdClaim!.Value);
+        var userId = int.Parse(userIdClaim!.Value, CultureInfo.InvariantCulture);
         var roles = User.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
         return (userId, roles);
     }

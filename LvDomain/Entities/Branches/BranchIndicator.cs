@@ -12,7 +12,7 @@ public class BranchIndicator : BaseEntity
     public decimal Losses { get; set; } = 0;
     public decimal DirectExpenses { get; set; } = 0;
     public decimal IndirectExpenses { get; set; } = 0;
-    public int TotalWorkers { get; set; } = 0;
-    public int TotalMaterials { get; set; } = 0;
+    public int TotalWorkers { get; set; }
+    public int TotalMaterials { get; set; }
     public DateTime LastUpdatedAt { get; set; }
 }

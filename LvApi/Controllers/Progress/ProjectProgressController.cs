@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Progress;
 
+/// <summary>Project progress snapshots.</summary>
 [ApiController]
 [Route("api")]
 [Authorize]

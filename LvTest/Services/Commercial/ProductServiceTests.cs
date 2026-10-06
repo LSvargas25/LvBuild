@@ -9,8 +9,6 @@ namespace LvTest.Services.Commercial;
 
 public class ProductServiceTests
 {
-    private static readonly string[] GeneralManagerRoles = ["GeneralManager"];
-
     private static CreateProductDto BuildCreateDto(string sku = "SKU-001") =>
         new()
         {
@@ -43,11 +41,7 @@ public class ProductServiceTests
         );
         var service = ServiceFactory.CreateProductService(context);
 
-        var result = await service.CreateAsync(
-            BuildCreateDto(),
-            user.Id,
-            new[] { "GeneralManager" }
-        );
+        var result = await service.CreateAsync(BuildCreateDto(), user.Id, TestRoles.GeneralManager);
 
         result.Status.Should().Be(ProductStatus.Validated);
         result.ValidatedByUserId.Should().Be(user.Id);
@@ -69,7 +63,7 @@ public class ProductServiceTests
         var result = await service.CreateAsync(
             BuildCreateDto(),
             user.Id,
-            new[] { "OperationsDirector" }
+            TestRoles.OperationsDirector
         );
 
         result.Status.Should().Be(ProductStatus.Validated);
@@ -86,7 +80,7 @@ public class ProductServiceTests
         );
         var service = ServiceFactory.CreateProductService(context);
 
-        var result = await service.CreateAsync(BuildCreateDto(), user.Id, new[] { "BranchAdmin" });
+        var result = await service.CreateAsync(BuildCreateDto(), user.Id, TestRoles.BranchAdmin);
 
         result.Status.Should().Be(ProductStatus.Validated);
     }
@@ -105,7 +99,7 @@ public class ProductServiceTests
         var result = await service.CreateAsync(
             BuildCreateDto(),
             user.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         result.Status.Should().Be(ProductStatus.PendingValidation);
@@ -123,10 +117,10 @@ public class ProductServiceTests
             roleId: TestUserFactory.GeneralManagerRoleId
         );
         var service = ServiceFactory.CreateProductService(context);
-        await service.CreateAsync(BuildCreateDto("DUP-1"), user.Id, new[] { "GeneralManager" });
+        await service.CreateAsync(BuildCreateDto("DUP-1"), user.Id, TestRoles.GeneralManager);
 
         var act = () =>
-            service.CreateAsync(BuildCreateDto("DUP-1"), user.Id, new[] { "GeneralManager" });
+            service.CreateAsync(BuildCreateDto("DUP-1"), user.Id, TestRoles.GeneralManager);
 
         await act.Should().ThrowAsync<ConflictException>();
     }
@@ -141,9 +135,10 @@ public class ProductServiceTests
             roleId: TestUserFactory.GeneralManagerRoleId
         );
         var service = ServiceFactory.CreateProductService(context);
-        await service.CreateAsync(BuildCreateDto("dup-2"), user.Id, GeneralManagerRoles);
+        await service.CreateAsync(BuildCreateDto("dup-2"), user.Id, TestRoles.GeneralManager);
 
-        var act = () => service.CreateAsync(BuildCreateDto("DUP-2"), user.Id, GeneralManagerRoles);
+        var act = () =>
+            service.CreateAsync(BuildCreateDto("DUP-2"), user.Id, TestRoles.GeneralManager);
 
         await act.Should().ThrowAsync<ConflictException>();
     }
@@ -166,14 +161,14 @@ public class ProductServiceTests
         var created = await service.CreateAsync(
             BuildCreateDto("VAL-1"),
             creator.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         var result = await service.ValidateAsync(
             created.Id,
             true,
             validator.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         result.Status.Should().Be(ProductStatus.Validated);
@@ -198,14 +193,14 @@ public class ProductServiceTests
         var created = await service.CreateAsync(
             BuildCreateDto("VAL-2"),
             creator.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         var result = await service.ValidateAsync(
             created.Id,
             false,
             validator.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         result.Status.Should().Be(ProductStatus.Rejected);
@@ -224,11 +219,11 @@ public class ProductServiceTests
         var created = await service.CreateAsync(
             BuildCreateDto("VAL-3"),
             creator.Id,
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         var act = () =>
-            service.ValidateAsync(created.Id, true, creator.Id, new[] { "BusinessManager" });
+            service.ValidateAsync(created.Id, true, creator.Id, TestRoles.BusinessManager);
 
         await act.Should().ThrowAsync<ForbiddenException>();
     }
@@ -246,11 +241,10 @@ public class ProductServiceTests
         var created = await service.CreateAsync(
             BuildCreateDto("VAL-4"),
             user.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
-        var act = () =>
-            service.ValidateAsync(created.Id, true, user.Id, new[] { "GeneralManager" });
+        var act = () => service.ValidateAsync(created.Id, true, user.Id, TestRoles.GeneralManager);
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
@@ -273,14 +267,14 @@ public class ProductServiceTests
         var created = await service.CreateAsync(
             BuildCreateDto("UPD-1"),
             manager.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
         created.Status.Should().Be(ProductStatus.Validated);
 
         var result = await service.UpdateAsync(
             created.Id,
             BuildUpdateDto(),
-            new[] { "BusinessManager" }
+            TestRoles.BusinessManager
         );
 
         result.Status.Should().Be(ProductStatus.PendingValidation);
@@ -302,7 +296,7 @@ public class ProductServiceTests
         var created = await service.CreateAsync(
             BuildCreateDto("ACT-1"),
             user.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         var deactivated = await service.DeactivateAsync(created.Id);

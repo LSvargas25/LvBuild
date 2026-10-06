@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace LvInfrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261005231404_InitialCreate")]
+    [Migration("20261006001652_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -235,10 +235,9 @@ namespace LvInfrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
-                    b.Property<string>("ProfilePhotoPath")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("profile_photo_path");
+                    b.Property<int?>("ProfilePhotoFileId")
+                        .HasColumnType("integer")
+                        .HasColumnName("profile_photo_file_id");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -256,6 +255,9 @@ namespace LvInfrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique()
                         .HasDatabaseName("ix_users_email");
+
+                    b.HasIndex("ProfilePhotoFileId")
+                        .HasDatabaseName("ix_users_profile_photo_file_id");
 
                     b.ToTable("users", (string)null);
 
@@ -1787,11 +1789,6 @@ namespace LvInfrastructure.Migrations
                         .HasColumnType("character varying(500)")
                         .HasColumnName("exclusions");
 
-                    b.Property<string>("GeneratedPdfPath")
-                        .HasMaxLength(300)
-                        .HasColumnType("character varying(300)")
-                        .HasColumnName("generated_pdf_path");
-
                     b.Property<DateTime>("IssueDate")
                         .HasColumnType("date")
                         .HasColumnName("issue_date");
@@ -2638,6 +2635,50 @@ namespace LvInfrastructure.Migrations
                     b.ToTable("site_log_workers", (string)null);
                 });
 
+            modelBuilder.Entity("LvDomain.Entities.Storage.StoredFile", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<byte[]>("Content")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("content");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("size_bytes");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_stored_files");
+
+                    b.ToTable("stored_files", (string)null);
+                });
+
             modelBuilder.Entity("LvDomain.Entities.Suppliers.Supplier", b =>
                 {
                     b.Property<int>("Id")
@@ -2882,6 +2923,17 @@ namespace LvInfrastructure.Migrations
                         .HasConstraintName("fk_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("LvDomain.Entities.Auth.User", b =>
+                {
+                    b.HasOne("LvDomain.Entities.Storage.StoredFile", "ProfilePhotoFile")
+                        .WithMany()
+                        .HasForeignKey("ProfilePhotoFileId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_users_stored_files_profile_photo_file_id");
+
+                    b.Navigation("ProfilePhotoFile");
                 });
 
             modelBuilder.Entity("LvDomain.Entities.Auth.UserRole", b =>

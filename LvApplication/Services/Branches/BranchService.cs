@@ -246,6 +246,19 @@ public class BranchService : IBranchService
         };
     }
 
+    public async Task<List<BranchOptionDto>> GetOptionsAsync()
+    {
+        var branches = await _branchRepository.GetActiveAsync();
+        return branches
+            .Select(b => new BranchOptionDto
+            {
+                Id = b.Id,
+                Name = b.Name,
+                BranchType = b.BranchType,
+            })
+            .ToList();
+    }
+
     private static bool IsGeneralManager(IEnumerable<string> roles) =>
         roles.Contains(GeneralManagerRole);
 

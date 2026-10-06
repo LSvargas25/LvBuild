@@ -411,7 +411,7 @@ public class BranchServiceTests
             }
         );
 
-        var result = await service.GetAllAsync(1, 10, directorA.Id, new[] { "OperationsDirector" });
+        var result = await service.GetAllAsync(1, 10, directorA.Id, TestRoles.OperationsDirector);
 
         result.TotalCount.Should().Be(2);
         result.Items.Should().OnlyContain(b => b.OperationsDirectorId == directorA.Id);
@@ -459,12 +459,7 @@ public class BranchServiceTests
             }
         );
 
-        var result = await service.GetAllAsync(
-            1,
-            10,
-            generalManager.Id,
-            new[] { "GeneralManager" }
-        );
+        var result = await service.GetAllAsync(1, 10, generalManager.Id, TestRoles.GeneralManager);
 
         result.TotalCount.Should().Be(2);
     }
@@ -494,7 +489,7 @@ public class BranchServiceTests
         var result = await service.GetByIdAsync(
             created.Id,
             director.Id,
-            new[] { "OperationsDirector" }
+            TestRoles.OperationsDirector
         );
 
         result.Id.Should().Be(created.Id);
@@ -513,7 +508,7 @@ public class BranchServiceTests
         var service = ServiceFactory.CreateBranchService(context);
 
         var act = async () =>
-            await service.GetByIdAsync(999, generalManager.Id, new[] { "GeneralManager" });
+            await service.GetByIdAsync(999, generalManager.Id, TestRoles.GeneralManager);
 
         await act.Should().ThrowAsync<NotFoundException>();
     }
@@ -546,11 +541,7 @@ public class BranchServiceTests
         );
 
         var act = async () =>
-            await service.GetByIdAsync(
-                created.Id,
-                otherDirector.Id,
-                new[] { "OperationsDirector" }
-            );
+            await service.GetByIdAsync(created.Id, otherDirector.Id, TestRoles.OperationsDirector);
 
         await act.Should().ThrowAsync<NotFoundException>();
     }
@@ -855,13 +846,13 @@ public class BranchServiceTests
             1,
             2,
             generalManager.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
         var thirdPage = await service.GetAllAsync(
             3,
             2,
             generalManager.Id,
-            new[] { "GeneralManager" }
+            TestRoles.GeneralManager
         );
 
         firstPage.Items.Should().HaveCount(2);
