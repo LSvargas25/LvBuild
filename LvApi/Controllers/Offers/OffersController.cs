@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Offers;
 
+/// <summary>Commercial offers generated from an approved budget (turnkey or percentage), with a PDF for the client.</summary>
 [ApiController]
 [Route("api/offers")]
 [Authorize]
@@ -20,6 +21,7 @@ public class OffersController : ApiControllerBase
         _offerService = offerService;
     }
 
+    /// <summary>Creates a Draft offer from a budget in Sent state.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPost]
     public async Task<ActionResult<OfferResponseDto>> Create(CreateOfferDto request)
@@ -28,6 +30,7 @@ public class OffersController : ApiControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    /// <summary>Updates a Draft offer.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPut("{id:int}")]
     public async Task<ActionResult<OfferResponseDto>> Update(int id, UpdateOfferDto request)
@@ -36,6 +39,7 @@ public class OffersController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Draft -&gt; SentToClient.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPost("{id:int}/send-to-client")]
     public async Task<ActionResult<OfferResponseDto>> SendToClient(int id)
@@ -44,6 +48,7 @@ public class OffersController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>SentToClient -&gt; ClientAccepted; also marks the budget as approved by the client.</summary>
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("{id:int}/mark-accepted")]
     public async Task<ActionResult<OfferResponseDto>> MarkAccepted(int id)
@@ -52,6 +57,7 @@ public class OffersController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>SentToClient -&gt; Draft, with a reason.</summary>
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("{id:int}/revert-to-draft")]
     public async Task<ActionResult<OfferResponseDto>> RevertToDraft(
@@ -63,6 +69,7 @@ public class OffersController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Deletes an offer.</summary>
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
@@ -71,6 +78,7 @@ public class OffersController : ApiControllerBase
         return NoContent();
     }
 
+    /// <summary>Returns the offer PDF (application/pdf).</summary>
     [HttpGet("{id:int}/pdf")]
     public async Task<IActionResult> GetPdf(int id)
     {
@@ -78,6 +86,7 @@ public class OffersController : ApiControllerBase
         return PhysicalFile(Path.GetFullPath(filePath), "application/pdf", fileName);
     }
 
+    /// <summary>Lists offers (paged).</summary>
     [HttpGet]
     public async Task<ActionResult<PagedResult<OfferResponseDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -89,6 +98,7 @@ public class OffersController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Returns an offer with its chapters.</summary>
     [HttpGet("{id:int}")]
     public async Task<ActionResult<OfferResponseDto>> GetById(int id)
     {

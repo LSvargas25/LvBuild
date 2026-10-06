@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Auth;
 
+/// <summary>User administration (create users and assign roles).</summary>
 [ApiController]
 [Route("api/users")]
 [Authorize]

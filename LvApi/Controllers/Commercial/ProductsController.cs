@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Commercial;
 
+/// <summary>Product catalog for the stores (SKU, price, cost) and its validation.</summary>
 [ApiController]
 [Route("api/products")]
 [Authorize]

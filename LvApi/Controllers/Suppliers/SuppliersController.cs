@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Suppliers;
 
+/// <summary>Suppliers of materials.</summary>
 [ApiController]
 [Route("api/suppliers")]
 [Authorize(Roles = "GeneralManager,OperationsDirector")]

@@ -67,14 +67,29 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo { Title = "LVConstrucciones", Version = "v1" });
+    options.SwaggerDoc(
+        "v1",
+        new OpenApiInfo
+        {
+            Title = "LvBuild API",
+            Version = "v1",
+            Description = ApiDocumentation.Description,
+        }
+    );
+
+    // XML comments of the controllers (GenerateDocumentationFile in LvApi.csproj); controller
+    // summaries become the tag descriptions.
+    options.IncludeXmlComments(
+        Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml"),
+        includeControllerXmlComments: true
+    );
 
     options.AddSecurityDefinition(
         "Bearer",
         new OpenApiSecurityScheme
         {
             Description =
-                "Pega solo el token JWT (sin la palabra 'Bearer', Swagger la agrega sola).",
+                "Paste only the accessToken from POST /api/auth/login (Swagger adds 'Bearer').",
             Name = "Authorization",
             In = ParameterLocation.Header,
             Type = SecuritySchemeType.Http,
@@ -203,13 +218,17 @@ app.UseTransportSecurity();
 
 app.UseSerilogRequestLogging();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Swagger: always in Development; elsewhere only with Swagger:Enabled=true (the public demo).
+if (
+    app.Environment.IsDevelopment()
+    || app.Services.GetRequiredService<IOptions<ApiDocsOptions>>().Value.Enabled
+)
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Mi API v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "LvBuild API v1");
+        options.DocumentTitle = "LvBuild API";
     });
 }
 

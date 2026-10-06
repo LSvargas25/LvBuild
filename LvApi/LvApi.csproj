@@ -4,6 +4,10 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>bd47f38d-d938-401e-87ed-ad3bac4f3931</UserSecretsId>
+    <!-- XML comments feed Swagger. Only the controllers are documented, so CS1591 (missing
+         comment on other public members) is not useful here. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

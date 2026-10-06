@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Incidents;
 
+/// <summary>Project incidents (unplanned events) with the materials and labor they consumed.</summary>
 [ApiController]
 [Route("api")]
 [Authorize]

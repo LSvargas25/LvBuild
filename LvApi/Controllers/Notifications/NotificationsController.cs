@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Notifications;
 
+/// <summary>In-app notifications for the authenticated user.</summary>
 [ApiController]
 [Route("api/notifications")]
 [Authorize]

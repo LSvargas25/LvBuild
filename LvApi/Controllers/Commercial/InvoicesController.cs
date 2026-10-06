@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Commercial;
 
+/// <summary>Point of sale invoices: draft, issue (decrements stock), payments and cancellation.</summary>
 [ApiController]
 [Route("api/invoices")]
 [Authorize]

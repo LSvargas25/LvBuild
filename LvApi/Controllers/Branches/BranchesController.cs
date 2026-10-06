@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.Branches;
 
+/// <summary>Branches (offices, stores, warehouses) and their indicators.</summary>
 [ApiController]
 [Route("api/branches")]
 [Authorize(Roles = "GeneralManager,OperationsDirector")]

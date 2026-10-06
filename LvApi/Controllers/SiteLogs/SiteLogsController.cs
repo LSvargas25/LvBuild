@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LvApi.Controllers.SiteLogs;
 
+/// <summary>Weekly site logs (bitacoras): work done, hours per worker and materials used.</summary>
 [ApiController]
 [Route("api")]
 [Authorize]
@@ -19,6 +20,7 @@ public class SiteLogsController : ApiControllerBase
         _siteLogService = siteLogService;
     }
 
+    /// <summary>Creates a Draft site log for a project week.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPost("site-logs")]
     public async Task<ActionResult<SiteLogDto>> Create(CreateSiteLogDto request)
@@ -27,6 +29,7 @@ public class SiteLogsController : ApiControllerBase
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
 
+    /// <summary>Updates a Draft site log.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPut("site-logs/{id:int}")]
     public async Task<ActionResult<SiteLogDto>> Update(int id, UpdateSiteLogDto request)
@@ -35,6 +38,7 @@ public class SiteLogsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Draft -&gt; Review.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpPost("site-logs/{id:int}/submit-review")]
     public async Task<ActionResult<SiteLogDto>> SubmitToReview(int id)
@@ -43,6 +47,7 @@ public class SiteLogsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Review -&gt; Draft, with a reason.</summary>
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("site-logs/{id:int}/revert-to-draft")]
     public async Task<ActionResult<SiteLogDto>> RevertToDraft(int id, RevertToDraftDto request)
@@ -51,6 +56,7 @@ public class SiteLogsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Review -&gt; Approved; a payroll can then be created from it.</summary>
     [Authorize(Roles = "GeneralManager,OperationsDirector")]
     [HttpPost("site-logs/{id:int}/approve")]
     public async Task<ActionResult<SiteLogDto>> Approve(int id)
@@ -59,6 +65,7 @@ public class SiteLogsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Deletes a Draft site log.</summary>
     [Authorize(Roles = "ProjectAdmin")]
     [HttpDelete("site-logs/{id:int}")]
     public async Task<IActionResult> Delete(int id)
@@ -67,6 +74,7 @@ public class SiteLogsController : ApiControllerBase
         return NoContent();
     }
 
+    /// <summary>Lists site logs (paged).</summary>
     [HttpGet("site-logs")]
     public async Task<ActionResult<PagedResult<SiteLogDto>>> GetAll(
         [FromQuery] int pageNumber = 1,
@@ -77,6 +85,7 @@ public class SiteLogsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Returns a site log with its workers, materials and equipment.</summary>
     [HttpGet("site-logs/{id:int}")]
     public async Task<ActionResult<SiteLogDto>> GetById(int id)
     {
@@ -84,6 +93,7 @@ public class SiteLogsController : ApiControllerBase
         return Ok(result);
     }
 
+    /// <summary>Lists the site logs of a project (paged).</summary>
     [HttpGet("projects/{projectId:int}/site-logs")]
     public async Task<ActionResult<PagedResult<SiteLogDto>>> GetAllByProject(
         int projectId,
