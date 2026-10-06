@@ -62,6 +62,8 @@ public static class ServiceCollectionExtensions
                     .UseSnakeCaseNamingConvention()
         );
 
+        services.AddScoped<DatabaseInitializer>();
+
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();

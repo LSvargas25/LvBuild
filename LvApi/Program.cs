@@ -227,6 +227,8 @@ app.UseRateLimiter();
 app.MapControllers();
 app.MapAppHealthChecks();
 
-app.Run();
+await app.InitializeDatabaseAsync();
+
+await app.RunAsync();
 
 public partial class Program { }
