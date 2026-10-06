@@ -70,6 +70,29 @@ public class MaterialTicketRepository : IMaterialTicketRepository
             .ToListAsync();
     }
 
+    public async Task<decimal> SumInRangeAsync(
+        int projectId,
+        MaterialTicketStatus status,
+        DateTime fromDate,
+        DateTime toDate
+    )
+    {
+        // Same day criterion as GetAppliedInRangeAsync, so the period's materials list and its
+        // totals always cover the same tickets.
+        var fromUtc = CostaRicaTime.StartOfDayUtc(fromDate);
+        var toUtcExclusive = CostaRicaTime.StartOfDayUtc(toDate.AddDays(1));
+
+        return await _context
+                .MaterialTickets.Where(t =>
+                    t.ProjectId == projectId
+                    && t.Status == status
+                    && t.CreatedAt >= fromUtc
+                    && t.CreatedAt < toUtcExclusive
+                )
+                .SumAsync(t => (decimal?)t.Total)
+            ?? 0m;
+    }
+
     public async Task AddAsync(MaterialTicket ticket)
     {
         _context.MaterialTickets.Add(ticket);

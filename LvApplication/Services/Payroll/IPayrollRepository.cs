@@ -14,6 +14,9 @@ public interface IPayrollRepository
         int pageSize
     );
     Task<decimal> SumPaidTotalByChapterAsync(int projectId, int chapterId);
+
+    /// <summary>Total of the project's payrolls paid (PaidAt) on the given Costa Rica days.</summary>
+    Task<decimal> SumPaidInRangeAsync(int projectId, DateTime fromDate, DateTime toDate);
     Task AddAsync(LvDomain.Entities.Payroll.Payroll payroll);
     Task UpdateAsync(LvDomain.Entities.Payroll.Payroll payroll);
     Task DeleteAsync(LvDomain.Entities.Payroll.Payroll payroll);

@@ -230,7 +230,9 @@ public static class ServiceFactory
         new(
             new ProjectRepository(context),
             new MaterialTicketRepository(context),
-            new SiteLogRepository(context)
+            new SiteLogRepository(context),
+            new PayrollRepository(context),
+            new IncidentRepository(context)
         );
 
     public static ProductService CreateProductService(AppDbContext context) =>
