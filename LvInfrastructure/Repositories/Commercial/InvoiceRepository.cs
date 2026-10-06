@@ -39,8 +39,8 @@ public class InvoiceRepository : IInvoiceRepository
         await _context.SaveChangesAsync();
     }
 
-    public async Task<int> CountByBranchAsync(int branchId) =>
-        await _context.Invoices.CountAsync(i => i.BranchId == branchId);
+    public async Task<int> CountNumberedByBranchAsync(int branchId) =>
+        await _context.Invoices.CountAsync(i => i.BranchId == branchId && i.InvoiceNumber != null);
 
     public async Task<(List<Invoice> Items, int TotalCount)> GetPagedByBranchAsync(
         int branchId,

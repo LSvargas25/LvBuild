@@ -50,7 +50,7 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
 
         var branch =
             await _branchRepository.GetByIdAsync(request.BranchId)
-            ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {request.BranchId}.");
 
         if (branch.BranchType is not (BranchType.Commercial or BranchType.Warehouse))
         {
@@ -61,7 +61,7 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
 
         var product =
             await _productRepository.GetByIdAsync(request.ProductId)
-            ?? throw new NotFoundException($"Product {request.ProductId} not found.");
+            ?? throw new NotFoundException($"No se encontró el producto {request.ProductId}.");
 
         if (product.Status != ProductStatus.Validated)
         {
@@ -116,7 +116,9 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
 
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
+            ?? throw new NotFoundException(
+                $"No se encontró el tiquete de ingreso de producto {id}."
+            );
 
         if (ticket.Status != ProductIncorporationTicketStatus.PendingValidation)
         {
@@ -146,7 +148,9 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
     {
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
+            ?? throw new NotFoundException(
+                $"No se encontró el tiquete de ingreso de producto {id}."
+            );
 
         if (ticket.Status != ProductIncorporationTicketStatus.PendingValidation)
         {
@@ -162,7 +166,9 @@ public class ProductIncorporationTicketService : IProductIncorporationTicketServ
     {
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"ProductIncorporationTicket {id} not found.");
+            ?? throw new NotFoundException(
+                $"No se encontró el tiquete de ingreso de producto {id}."
+            );
         return MapToDto(ticket);
     }
 

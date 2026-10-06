@@ -13,7 +13,7 @@ namespace LvApplication.Services.Auth;
 
 public partial class AuthService : IAuthService
 {
-    private const string InvalidCredentialsMessage = "Invalid email or password.";
+    private const string InvalidCredentialsMessage = "Correo o contraseña incorrectos.";
 
     private readonly IUserRepository _userRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
@@ -78,7 +78,9 @@ public partial class AuthService : IAuthService
 
         if (user.Status == UserStatus.Blocked)
         {
-            throw new ForbiddenException("This account is blocked. Contact an administrator.");
+            throw new ForbiddenException(
+                "Esta cuenta está bloqueada. Contacte a un administrador."
+            );
         }
 
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
@@ -109,7 +111,9 @@ public partial class AuthService : IAuthService
             || existingToken.ExpiresAt <= DateTime.UtcNow
         )
         {
-            throw new ForbiddenException("Invalid or expired refresh token.");
+            throw new ForbiddenException(
+                "La sesión no es válida o expiró. Inicie sesión de nuevo."
+            );
         }
 
         existingToken.Revoked = true;
@@ -119,7 +123,7 @@ public partial class AuthService : IAuthService
         var user =
             existingToken.User
             ?? await _userRepository.GetByIdAsync(existingToken.UserId)
-            ?? throw new NotFoundException("User not found.");
+            ?? throw new NotFoundException("No se encontró el usuario.");
 
         return await IssueTokensAsync(user, ipAddress);
     }
@@ -185,13 +189,15 @@ public partial class AuthService : IAuthService
         var resetToken = await _passwordResetTokenRepository.GetByTokenAsync(request.Token);
         if (resetToken is null || resetToken.Used || resetToken.ExpiresAt <= DateTime.UtcNow)
         {
-            throw new ValidationAppException("Invalid or expired password reset token.");
+            throw new ValidationAppException(
+                "El enlace para restablecer la contraseña no es válido o expiró."
+            );
         }
 
         var user =
             resetToken.User
             ?? await _userRepository.GetByIdAsync(resetToken.UserId)
-            ?? throw new NotFoundException("User not found.");
+            ?? throw new NotFoundException("No se encontró el usuario.");
 
         user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
@@ -208,7 +214,7 @@ public partial class AuthService : IAuthService
     {
         var user =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException($"User {userId} not found.");
+            ?? throw new NotFoundException($"No se encontró el usuario {userId}.");
         return MapToProfileDto(user);
     }
 
@@ -218,7 +224,7 @@ public partial class AuthService : IAuthService
 
         var user =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException($"User {userId} not found.");
+            ?? throw new NotFoundException($"No se encontró el usuario {userId}.");
 
         user.Name = request.Name;
         user.UpdatedAt = DateTime.UtcNow;
@@ -233,7 +239,7 @@ public partial class AuthService : IAuthService
 
         var user =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException($"User {userId} not found.");
+            ?? throw new NotFoundException($"No se encontró el usuario {userId}.");
 
         if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
         {
@@ -256,7 +262,7 @@ public partial class AuthService : IAuthService
     {
         var user =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException($"User {userId} not found.");
+            ?? throw new NotFoundException($"No se encontró el usuario {userId}.");
 
         var content = await ProfilePhotoRules.ReadAndValidateAsync(fileStream, contentType);
 
@@ -283,7 +289,7 @@ public partial class AuthService : IAuthService
     {
         var user =
             await _userRepository.GetByIdAsync(userId)
-            ?? throw new NotFoundException($"User {userId} not found.");
+            ?? throw new NotFoundException($"No se encontró el usuario {userId}.");
 
         if (user.ProfilePhotoFileId is null)
         {

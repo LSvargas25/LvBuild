@@ -252,4 +252,51 @@ public class ProjectChapterServiceTests
         updated.AssignedSoldTotal.Should().Be(12345m);
         updated.ChapterProfit.Should().Be(12345m); // ActualCostTotal is still 0 at this point
     }
+
+    [Fact]
+    public async Task CreateProjectAsync_StartsCurrentProfitAtTheSumOfChapterProfits()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (project, _, _, _) = await CreateProjectWithChapterAsync(context);
+
+        var chapterProfits = await context
+            .ProjectChapters.Where(pc => pc.ProjectId == project.Id)
+            .SumAsync(pc => pc.ChapterProfit);
+
+        project.CurrentProfit.Should().Be(100000m).And.Be(chapterProfits);
+    }
+
+    [Fact]
+    public async Task AppliedCosts_KeepProjectCurrentProfitEqualToTheChaptersProfitTotal()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (project, chapter, _, projectAdminId) = await CreateProjectWithChapterAsync(context);
+        var supplier = await CreateSupplierAsync(context);
+        var material = await CreateMaterialAsync(context);
+
+        var ticketService = ServiceFactory.CreateMaterialTicketService(context);
+        var ticket = await ticketService.CreateAsync(
+            project.Id,
+            new LvApplication.DTOs.Inventory.CreateMaterialTicketDto
+            {
+                SupplierId = supplier.Id,
+                MaterialId = material.Id,
+                Quantity = 10,
+                UnitPrice = 500,
+                ChapterId = chapter.Id,
+            },
+            projectAdminId
+        ); // Total = 5 000
+        await ticketService.ApplyAsync(ticket.Id);
+
+        var chapterService = ServiceFactory.CreateProjectChapterService(context);
+        await chapterService.UpdateAssignedSoldTotalAsync(project.Id, chapter.Id, 80000m);
+
+        var stored = await context.Projects.SingleAsync(p => p.Id == project.Id);
+        var chapterProfits = await context
+            .ProjectChapters.Where(pc => pc.ProjectId == project.Id)
+            .SumAsync(pc => pc.ChapterProfit);
+
+        stored.CurrentProfit.Should().Be(75000m).And.Be(chapterProfits);
+    }
 }

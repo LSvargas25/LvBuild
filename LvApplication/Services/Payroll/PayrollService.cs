@@ -64,7 +64,7 @@ public class PayrollService : IPayrollService
         {
             var project =
                 await _projectRepository.GetByIdAsync(siteLog.ProjectId)
-                ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
+                ?? throw new NotFoundException($"No se encontró el proyecto {siteLog.ProjectId}.");
             await ValidateChapterAsync(project.BudgetId, request.ChapterId);
         }
 
@@ -94,7 +94,7 @@ public class PayrollService : IPayrollService
 
         var payroll =
             await _payrollRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Payroll {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la planilla {id}.");
 
         if (payroll.Status != PayrollStatus.Pending)
         {
@@ -107,7 +107,7 @@ public class PayrollService : IPayrollService
         {
             var project =
                 await _projectRepository.GetByIdAsync(payroll.ProjectId)
-                ?? throw new NotFoundException($"Project {payroll.ProjectId} not found.");
+                ?? throw new NotFoundException($"No se encontró el proyecto {payroll.ProjectId}.");
             await ValidateChapterAsync(project.BudgetId, request.ChapterId);
         }
 
@@ -126,7 +126,7 @@ public class PayrollService : IPayrollService
     {
         var payroll =
             await _payrollRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Payroll {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la planilla {id}.");
 
         if (payroll.Status != PayrollStatus.Pending)
         {
@@ -142,7 +142,7 @@ public class PayrollService : IPayrollService
 
         var project =
             await _projectRepository.GetByIdAsync(payroll.ProjectId)
-            ?? throw new NotFoundException($"Project {payroll.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {payroll.ProjectId}.");
         project.CurrentDirectExpenses += payroll.TotalPayroll;
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
@@ -165,7 +165,7 @@ public class PayrollService : IPayrollService
     {
         var payroll =
             await _payrollRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Payroll {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la planilla {id}.");
 
         if (payroll.Status != PayrollStatus.Pending)
         {
@@ -181,7 +181,7 @@ public class PayrollService : IPayrollService
     {
         var payroll =
             await _payrollRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Payroll {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la planilla {id}.");
         return MapToDto(payroll);
     }
 
@@ -304,7 +304,7 @@ public class PayrollService : IPayrollService
 
         var budget =
             await _budgetRepository.GetByIdAsync(budgetId)
-            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {budgetId}.");
 
         if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
         {

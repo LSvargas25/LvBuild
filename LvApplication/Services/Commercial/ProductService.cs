@@ -82,7 +82,7 @@ public class ProductService : IProductService
 
         var product =
             await _productRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Product {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el producto {id}.");
 
         var autoValidate = CanAutoValidate(actingUserRoles);
         var now = DateTime.UtcNow;
@@ -129,7 +129,7 @@ public class ProductService : IProductService
 
         var product =
             await _productRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Product {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el producto {id}.");
 
         if (product.Status != ProductStatus.PendingValidation)
         {
@@ -152,7 +152,7 @@ public class ProductService : IProductService
     {
         var product =
             await _productRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Product {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el producto {id}.");
         product.ActiveStatus = false;
         product.UpdatedAt = DateTime.UtcNow;
         await _productRepository.UpdateAsync(product);
@@ -163,7 +163,7 @@ public class ProductService : IProductService
     {
         var product =
             await _productRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Product {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el producto {id}.");
         product.ActiveStatus = true;
         product.UpdatedAt = DateTime.UtcNow;
         await _productRepository.UpdateAsync(product);
@@ -174,7 +174,7 @@ public class ProductService : IProductService
     {
         var product =
             await _productRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Product {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el producto {id}.");
         return MapToDto(product);
     }
 

@@ -8,7 +8,9 @@ public interface IInvoiceRepository
     Task AddAsync(Invoice invoice);
     Task UpdateAsync(Invoice invoice);
     Task DeleteAsync(Invoice invoice);
-    Task<int> CountByBranchAsync(int branchId);
+
+    /// <summary>Invoices of the branch that already received a consecutive number.</summary>
+    Task<int> CountNumberedByBranchAsync(int branchId);
     Task<(List<Invoice> Items, int TotalCount)> GetPagedByBranchAsync(
         int branchId,
         int pageNumber,

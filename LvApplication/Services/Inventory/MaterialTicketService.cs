@@ -56,17 +56,17 @@ public class MaterialTicketService : IMaterialTicketService
 
         var project =
             await _projectRepository.GetByIdAsync(projectId)
-            ?? throw new NotFoundException($"Project {projectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {projectId}.");
 
         await ValidateChapterAsync(project.BudgetId, request.ChapterId);
 
         var supplier =
             await _supplierRepository.GetByIdAsync(request.SupplierId)
-            ?? throw new NotFoundException($"Supplier {request.SupplierId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proveedor {request.SupplierId}.");
 
         var material =
             await _materialCatalogRepository.GetByIdAsync(request.MaterialId)
-            ?? throw new NotFoundException($"Material {request.MaterialId} not found.");
+            ?? throw new NotFoundException($"No se encontró el material {request.MaterialId}.");
 
         var subtotal = request.Quantity * request.UnitPrice;
         var total = subtotal - (request.Discount ?? 0);
@@ -105,7 +105,7 @@ public class MaterialTicketService : IMaterialTicketService
 
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el tiquete de material {id}.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
@@ -114,17 +114,17 @@ public class MaterialTicketService : IMaterialTicketService
 
         var project =
             await _projectRepository.GetByIdAsync(ticket.ProjectId)
-            ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {ticket.ProjectId}.");
 
         await ValidateChapterAsync(project.BudgetId, request.ChapterId);
 
         var supplier =
             await _supplierRepository.GetByIdAsync(request.SupplierId)
-            ?? throw new NotFoundException($"Supplier {request.SupplierId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proveedor {request.SupplierId}.");
 
         var material =
             await _materialCatalogRepository.GetByIdAsync(request.MaterialId)
-            ?? throw new NotFoundException($"Material {request.MaterialId} not found.");
+            ?? throw new NotFoundException($"No se encontró el material {request.MaterialId}.");
 
         var previousTotal = ticket.Total;
 
@@ -154,7 +154,7 @@ public class MaterialTicketService : IMaterialTicketService
     {
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el tiquete de material {id}.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
@@ -167,7 +167,7 @@ public class MaterialTicketService : IMaterialTicketService
 
         var project =
             await _projectRepository.GetByIdAsync(ticket.ProjectId)
-            ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {ticket.ProjectId}.");
 
         project.PendingExpenses -= ticket.Total;
         project.CurrentDirectExpenses += ticket.Total;
@@ -218,7 +218,7 @@ public class MaterialTicketService : IMaterialTicketService
     {
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el tiquete de material {id}.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
@@ -233,7 +233,7 @@ public class MaterialTicketService : IMaterialTicketService
 
         var project =
             await _projectRepository.GetByIdAsync(ticket.ProjectId)
-            ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {ticket.ProjectId}.");
 
         project.PendingExpenses -= ticket.Total;
         project.UpdatedAt = DateTime.UtcNow;
@@ -246,7 +246,7 @@ public class MaterialTicketService : IMaterialTicketService
     {
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el tiquete de material {id}.");
 
         if (ticket.Status != MaterialTicketStatus.Review)
         {
@@ -257,7 +257,7 @@ public class MaterialTicketService : IMaterialTicketService
 
         var project =
             await _projectRepository.GetByIdAsync(ticket.ProjectId)
-            ?? throw new NotFoundException($"Project {ticket.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {ticket.ProjectId}.");
 
         project.PendingExpenses -= ticket.Total;
         project.UpdatedAt = DateTime.UtcNow;
@@ -270,7 +270,7 @@ public class MaterialTicketService : IMaterialTicketService
     {
         var ticket =
             await _ticketRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"MaterialTicket {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el tiquete de material {id}.");
         return MapToDto(ticket);
     }
 
@@ -342,7 +342,7 @@ public class MaterialTicketService : IMaterialTicketService
 
         var budget =
             await _budgetRepository.GetByIdAsync(budgetId)
-            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {budgetId}.");
 
         if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
         {

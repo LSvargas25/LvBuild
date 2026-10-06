@@ -47,7 +47,7 @@ public class SiteLogService : ISiteLogService
 
         var project =
             await _projectRepository.GetByIdAsync(request.ProjectId)
-            ?? throw new NotFoundException($"Project {request.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {request.ProjectId}.");
 
         if (await _siteLogRepository.ExistsForProjectAndWeekAsync(project.Id, request.WeekStart))
         {
@@ -84,7 +84,7 @@ public class SiteLogService : ISiteLogService
 
         var siteLog =
             await _siteLogRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"SiteLog {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {id}.");
 
         EnsureEditable(siteLog);
 
@@ -92,7 +92,7 @@ public class SiteLogService : ISiteLogService
         {
             var project =
                 await _projectRepository.GetByIdAsync(siteLog.ProjectId)
-                ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
+                ?? throw new NotFoundException($"No se encontró el proyecto {siteLog.ProjectId}.");
             await ValidateChapterAsync(project.BudgetId, request.ChapterId);
         }
 
@@ -114,7 +114,7 @@ public class SiteLogService : ISiteLogService
     {
         var siteLog =
             await _siteLogRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"SiteLog {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {id}.");
 
         if (siteLog.Status != SiteLogStatus.Draft)
         {
@@ -134,7 +134,7 @@ public class SiteLogService : ISiteLogService
     {
         var siteLog =
             await _siteLogRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"SiteLog {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {id}.");
 
         if (siteLog.Status != SiteLogStatus.Review)
         {
@@ -154,7 +154,7 @@ public class SiteLogService : ISiteLogService
     {
         var siteLog =
             await _siteLogRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"SiteLog {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {id}.");
 
         if (siteLog.Status != SiteLogStatus.Review)
         {
@@ -165,7 +165,7 @@ public class SiteLogService : ISiteLogService
 
         var project =
             await _projectRepository.GetByIdAsync(siteLog.ProjectId)
-            ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {siteLog.ProjectId}.");
 
         // First pass: validate every material against inventory before mutating anything,
         // so a shortfall on one material rejects the whole approval instead of leaving
@@ -223,7 +223,7 @@ public class SiteLogService : ISiteLogService
     {
         var siteLog =
             await _siteLogRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"SiteLog {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {id}.");
 
         if (siteLog.Status != SiteLogStatus.Draft)
         {
@@ -239,7 +239,7 @@ public class SiteLogService : ISiteLogService
     {
         var siteLog =
             await _siteLogRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"SiteLog {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {id}.");
         return MapToDto(siteLog);
     }
 
@@ -281,7 +281,7 @@ public class SiteLogService : ISiteLogService
     {
         var siteLog =
             await _siteLogRepository.GetByIdAsync(siteLogId)
-            ?? throw new NotFoundException($"SiteLog {siteLogId} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {siteLogId}.");
 
         siteLog.TotalPayroll = amount;
         siteLog.UpdatedAt = DateTime.UtcNow;
@@ -416,7 +416,7 @@ public class SiteLogService : ISiteLogService
 
         var budget =
             await _budgetRepository.GetByIdAsync(budgetId)
-            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {budgetId}.");
 
         if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
         {

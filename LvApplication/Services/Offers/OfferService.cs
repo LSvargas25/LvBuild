@@ -40,7 +40,7 @@ public class OfferService : IOfferService
 
         var budget =
             await _budgetRepository.GetByIdAsync(request.BudgetId)
-            ?? throw new NotFoundException($"Budget {request.BudgetId} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {request.BudgetId}.");
 
         if (budget.Status != BudgetStatus.Sent)
         {
@@ -110,7 +110,7 @@ public class OfferService : IOfferService
 
         var offer =
             await _offerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Offer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {id}.");
 
         if (offer.Status != OfferStatus.Draft)
         {
@@ -147,7 +147,7 @@ public class OfferService : IOfferService
     {
         var offer =
             await _offerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Offer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {id}.");
 
         if (offer.Status != OfferStatus.Draft)
         {
@@ -168,7 +168,7 @@ public class OfferService : IOfferService
     {
         var offer =
             await _offerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Offer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {id}.");
 
         if (offer.Status != OfferStatus.SentToClient)
         {
@@ -191,7 +191,7 @@ public class OfferService : IOfferService
     {
         var offer =
             await _offerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Offer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {id}.");
 
         if (offer.Status != OfferStatus.SentToClient)
         {
@@ -212,7 +212,7 @@ public class OfferService : IOfferService
     {
         var offer =
             await _offerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Offer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {id}.");
 
         if (offer.Status != OfferStatus.Draft)
         {
@@ -228,7 +228,7 @@ public class OfferService : IOfferService
     {
         var offer =
             await _offerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Offer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {id}.");
         return MapToDto(offer);
     }
 
@@ -257,7 +257,7 @@ public class OfferService : IOfferService
     {
         var offer =
             await _offerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Offer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {id}.");
 
         if (offer.Status == OfferStatus.Draft)
         {

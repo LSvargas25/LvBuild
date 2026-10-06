@@ -49,7 +49,7 @@ public class IncidentService : IIncidentService
 
         var project =
             await _projectRepository.GetByIdAsync(request.ProjectId)
-            ?? throw new NotFoundException($"Project {request.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {request.ProjectId}.");
 
         await ValidateChapterAsync(project.BudgetId, request.ChapterId);
 
@@ -83,7 +83,7 @@ public class IncidentService : IIncidentService
 
         var incident =
             await _incidentRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Incident {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el imprevisto {id}.");
 
         if (incident.Status != IncidentStatus.Draft)
         {
@@ -94,7 +94,7 @@ public class IncidentService : IIncidentService
 
         var project =
             await _projectRepository.GetByIdAsync(incident.ProjectId)
-            ?? throw new NotFoundException($"Project {incident.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {incident.ProjectId}.");
 
         await ValidateChapterAsync(project.BudgetId, request.ChapterId);
 
@@ -126,7 +126,7 @@ public class IncidentService : IIncidentService
     {
         var incident =
             await _incidentRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Incident {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el imprevisto {id}.");
 
         if (incident.Status != IncidentStatus.Draft)
         {
@@ -142,7 +142,7 @@ public class IncidentService : IIncidentService
 
         var project =
             await _projectRepository.GetByIdAsync(incident.ProjectId)
-            ?? throw new NotFoundException($"Project {incident.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {incident.ProjectId}.");
         project.PendingExpenses -= incident.TotalCost;
         project.CurrentDirectExpenses += incident.TotalCost;
         project.UpdatedAt = DateTime.UtcNow;
@@ -163,7 +163,7 @@ public class IncidentService : IIncidentService
     {
         var incident =
             await _incidentRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Incident {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el imprevisto {id}.");
 
         if (incident.Status != IncidentStatus.Draft)
         {
@@ -174,7 +174,7 @@ public class IncidentService : IIncidentService
 
         var project =
             await _projectRepository.GetByIdAsync(incident.ProjectId)
-            ?? throw new NotFoundException($"Project {incident.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {incident.ProjectId}.");
         project.PendingExpenses -= incident.TotalCost;
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
@@ -186,7 +186,7 @@ public class IncidentService : IIncidentService
     {
         var incident =
             await _incidentRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Incident {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el imprevisto {id}.");
         return MapToDto(incident);
     }
 
@@ -292,7 +292,7 @@ public class IncidentService : IIncidentService
         {
             var workerEntity =
                 await _workerRepository.GetByIdAsync(dto.WorkerId)
-                ?? throw new NotFoundException($"Worker {dto.WorkerId} not found.");
+                ?? throw new NotFoundException($"No se encontró el trabajador {dto.WorkerId}.");
 
             var incidentWorker = incident.Workers.FirstOrDefault(w => w.WorkerId == dto.WorkerId);
             if (incidentWorker is null)
@@ -353,7 +353,7 @@ public class IncidentService : IIncidentService
 
         var budget =
             await _budgetRepository.GetByIdAsync(budgetId)
-            ?? throw new NotFoundException($"Budget {budgetId} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {budgetId}.");
 
         if (!budget.Chapters.Any(c => c.Id == chapterId.Value))
         {

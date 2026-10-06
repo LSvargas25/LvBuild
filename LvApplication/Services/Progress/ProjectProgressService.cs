@@ -32,15 +32,15 @@ public class ProjectProgressService : IProjectProgressService
     {
         var siteLog =
             await _siteLogRepository.GetByIdAsync(siteLogId)
-            ?? throw new NotFoundException($"SiteLog {siteLogId} not found.");
+            ?? throw new NotFoundException($"No se encontró la bitácora {siteLogId}.");
 
         var project =
             await _projectRepository.GetByIdAsync(siteLog.ProjectId)
-            ?? throw new NotFoundException($"Project {siteLog.ProjectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {siteLog.ProjectId}.");
 
         var offer =
             await _offerRepository.GetByIdAsync(project.OfferId)
-            ?? throw new NotFoundException($"Offer {project.OfferId} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {project.OfferId}.");
 
         // SUPUESTO (la sección 13 de la especificación no trae la fórmula exacta):
         // % de avance = semanas transcurridas entre el inicio del proyecto y el fin de

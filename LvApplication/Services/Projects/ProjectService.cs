@@ -54,7 +54,7 @@ public class ProjectService : IProjectService
 
         var offer =
             await _offerRepository.GetByIdAsync(request.OfferId)
-            ?? throw new NotFoundException($"Offer {request.OfferId} not found.");
+            ?? throw new NotFoundException($"No se encontró la oferta {request.OfferId}.");
 
         if (offer.Status != OfferStatus.ClientAccepted)
         {
@@ -65,7 +65,7 @@ public class ProjectService : IProjectService
 
         var budget =
             await _budgetRepository.GetByIdAsync(offer.BudgetId)
-            ?? throw new NotFoundException($"Budget {offer.BudgetId} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {offer.BudgetId}.");
 
         if (budget.Status != BudgetStatus.ClientApproved)
         {
@@ -84,7 +84,7 @@ public class ProjectService : IProjectService
 
         var branch =
             await _branchRepository.GetByIdAsync(request.BranchId)
-            ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {request.BranchId}.");
 
         if (branch.BranchType != BranchType.Office)
         {
@@ -141,7 +141,12 @@ public class ProjectService : IProjectService
                     CreatedAt = DateTime.UtcNow,
                 }
             );
+            project.CurrentProfit += assignedSoldTotal;
         }
+
+        // CurrentProfit = Σ ChapterProfit (see ProjectChapterService.SyncProjectProfitAsync).
+        if (project.CurrentProfit != 0)
+            await _projectRepository.UpdateAsync(project);
 
         return MapToDto(project);
     }
@@ -156,7 +161,7 @@ public class ProjectService : IProjectService
 
         var project =
             await _projectRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Project {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {id}.");
 
         var previousDate = project.EndDate;
 
@@ -190,11 +195,11 @@ public class ProjectService : IProjectService
 
         var project =
             await _projectRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Project {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {id}.");
 
         var worker =
             await _workerRepository.GetByIdAsync(request.WorkerId)
-            ?? throw new NotFoundException($"Worker {request.WorkerId} not found.");
+            ?? throw new NotFoundException($"No se encontró el trabajador {request.WorkerId}.");
 
         if (worker.Status != ActiveStatus.Active)
         {
@@ -235,7 +240,7 @@ public class ProjectService : IProjectService
     {
         var project =
             await _projectRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Project {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {id}.");
 
         var assignment =
             project.Workers.FirstOrDefault(pw => pw.WorkerId == workerId && pw.IsActive)
@@ -255,7 +260,7 @@ public class ProjectService : IProjectService
     {
         var project =
             await _projectRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Project {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {id}.");
 
         var hasActivity =
             project.Workers.Count > 0
@@ -278,7 +283,7 @@ public class ProjectService : IProjectService
     {
         var project =
             await _projectRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Project {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {id}.");
         return MapToDto(project);
     }
 
@@ -318,7 +323,7 @@ public class ProjectService : IProjectService
     {
         var project =
             await _projectRepository.GetByIdAsync(projectId)
-            ?? throw new NotFoundException($"Project {projectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {projectId}.");
 
         project.WeeksCounter += 1;
         project.UpdatedAt = DateTime.UtcNow;
@@ -337,7 +342,7 @@ public class ProjectService : IProjectService
 
         var project =
             await _projectRepository.GetByIdAsync(projectId)
-            ?? throw new NotFoundException($"Project {projectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {projectId}.");
 
         if (project.WeeksCounter > 0)
         {

@@ -53,7 +53,7 @@ public class WorkerService : IWorkerService
 
         var worker =
             await _workerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Worker {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el trabajador {id}.");
 
         worker.Name = request.Name;
         worker.PersonalId = request.PersonalId;
@@ -75,7 +75,7 @@ public class WorkerService : IWorkerService
     {
         var worker =
             await _workerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Worker {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el trabajador {id}.");
         return MapToDto(worker);
     }
 
@@ -96,7 +96,7 @@ public class WorkerService : IWorkerService
     {
         var worker =
             await _workerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Worker {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el trabajador {id}.");
         await _workerRepository.DeleteAsync(worker);
     }
 

@@ -71,7 +71,7 @@ public class BudgetService : IBudgetService
 
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         EnsureEditable(budget);
 
@@ -94,7 +94,7 @@ public class BudgetService : IBudgetService
     {
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         if (budget.Status != BudgetStatus.Draft && budget.Status != BudgetStatus.Correction)
         {
@@ -125,7 +125,7 @@ public class BudgetService : IBudgetService
     {
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         if (budget.Status != BudgetStatus.Review)
         {
@@ -149,7 +149,7 @@ public class BudgetService : IBudgetService
 
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         if (budget.Status != BudgetStatus.Review)
         {
@@ -179,7 +179,7 @@ public class BudgetService : IBudgetService
 
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         if (budget.Status != BudgetStatus.Sent)
         {
@@ -203,7 +203,7 @@ public class BudgetService : IBudgetService
     {
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         if (budget.Status != BudgetStatus.Sent)
         {
@@ -233,7 +233,7 @@ public class BudgetService : IBudgetService
 
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         if (budget.Status is BudgetStatus.ClientApproved or BudgetStatus.Cancelled)
         {
@@ -257,7 +257,7 @@ public class BudgetService : IBudgetService
     {
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
 
         if (budget.Status != BudgetStatus.Draft)
         {
@@ -284,7 +284,7 @@ public class BudgetService : IBudgetService
     {
         var budget =
             await _budgetRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Budget {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
         return MapToDto(budget);
     }
 

@@ -104,3 +104,30 @@ Formato: `csharpier check .` (o `csharpier format .`).
   en la variable de entorno `ConnectionStrings__DefaultConnection` del hosting (nunca en el repo).
 - Para `dotnet ef database update` usar el endpoint **directo** (sin `-pooler`); la app puede
   usar el endpoint con pooler.
+
+### Re-sembrar la demo en producción
+
+El seeder demo es idempotente: si ya existe `gerencia@lvbuild.test` no hace nada. Las fechas
+de la demo se calculan relativas al día en que corre el seed (el proyecto arranca el lunes de
+cinco semanas antes), así que para "rejuvenecer" la demo o cargar cambios del seeder hay que
+vaciar la base y dejar que el siguiente arranque la vuelva a crear:
+
+1. En la consola de Neon (**SQL Editor**, base de la app, con el rol dueño, p. ej.
+   `neondb_owner`) ejecutar:
+
+   ```sql
+   -- Borra TODAS las tablas de la app, incluido __EFMigrationsHistory.
+   DROP SCHEMA public CASCADE;
+   CREATE SCHEMA public;
+   GRANT ALL ON SCHEMA public TO public;
+   ```
+
+   Alternativa sin SQL: en Neon, **Branches → (rama de producción) → Reset from parent** o
+   restaurar la rama a un punto anterior al primer deploy.
+2. En Render, **Manual Deploy → Restart service** (o cualquier deploy). Con
+   `Database__MigrateOnStartup=true` y `Seed__Demo=true` el arranque aplica las migraciones y
+   vuelve a sembrar la empresa demo con fechas relativas a ese día.
+3. Verificar `GET /health/ready` y entrar con `gerencia@lvbuild.test` / `LvBuild#2026`.
+
+> Esto borra cualquier dato creado a mano en la demo. Nunca hacerlo sobre una base con datos
+> reales: ahí `Seed__Demo` debe estar en `false`.

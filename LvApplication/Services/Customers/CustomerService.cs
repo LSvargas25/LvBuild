@@ -52,7 +52,7 @@ public class CustomerService : ICustomerService
 
         var customer =
             await _customerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Customer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el cliente {id}.");
 
         customer.Name = request.Name;
         customer.CustomerType = request.CustomerType;
@@ -73,7 +73,7 @@ public class CustomerService : ICustomerService
     {
         var customer =
             await _customerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Customer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el cliente {id}.");
         return MapToDto(customer);
     }
 
@@ -94,7 +94,7 @@ public class CustomerService : ICustomerService
     {
         var customer =
             await _customerRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Customer {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el cliente {id}.");
 
         customer.Status = ActiveStatus.Inactive;
         customer.UpdatedAt = DateTime.UtcNow;

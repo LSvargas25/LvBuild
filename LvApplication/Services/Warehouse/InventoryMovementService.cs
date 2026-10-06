@@ -56,7 +56,7 @@ public class InventoryMovementService : IInventoryMovementService
 
         var originBranch =
             await _branchRepository.GetByIdAsync(request.OriginBranchId)
-            ?? throw new NotFoundException($"Branch {request.OriginBranchId} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {request.OriginBranchId}.");
 
         if (originBranch.BranchType != BranchType.Warehouse)
         {
@@ -69,7 +69,9 @@ public class InventoryMovementService : IInventoryMovementService
         {
             var destinationBranch =
                 await _branchRepository.GetByIdAsync(request.DestinationBranchId.Value)
-                ?? throw new NotFoundException($"Branch {request.DestinationBranchId} not found.");
+                ?? throw new NotFoundException(
+                    $"No se encontró la sucursal {request.DestinationBranchId}."
+                );
 
             if (destinationBranch.BranchType != BranchType.Commercial)
             {
@@ -83,13 +85,13 @@ public class InventoryMovementService : IInventoryMovementService
             _ =
                 await _projectRepository.GetByIdAsync(request.DestinationProjectId!.Value)
                 ?? throw new NotFoundException(
-                    $"Project {request.DestinationProjectId} not found."
+                    $"No se encontró el proyecto {request.DestinationProjectId}."
                 );
         }
 
         _ =
             await _productRepository.GetByIdAsync(request.ProductId)
-            ?? throw new NotFoundException($"Product {request.ProductId} not found.");
+            ?? throw new NotFoundException($"No se encontró el producto {request.ProductId}.");
 
         var now = DateTime.UtcNow;
         var movement = new InventoryMovement
@@ -126,7 +128,7 @@ public class InventoryMovementService : IInventoryMovementService
 
         var movement =
             await _movementRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"InventoryMovement {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el movimiento de inventario {id}.");
 
         if (movement.Status != InventoryMovementStatus.Sent)
         {
@@ -162,7 +164,9 @@ public class InventoryMovementService : IInventoryMovementService
             {
                 var product =
                     await _productRepository.GetByIdAsync(movement.ProductId)
-                    ?? throw new NotFoundException($"Product {movement.ProductId} not found.");
+                    ?? throw new NotFoundException(
+                        $"No se encontró el producto {movement.ProductId}."
+                    );
                 await IncrementProjectInventoryAsync(
                     movement.DestinationProjectId!.Value,
                     movement.ProductId,
@@ -258,7 +262,7 @@ public class InventoryMovementService : IInventoryMovementService
 
         var movement =
             await _movementRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"InventoryMovement {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el movimiento de inventario {id}.");
 
         if (movement.Status != InventoryMovementStatus.Sent)
         {
@@ -274,7 +278,7 @@ public class InventoryMovementService : IInventoryMovementService
     {
         var movement =
             await _movementRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"InventoryMovement {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el movimiento de inventario {id}.");
         return MapToDto(movement);
     }
 
