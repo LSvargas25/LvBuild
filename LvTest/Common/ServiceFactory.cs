@@ -139,22 +139,9 @@ public static class ServiceFactory
             new CancelBudgetDtoValidator()
         );
 
-    public static OfferService CreateOfferService(
-        AppDbContext context,
-        string? pdfOutputFolder = null,
-        string? logoPath = null
-    )
+    public static OfferService CreateOfferService(AppDbContext context, string? logoPath = null)
     {
-        var overrides = new Dictionary<string, string?>
-        {
-            ["Storage:GeneratedOffersPath"] =
-                pdfOutputFolder
-                ?? Path.Combine(
-                    Path.GetTempPath(),
-                    "LvTestGeneratedOffers",
-                    Guid.NewGuid().ToString()
-                ),
-        };
+        var overrides = new Dictionary<string, string?>();
 
         if (logoPath is not null)
         {

@@ -169,6 +169,12 @@ public class OfferServiceTests
             PaymentFrequency = PaymentFrequency.Monthly,
         };
 
+    private static void AssertIsPdf(byte[] content)
+    {
+        content.Should().NotBeEmpty();
+        System.Text.Encoding.ASCII.GetString(content, 0, 5).Should().Be("%PDF-");
+    }
+
     private static string CreateTempLogoFile()
     {
         // Minimal valid 1x1 transparent PNG, just enough for QuestPDF to load as an image.
@@ -424,20 +430,19 @@ public class OfferServiceTests
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
-        var pdfFolder = Path.Combine(Path.GetTempPath(), "LvTestOffers", Guid.NewGuid().ToString());
-        var service = ServiceFactory.CreateOfferService(context, pdfFolder);
+        var service = ServiceFactory.CreateOfferService(context);
 
         var created = await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
 
         var result = await service.SendToClientAsync(created.Id);
 
         result.Status.Should().Be(OfferStatus.SentToClient);
-        result.GeneratedPdfPath.Should().NotBeNullOrWhiteSpace();
-        File.Exists(result.GeneratedPdfPath!).Should().BeTrue();
+        result.PdfUrl.Should().Be($"/api/offers/{created.Id}/pdf");
+        created.PdfUrl.Should().BeNull();
     }
 
     [Fact]
-    public async Task GetPdfFileAsync_StillDraft_ThrowsValidationExceptionWithClearMessage()
+    public async Task GetPdfAsync_StillDraft_ThrowsValidationExceptionWithClearMessage()
     {
         using var context = TestDbContextFactory.Create();
         var director = await TestUserFactory.CreateAsync(
@@ -457,14 +462,14 @@ public class OfferServiceTests
 
         var created = await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
 
-        var act = async () => await service.GetPdfFileAsync(created.Id);
+        var act = async () => await service.GetPdfAsync(created.Id);
 
         var exception = await act.Should().ThrowAsync<ValidationAppException>();
         exception.Which.Message.Should().Contain("enviarse al cliente");
     }
 
     [Fact]
-    public async Task GetPdfFileAsync_AfterSendToClient_ReturnsExistingFilePathAndFileName()
+    public async Task GetPdfAsync_AfterSendToClient_ReturnsPdfBytesAndFileName()
     {
         using var context = TestDbContextFactory.Create();
         var director = await TestUserFactory.CreateAsync(
@@ -480,21 +485,19 @@ public class OfferServiceTests
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
-        var pdfFolder = Path.Combine(Path.GetTempPath(), "LvTestOffers", Guid.NewGuid().ToString());
-        var service = ServiceFactory.CreateOfferService(context, pdfFolder);
+        var service = ServiceFactory.CreateOfferService(context);
 
         var created = await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
         var sent = await service.SendToClientAsync(created.Id);
 
-        var (filePath, fileName) = await service.GetPdfFileAsync(created.Id);
+        var (content, fileName) = await service.GetPdfAsync(created.Id);
 
-        filePath.Should().Be(sent.GeneratedPdfPath);
         fileName.Should().Be($"{sent.OfferNumber}.pdf");
-        File.Exists(filePath).Should().BeTrue();
+        AssertIsPdf(content);
     }
 
     [Fact]
-    public async Task SendToClientAsync_PercentageOffer_GeneratesPdfFileOnDisk()
+    public async Task GetPdfAsync_PercentageOffer_GeneratesPdf()
     {
         using var context = TestDbContextFactory.Create();
         var director = await TestUserFactory.CreateAsync(
@@ -510,20 +513,18 @@ public class OfferServiceTests
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
-        var pdfFolder = Path.Combine(Path.GetTempPath(), "LvTestOffers", Guid.NewGuid().ToString());
-        var service = ServiceFactory.CreateOfferService(context, pdfFolder);
+        var service = ServiceFactory.CreateOfferService(context);
 
         var created = await service.CreateAsync(BuildPercentageCreateDto(budget.Id), creator.Id);
 
         var result = await service.SendToClientAsync(created.Id);
 
         result.Status.Should().Be(OfferStatus.SentToClient);
-        result.GeneratedPdfPath.Should().NotBeNullOrWhiteSpace();
-        File.Exists(result.GeneratedPdfPath!).Should().BeTrue();
+        AssertIsPdf((await service.GetPdfAsync(created.Id)).Content);
     }
 
     [Fact]
-    public async Task SendToClientAsync_WithConfiguredLogoPath_GeneratesPdfIncludingLogo()
+    public async Task GetPdfAsync_WithConfiguredLogoPath_GeneratesPdfIncludingLogo()
     {
         using var context = TestDbContextFactory.Create();
         var director = await TestUserFactory.CreateAsync(
@@ -539,16 +540,14 @@ public class OfferServiceTests
         var customer = await CreateProjectCustomerAsync(context);
         var branch = await CreateBranchAsync(context, director.Id);
         var budget = await CreateSentBudgetAsync(context, customer.Id, branch.Id, creator.Id);
-        var pdfFolder = Path.Combine(Path.GetTempPath(), "LvTestOffers", Guid.NewGuid().ToString());
         var logoPath = CreateTempLogoFile();
-        var service = ServiceFactory.CreateOfferService(context, pdfFolder, logoPath);
+        var service = ServiceFactory.CreateOfferService(context, logoPath: logoPath);
 
         var created = await service.CreateAsync(BuildTurnkeyCreateDto(budget.Id), creator.Id);
 
-        var result = await service.SendToClientAsync(created.Id);
+        await service.SendToClientAsync(created.Id);
 
-        result.GeneratedPdfPath.Should().NotBeNullOrWhiteSpace();
-        File.Exists(result.GeneratedPdfPath!).Should().BeTrue();
+        AssertIsPdf((await service.GetPdfAsync(created.Id)).Content);
     }
 
     [Fact]

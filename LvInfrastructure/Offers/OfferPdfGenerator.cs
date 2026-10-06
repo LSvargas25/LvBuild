@@ -27,17 +27,14 @@ public class OfferPdfGenerator : IOfferPdfGenerator
         _configuration = configuration;
     }
 
-    public string Generate(Offer offer)
+    // Rendered in memory on every request: the host disk (Render) is ephemeral, and the
+    // offer data is the source of truth, so there is no file to keep in sync.
+    public byte[] Generate(Offer offer)
     {
-        var outputFolder = _configuration["Storage:GeneratedOffersPath"] ?? "GeneratedFiles/Offers";
-        Directory.CreateDirectory(outputFolder);
-
-        var filePath = Path.Combine(outputFolder, $"{offer.OfferNumber}.pdf");
-
         var companyName = _configuration["Company:Name"] ?? "LV Construcciones";
         var logoPath = _configuration["Company:LogoPath"];
 
-        Document
+        return Document
             .Create(container =>
             {
                 container.Page(page =>
@@ -191,8 +188,6 @@ public class OfferPdfGenerator : IOfferPdfGenerator
                         });
                 });
             })
-            .GeneratePdf(filePath);
-
-        return filePath;
+            .GeneratePdf();
     }
 }

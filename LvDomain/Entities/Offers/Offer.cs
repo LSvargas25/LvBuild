@@ -35,7 +35,6 @@ public class Offer : BaseEntity
     public PaymentFrequency? PaymentFrequency { get; set; }
 
     public OfferStatus Status { get; set; }
-    public string? GeneratedPdfPath { get; set; }
 
     public int CreatedByUserId { get; set; }
     public User CreatedByUser { get; set; } = null!;

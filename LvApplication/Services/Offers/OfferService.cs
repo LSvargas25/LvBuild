@@ -156,7 +156,6 @@ public class OfferService : IOfferService
             );
         }
 
-        offer.GeneratedPdfPath = _pdfGenerator.Generate(offer);
         offer.Status = OfferStatus.SentToClient;
         offer.UpdatedAt = DateTime.UtcNow;
 
@@ -254,20 +253,20 @@ public class OfferService : IOfferService
         };
     }
 
-    public async Task<(string FilePath, string FileName)> GetPdfFileAsync(int id)
+    public async Task<(byte[] Content, string FileName)> GetPdfAsync(int id)
     {
         var offer =
             await _offerRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"Offer {id} not found.");
 
-        if (string.IsNullOrEmpty(offer.GeneratedPdfPath) || !File.Exists(offer.GeneratedPdfPath))
+        if (offer.Status == OfferStatus.Draft)
         {
             throw new ValidationAppException(
                 "El PDF de esta oferta aún no existe: primero debe enviarse al cliente (send-to-client)."
             );
         }
 
-        return (offer.GeneratedPdfPath, $"{offer.OfferNumber}.pdf");
+        return (_pdfGenerator.Generate(offer), $"{offer.OfferNumber}.pdf");
     }
 
     private async Task<string> GenerateOfferNumberAsync(int year)
@@ -302,7 +301,7 @@ public class OfferService : IOfferService
             PercentageCalculationMethod = offer.PercentageCalculationMethod,
             PaymentFrequency = offer.PaymentFrequency,
             Status = offer.Status,
-            GeneratedPdfPath = offer.GeneratedPdfPath,
+            PdfUrl = offer.Status == OfferStatus.Draft ? null : $"/api/offers/{offer.Id}/pdf",
             CreatedByUserId = offer.CreatedByUserId,
             Chapters = offer
                 .Chapters.OrderBy(c => c.Id)

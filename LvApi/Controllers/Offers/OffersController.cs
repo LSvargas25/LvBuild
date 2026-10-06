@@ -78,12 +78,12 @@ public class OffersController : ApiControllerBase
         return NoContent();
     }
 
-    /// <summary>Returns the offer PDF (application/pdf).</summary>
+    /// <summary>Generates the offer PDF on demand and returns it (application/pdf). Available once the offer was sent to the client; nothing is stored on disk.</summary>
     [HttpGet("{id:int}/pdf")]
     public async Task<IActionResult> GetPdf(int id)
     {
-        var (filePath, fileName) = await _offerService.GetPdfFileAsync(id);
-        return PhysicalFile(Path.GetFullPath(filePath), "application/pdf", fileName);
+        var (content, fileName) = await _offerService.GetPdfAsync(id);
+        return File(content, "application/pdf", fileName);
     }
 
     /// <summary>Lists offers (paged).</summary>

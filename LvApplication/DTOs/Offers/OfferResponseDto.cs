@@ -28,7 +28,9 @@ public class OfferResponseDto
     public PaymentFrequency? PaymentFrequency { get; set; }
 
     public OfferStatus Status { get; set; }
-    public string? GeneratedPdfPath { get; set; }
+
+    /// <summary>Relative URL of the PDF once the offer was sent to the client; null in Draft.</summary>
+    public string? PdfUrl { get; set; }
     public int CreatedByUserId { get; set; }
 
     public List<OfferChapterResponseDto> Chapters { get; set; } = new();
