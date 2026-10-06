@@ -18,8 +18,10 @@ and invoices. ASP.NET Core 8, EF Core 9 on PostgreSQL, layered architecture, JWT
 
 ## Live demo
 
-- API / Swagger: `https://<your-service>.onrender.com/swagger` *(placeholder until deployed)*
-- Health: `/health` (liveness) and `/health/ready` (database)
+- **App:** https://lvbuild-web.onrender.com (frontend: [lvbuild-web](https://github.com/LSvargas25/lvbuild-web))
+- **API:** https://lvbuild-api.onrender.com
+- **Swagger:** https://lvbuild-api.onrender.com/swagger
+- **Health:** https://lvbuild-api.onrender.com/health/ready (database) and `/health` (liveness)
 
 The free Render instance sleeps when idle, and Neon suspends idle compute: the first request
 can take 30-60 seconds.
