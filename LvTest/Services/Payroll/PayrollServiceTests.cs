@@ -591,4 +591,80 @@ public class PayrollServiceTests
 
         await act.Should().ThrowAsync<ValidationAppException>();
     }
+
+    [Fact]
+    public async Task PendingPayroll_IsAPendingExpense_UntilPaid_ThenMovesToDirectWithoutDoubleCounting()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (project, managerId, projectAdminId) = await CreateActiveProjectAsync(context);
+        var siteLog = await CreateApprovedSiteLogAsync(
+            context,
+            project.Id,
+            projectAdminId,
+            managerId,
+            new DateTime(2026, 3, 2)
+        );
+        var worker = await CreateWorkerAsync(context);
+        var service = ServiceFactory.CreatePayrollService(context);
+        var stored = await context.Projects.FindAsync(project.Id);
+        var pendingBefore = stored!.PendingExpenses;
+        var directBefore = stored.CurrentDirectExpenses;
+
+        var created = await service.CreateAsync(
+            new CreatePayrollDto
+            {
+                SiteLogId = siteLog.Id,
+                Details = [BuildDetail(worker.Id, new DateTime(2026, 3, 2), 40, 5)], // 200
+            },
+            projectAdminId
+        );
+        stored.PendingExpenses.Should().Be(pendingBefore + 200m);
+        stored.CurrentDirectExpenses.Should().Be(directBefore);
+
+        await service.UpdateAsync(
+            created.Id,
+            new UpdatePayrollDto
+            {
+                Details = [BuildDetail(worker.Id, new DateTime(2026, 3, 2), 48, 5)], // 240
+            }
+        );
+        stored.PendingExpenses.Should().Be(pendingBefore + 240m);
+
+        await service.MarkAsPaidAsync(created.Id);
+        stored.PendingExpenses.Should().Be(pendingBefore);
+        stored.CurrentDirectExpenses.Should().Be(directBefore + 240m);
+        (stored.PendingExpenses + stored.CurrentDirectExpenses)
+            .Should()
+            .Be(pendingBefore + directBefore + 240m);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Pending_RemovesItFromPendingExpenses()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (project, managerId, projectAdminId) = await CreateActiveProjectAsync(context);
+        var siteLog = await CreateApprovedSiteLogAsync(
+            context,
+            project.Id,
+            projectAdminId,
+            managerId,
+            new DateTime(2026, 3, 2)
+        );
+        var worker = await CreateWorkerAsync(context);
+        var service = ServiceFactory.CreatePayrollService(context);
+        var stored = await context.Projects.FindAsync(project.Id);
+        var pendingBefore = stored!.PendingExpenses;
+
+        var created = await service.CreateAsync(
+            new CreatePayrollDto
+            {
+                SiteLogId = siteLog.Id,
+                Details = [BuildDetail(worker.Id, new DateTime(2026, 3, 2), 40, 5)],
+            },
+            projectAdminId
+        );
+        await service.DeleteAsync(created.Id);
+
+        stored.PendingExpenses.Should().Be(pendingBefore);
+    }
 }

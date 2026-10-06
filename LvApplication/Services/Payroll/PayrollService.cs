@@ -85,6 +85,9 @@ public class PayrollService : IPayrollService
 
         await _payrollRepository.AddAsync(payroll);
 
+        // A payroll waiting to be paid is a pending expense of the project until MarkAsPaidAsync.
+        await AddToPendingExpensesAsync(payroll.ProjectId, payroll.TotalPayroll);
+
         return MapToDto(payroll);
     }
 
@@ -114,10 +117,12 @@ public class PayrollService : IPayrollService
         payroll.ChapterId = request.ChapterId;
         payroll.UpdatedAt = DateTime.UtcNow;
 
+        var previousTotal = payroll.TotalPayroll;
         SyncDetails(payroll, request.Details);
         payroll.TotalPayroll = payroll.Details.Sum(d => d.FinalAmountToPay);
 
         await _payrollRepository.UpdateAsync(payroll);
+        await AddToPendingExpensesAsync(payroll.ProjectId, payroll.TotalPayroll - previousTotal);
 
         return MapToDto(payroll);
     }
@@ -143,6 +148,8 @@ public class PayrollService : IPayrollService
         var project =
             await _projectRepository.GetByIdAsync(payroll.ProjectId)
             ?? throw new NotFoundException($"No se encontró el proyecto {payroll.ProjectId}.");
+        // Pending -> direct: the amount moves, it is never counted twice.
+        project.PendingExpenses -= payroll.TotalPayroll;
         project.CurrentDirectExpenses += payroll.TotalPayroll;
         project.UpdatedAt = DateTime.UtcNow;
         await _projectRepository.UpdateAsync(project);
@@ -175,6 +182,20 @@ public class PayrollService : IPayrollService
         }
 
         await _payrollRepository.DeleteAsync(payroll);
+        await AddToPendingExpensesAsync(payroll.ProjectId, -payroll.TotalPayroll);
+    }
+
+    private async Task AddToPendingExpensesAsync(int projectId, decimal amount)
+    {
+        if (amount == 0)
+            return;
+
+        var project =
+            await _projectRepository.GetByIdAsync(projectId)
+            ?? throw new NotFoundException($"No se encontró el proyecto {projectId}.");
+        project.PendingExpenses += amount;
+        project.UpdatedAt = DateTime.UtcNow;
+        await _projectRepository.UpdateAsync(project);
     }
 
     public async Task<PayrollDto> GetByIdAsync(int id)
