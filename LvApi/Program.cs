@@ -161,6 +161,7 @@ builder
     );
 
 builder.Services.AddReverseProxySupport();
+builder.Services.AddAppHealthChecks();
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -224,6 +225,7 @@ app.UseAuthorization();
 app.UseRateLimiter();
 
 app.MapControllers();
+app.MapAppHealthChecks();
 
 app.Run();
 
