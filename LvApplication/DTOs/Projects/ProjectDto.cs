@@ -5,6 +5,9 @@ namespace LvApplication.DTOs.Projects;
 public class ProjectDto
 {
     public int Id { get; set; }
+
+    /// <summary>Display name of the project: the name of the budget it was sold from.</summary>
+    public string Name { get; set; } = string.Empty;
     public int OfferId { get; set; }
     public int BudgetId { get; set; }
     public int CustomerId { get; set; }

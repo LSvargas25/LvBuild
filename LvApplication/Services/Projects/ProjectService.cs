@@ -148,7 +148,7 @@ public class ProjectService : IProjectService
         if (project.CurrentProfit != 0)
             await _projectRepository.UpdateAsync(project);
 
-        return MapToDto(project);
+        return await ToDtoAsync(project);
     }
 
     public async Task<ProjectDto> UpdateEndDateAsync(
@@ -182,7 +182,7 @@ public class ProjectService : IProjectService
 
         await _projectRepository.UpdateAsync(project);
 
-        return MapToDto(project);
+        return await ToDtoAsync(project);
     }
 
     public async Task<ProjectDto> AssignWorkerAsync(
@@ -233,7 +233,7 @@ public class ProjectService : IProjectService
 
         await _projectRepository.UpdateAsync(project);
 
-        return MapToDto(project);
+        return await ToDtoAsync(project);
     }
 
     public async Task<ProjectDto> UnassignWorkerAsync(int id, int workerId)
@@ -253,7 +253,7 @@ public class ProjectService : IProjectService
 
         await _projectRepository.UpdateAsync(project);
 
-        return MapToDto(project);
+        return await ToDtoAsync(project);
     }
 
     public async Task DeleteAsync(int id)
@@ -284,7 +284,7 @@ public class ProjectService : IProjectService
         var project =
             await _projectRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"No se encontró el proyecto {id}.");
-        return MapToDto(project);
+        return await ToDtoAsync(project);
     }
 
     public async Task<PagedResult<ProjectDto>> GetAllAsync(int pageNumber, int pageSize)
@@ -293,7 +293,7 @@ public class ProjectService : IProjectService
 
         return new PagedResult<ProjectDto>
         {
-            Items = items.Select(MapToDto).ToList(),
+            Items = await ToDtosAsync(items),
             TotalCount = totalCount,
             PageNumber = pageNumber,
             PageSize = pageSize,
@@ -352,6 +352,18 @@ public class ProjectService : IProjectService
         project.UpdatedAt = DateTime.UtcNow;
 
         await _projectRepository.UpdateAsync(project);
+    }
+
+    private async Task<ProjectDto> ToDtoAsync(Project project) => (await ToDtosAsync([project]))[0];
+
+    /// <summary>Maps projects to DTOs, resolving their display names in a single query.</summary>
+    private async Task<List<ProjectDto>> ToDtosAsync(List<Project> projects)
+    {
+        var names = await _projectRepository.GetNamesAsync(projects.Select(p => p.Id).ToList());
+        var dtos = projects.Select(MapToDto).ToList();
+        foreach (var dto in dtos)
+            dto.Name = names.GetValueOrDefault(dto.Id, string.Empty);
+        return dtos;
     }
 
     private static ProjectDto MapToDto(Project project) =>

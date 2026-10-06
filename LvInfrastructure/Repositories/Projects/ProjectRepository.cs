@@ -61,4 +61,10 @@ public class ProjectRepository : IProjectRepository
             .ProjectEndDateHistories.Where(h => h.ProjectId == projectId)
             .OrderBy(h => h.ChangedAt)
             .ToListAsync();
+
+    public Task<Dictionary<int, string>> GetNamesAsync(IReadOnlyCollection<int> projectIds) =>
+        _context
+            .Projects.Where(p => projectIds.Contains(p.Id))
+            .Select(p => new { p.Id, p.Budget.Name })
+            .ToDictionaryAsync(p => p.Id, p => p.Name);
 }

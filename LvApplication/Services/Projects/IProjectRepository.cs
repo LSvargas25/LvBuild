@@ -11,4 +11,7 @@ public interface IProjectRepository
     Task UpdateAsync(Project project);
     Task DeleteAsync(Project project);
     Task<List<ProjectEndDateHistory>> GetEndDateHistoryAsync(int projectId);
+
+    /// <summary>Project id -> display name (the name of the budget the project was sold from).</summary>
+    Task<Dictionary<int, string>> GetNamesAsync(IReadOnlyCollection<int> projectIds);
 }

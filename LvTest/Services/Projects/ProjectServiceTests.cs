@@ -185,6 +185,10 @@ public class ProjectServiceTests
         result.EndDate.Should().Be(offer.EstimatedDeliveryDate);
         result.WeeksCounter.Should().Be(0);
         result.WorkersUsedCount.Should().Be(0);
+        result.Name.Should().Be(budget.Name).And.NotBeEmpty();
+
+        (await service.GetByIdAsync(result.Id)).Name.Should().Be(budget.Name);
+        (await service.GetAllAsync(1, 10)).Items.Single().Name.Should().Be(budget.Name);
     }
 
     [Fact]
