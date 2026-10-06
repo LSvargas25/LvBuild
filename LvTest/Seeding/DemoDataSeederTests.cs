@@ -2,6 +2,7 @@ using FluentAssertions;
 using LvApplication.Common;
 using LvApplication.DTOs.Auth;
 using LvApplication.Services.Auth;
+using LvApplication.Services.Budgets;
 using LvDomain.Enums;
 using LvInfrastructure.Persistence;
 using LvInfrastructure.Seeding;
@@ -62,6 +63,30 @@ public class DemoDataSeederTests
 
         var chapterProfits = chapters.Sum(c => c.ChapterProfit);
         project.CurrentProfit.Should().Be(chapterProfits).And.BeGreaterThan(0);
+    }
+
+    [Fact]
+    public async Task GetBudget_LinksTheApprovedBudgetToItsOfferAndProject()
+    {
+        await using var provider = AppServicesFactory.CreateInMemory();
+        await SeedAsync(provider);
+
+        await using var scope = provider.CreateAsyncScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var budgets = scope.ServiceProvider.GetRequiredService<IBudgetService>();
+        var project = await context.Projects.SingleAsync();
+        var draftId = await context
+            .Budgets.Where(b => b.Status == BudgetStatus.Draft)
+            .Select(b => b.Id)
+            .FirstAsync();
+
+        var sold = await budgets.GetByIdAsync(project.BudgetId);
+        var draft = await budgets.GetByIdAsync(draftId);
+
+        sold.OfferId.Should().Be(project.OfferId);
+        sold.ProjectId.Should().Be(project.Id);
+        draft.OfferId.Should().BeNull();
+        draft.ProjectId.Should().BeNull();
     }
 
     [Fact]

@@ -285,7 +285,9 @@ public class BudgetService : IBudgetService
         var budget =
             await _budgetRepository.GetByIdAsync(id)
             ?? throw new NotFoundException($"No se encontró el presupuesto {id}.");
-        return MapToDto(budget);
+        var dto = MapToDto(budget);
+        (dto.OfferId, dto.ProjectId) = await _budgetRepository.GetOfferAndProjectIdsAsync(id);
+        return dto;
     }
 
     public async Task<PagedResult<BudgetResponseDto>> GetAllAsync(
