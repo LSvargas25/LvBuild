@@ -8,6 +8,7 @@ using LvApi.Extensions;
 using LvApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -62,6 +63,19 @@ builder
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
+// Malformed bodies (wrong JSON types, unparsable dates...) get the same Spanish error shape as
+// the rest of the API instead of the default English ProblemDetails.
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+    options.InvalidModelStateResponseFactory = context => new BadRequestObjectResult(
+        new
+        {
+            statusCode = StatusCodes.Status400BadRequest,
+            code = "validation",
+            message = InvalidRequestMessage.For(context.ModelState.Keys),
+        }
+    )
+);
 
 builder.Services.AddEndpointsApiExplorer();
 

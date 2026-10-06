@@ -109,6 +109,7 @@ public static class ServiceCollectionExtensions
         var applicationAssembly = typeof(LvApplication.Common.PagedResult<>).Assembly;
 
         services.AddValidatorsFromAssembly(applicationAssembly);
+        LvApplication.Common.ValidationLocalization.UseSpanish();
 
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUserService, UserService>();

@@ -66,7 +66,7 @@ public class InvoiceService : IInvoiceService
 
         var branch =
             await _branchRepository.GetByIdAsync(request.BranchId)
-            ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {request.BranchId}.");
 
         if (branch.BranchType != BranchType.Commercial)
         {
@@ -77,7 +77,7 @@ public class InvoiceService : IInvoiceService
 
         var cashRegister =
             await _cashRegisterRepository.GetByIdAsync(request.CashRegisterId)
-            ?? throw new NotFoundException($"CashRegister {request.CashRegisterId} not found.");
+            ?? throw new NotFoundException($"No se encontró la caja {request.CashRegisterId}.");
 
         if (cashRegister.BranchId != request.BranchId)
         {
@@ -118,7 +118,7 @@ public class InvoiceService : IInvoiceService
 
         var invoice =
             await _invoiceRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Invoice {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la factura {id}.");
 
         if (invoice.Status != InvoiceStatus.Draft)
         {
@@ -151,7 +151,7 @@ public class InvoiceService : IInvoiceService
 
         var invoice =
             await _invoiceRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Invoice {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la factura {id}.");
 
         if (invoice.Status != InvoiceStatus.Draft)
         {
@@ -167,7 +167,7 @@ public class InvoiceService : IInvoiceService
 
         var cashRegister =
             await _cashRegisterRepository.GetByIdAsync(invoice.CashRegisterId)
-            ?? throw new NotFoundException($"CashRegister {invoice.CashRegisterId} not found.");
+            ?? throw new NotFoundException($"No se encontró la caja {invoice.CashRegisterId}.");
 
         if (cashRegister.Status != CashRegisterStatus.Open)
         {
@@ -223,7 +223,8 @@ public class InvoiceService : IInvoiceService
             await NotifyLowStockAsync(invoice.BranchId, lowStockProductIds);
         }
 
-        var nextNumber = await _invoiceRepository.CountByBranchAsync(invoice.BranchId) + 1;
+        // Drafts have no number yet, so they must not advance the consecutive.
+        var nextNumber = await _invoiceRepository.CountNumberedByBranchAsync(invoice.BranchId) + 1;
         invoice.InvoiceNumber = nextNumber.ToString("D6", CultureInfo.InvariantCulture);
         invoice.Status = InvoiceStatus.Issued;
         invoice.UpdatedAt = DateTime.UtcNow;
@@ -258,7 +259,7 @@ public class InvoiceService : IInvoiceService
 
         var invoice =
             await _invoiceRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Invoice {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la factura {id}.");
 
         if (
             invoice.Status != InvoiceStatus.Issued
@@ -304,7 +305,7 @@ public class InvoiceService : IInvoiceService
     {
         var invoice =
             await _invoiceRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Invoice {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la factura {id}.");
 
         if (invoice.Status != InvoiceStatus.Issued)
         {
@@ -351,7 +352,7 @@ public class InvoiceService : IInvoiceService
     {
         var invoice =
             await _invoiceRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Invoice {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la factura {id}.");
 
         if (invoice.Status != InvoiceStatus.Draft)
         {
@@ -365,7 +366,7 @@ public class InvoiceService : IInvoiceService
     {
         var invoice =
             await _invoiceRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Invoice {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la factura {id}.");
         return MapToDto(invoice);
     }
 
@@ -427,7 +428,7 @@ public class InvoiceService : IInvoiceService
         {
             var product =
                 await _productRepository.GetByIdAsync(line.ProductId)
-                ?? throw new NotFoundException($"Product {line.ProductId} not found.");
+                ?? throw new NotFoundException($"No se encontró el producto {line.ProductId}.");
 
             if (product.Status != ProductStatus.Validated)
             {

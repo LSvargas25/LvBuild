@@ -13,18 +13,21 @@ public class ProjectChapterService : IProjectChapterService
     private readonly IMaterialTicketRepository _ticketRepository;
     private readonly IPayrollRepository _payrollRepository;
     private readonly IIncidentRepository _incidentRepository;
+    private readonly IProjectRepository _projectRepository;
 
     public ProjectChapterService(
         IProjectChapterRepository projectChapterRepository,
         IMaterialTicketRepository ticketRepository,
         IPayrollRepository payrollRepository,
-        IIncidentRepository incidentRepository
+        IIncidentRepository incidentRepository,
+        IProjectRepository projectRepository
     )
     {
         _projectChapterRepository = projectChapterRepository;
         _ticketRepository = ticketRepository;
         _payrollRepository = payrollRepository;
         _incidentRepository = incidentRepository;
+        _projectRepository = projectRepository;
     }
 
     public async Task<ProjectChapterDto> UpdateAssignedSoldTotalAsync(
@@ -44,6 +47,7 @@ public class ProjectChapterService : IProjectChapterService
         projectChapter.UpdatedAt = DateTime.UtcNow;
 
         await _projectChapterRepository.UpdateAsync(projectChapter);
+        await SyncProjectProfitAsync(projectId);
 
         return MapToDto(projectChapter);
     }
@@ -81,6 +85,23 @@ public class ProjectChapterService : IProjectChapterService
         projectChapter.UpdatedAt = DateTime.UtcNow;
 
         await _projectChapterRepository.UpdateAsync(projectChapter);
+        await SyncProjectProfitAsync(projectId);
+    }
+
+    /// <summary>
+    /// Project.CurrentProfit is the sum of the chapters' profit (assigned sold total minus actual
+    /// cost), the same figure the finance view totals, so both always agree.
+    /// </summary>
+    public async Task SyncProjectProfitAsync(int projectId)
+    {
+        var project =
+            await _projectRepository.GetByIdAsync(projectId)
+            ?? throw new NotFoundException($"Proyecto {projectId} no encontrado.");
+        var chapters = await _projectChapterRepository.GetByProjectAsync(projectId);
+
+        project.CurrentProfit = chapters.Sum(c => c.ChapterProfit);
+        project.UpdatedAt = DateTime.UtcNow;
+        await _projectRepository.UpdateAsync(project);
     }
 
     public async Task<List<ProjectChapterDto>> GetByProjectAsync(int projectId)

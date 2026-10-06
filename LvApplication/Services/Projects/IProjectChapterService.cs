@@ -10,5 +10,6 @@ public interface IProjectChapterService
         decimal assignedSoldTotal
     );
     Task RecalculateActualCostAsync(int projectId, int chapterId);
+    Task SyncProjectProfitAsync(int projectId);
     Task<List<ProjectChapterDto>> GetByProjectAsync(int projectId);
 }

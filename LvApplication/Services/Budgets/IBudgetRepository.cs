@@ -15,4 +15,7 @@ public interface IBudgetRepository
     Task UpdateAsync(Budget budget);
     Task DeleteAsync(Budget budget);
     Task<List<BudgetHistory>> GetHistoryAsync(int budgetId);
+
+    /// <summary>The offer made from the budget and the project started from it, if they exist.</summary>
+    Task<(int? OfferId, int? ProjectId)> GetOfferAndProjectIdsAsync(int budgetId);
 }

@@ -34,7 +34,7 @@ public class CashRegisterService : ICashRegisterService
 
         var branch =
             await _branchRepository.GetByIdAsync(request.BranchId)
-            ?? throw new NotFoundException($"Branch {request.BranchId} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {request.BranchId}.");
 
         if (branch.BranchType != BranchType.Commercial)
         {
@@ -77,7 +77,7 @@ public class CashRegisterService : ICashRegisterService
 
         var register =
             await _cashRegisterRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"CashRegister {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la caja {id}.");
 
         if (register.Status != CashRegisterStatus.Open)
         {
@@ -104,7 +104,7 @@ public class CashRegisterService : ICashRegisterService
     {
         var register =
             await _cashRegisterRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"CashRegister {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la caja {id}.");
 
         if (register.Status != CashRegisterStatus.Open)
         {
@@ -125,7 +125,7 @@ public class CashRegisterService : ICashRegisterService
     {
         var register =
             await _cashRegisterRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"CashRegister {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la caja {id}.");
         return MapToDto(register);
     }
 

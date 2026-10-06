@@ -41,7 +41,7 @@ public class UserService : IUserService
 
         if (await _userRepository.EmailExistsAsync(request.Email))
         {
-            throw new ConflictException("Email is already registered.");
+            throw new ConflictException("El correo ya está registrado.");
         }
 
         var user = new User
@@ -68,7 +68,7 @@ public class UserService : IUserService
     {
         var user =
             await _userRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"User {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el usuario {id}.");
         return MapToDto(user);
     }
 

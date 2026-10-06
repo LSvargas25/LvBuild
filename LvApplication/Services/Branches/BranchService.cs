@@ -99,7 +99,7 @@ public class BranchService : IBranchService
 
         var branch =
             await _branchRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Branch {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {id}.");
 
         if (request.BranchAdminId.HasValue)
         {
@@ -141,7 +141,7 @@ public class BranchService : IBranchService
     {
         var branch =
             await _branchRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Branch {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {id}.");
 
         await EnsureUserHasRoleAsync(
             request.OperationsDirectorId,
@@ -161,7 +161,7 @@ public class BranchService : IBranchService
     {
         var branch =
             await _branchRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Branch {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {id}.");
 
         branch.Status = BranchStatus.Active;
         branch.UpdatedAt = DateTime.UtcNow;
@@ -175,7 +175,7 @@ public class BranchService : IBranchService
     {
         var branch =
             await _branchRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Branch {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {id}.");
 
         branch.Status = BranchStatus.Inactive;
         branch.UpdatedAt = DateTime.UtcNow;
@@ -189,7 +189,7 @@ public class BranchService : IBranchService
     {
         var branch =
             await _branchRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Branch {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {id}.");
 
         if (isGeneralManager)
         {
@@ -210,11 +210,11 @@ public class BranchService : IBranchService
     {
         var branch =
             await _branchRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Branch {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la sucursal {id}.");
 
         if (!IsGeneralManager(currentUserRoles) && branch.OperationsDirectorId != currentUserId)
         {
-            throw new NotFoundException($"Branch {id} not found.");
+            throw new NotFoundException($"No se encontró la sucursal {id}.");
         }
 
         return MapToDto(branch);

@@ -226,3 +226,6 @@ smoke-tests the Docker image against PostgreSQL.
    `Cors__AllowedOrigins__0` (the frontend URL).
 4. The first deploy migrates the schema and loads the demo data. Set `Seed__Demo=false` for a
    database without demo data.
+5. The demo seeder is idempotent and dates everything relative to the day it runs. To reload it
+   (fresh dates or seeder changes), empty the Neon database and restart the service: see
+   [docs/development.md](docs/development.md#re-sembrar-la-demo-en-producción).

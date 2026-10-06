@@ -32,7 +32,7 @@ public class ProjectFinanceService : IProjectFinanceService
     {
         var project =
             await _projectRepository.GetByIdAsync(projectId)
-            ?? throw new NotFoundException($"Project {projectId} not found.");
+            ?? throw new NotFoundException($"No se encontró el proyecto {projectId}.");
 
         var (periodStart, periodEnd) = ComputePeriodRange(period, referenceDate);
 

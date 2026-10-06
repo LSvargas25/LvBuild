@@ -39,21 +39,47 @@ public partial class ExceptionMiddleware
         PathString path
     );
 
+    /// <summary>
+    /// Every error has the same JSON shape: <c>{ statusCode, code, message }</c>. The message is
+    /// in Spanish and meant for the end user; <c>code</c> is stable so clients can branch on it
+    /// (not_found, validation, forbidden, conflict, unexpected).
+    /// </summary>
     private static Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
-        var (statusCode, message) = exception switch
+        var (statusCode, code, message) = exception switch
         {
-            NotFoundException => (HttpStatusCode.NotFound, exception.Message),
-            ValidationAppException => (HttpStatusCode.BadRequest, exception.Message),
-            ForbiddenException => (HttpStatusCode.Forbidden, exception.Message),
-            ConflictException => (HttpStatusCode.Conflict, exception.Message),
-            _ => (HttpStatusCode.InternalServerError, "An unexpected error occurred."),
+            NotFoundException => (HttpStatusCode.NotFound, "not_found", exception.Message),
+            ValidationAppException => (HttpStatusCode.BadRequest, "validation", exception.Message),
+            ForbiddenException => (HttpStatusCode.Forbidden, "forbidden", exception.Message),
+            ConflictException => (HttpStatusCode.Conflict, "conflict", exception.Message),
+            _ => (
+                HttpStatusCode.InternalServerError,
+                "unexpected",
+                "Ocurrió un error inesperado. Intente de nuevo más tarde."
+            ),
         };
 
+        return WriteErrorAsync(context, statusCode, code, message);
+    }
+
+    private static Task WriteErrorAsync(
+        HttpContext context,
+        HttpStatusCode statusCode,
+        string code,
+        string message
+    )
+    {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)statusCode;
 
-        var payload = JsonSerializer.Serialize(new { statusCode = (int)statusCode, message });
+        var payload = JsonSerializer.Serialize(
+            new
+            {
+                statusCode = (int)statusCode,
+                code,
+                message,
+            }
+        );
 
         return context.Response.WriteAsync(payload);
     }

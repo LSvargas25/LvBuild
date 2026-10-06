@@ -50,7 +50,7 @@ public class SupplierService : ISupplierService
 
         var supplier =
             await _supplierRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Supplier {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proveedor {id}.");
 
         supplier.Name = request.Name;
         supplier.Status = request.Status;
@@ -69,7 +69,7 @@ public class SupplierService : ISupplierService
     {
         var supplier =
             await _supplierRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Supplier {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proveedor {id}.");
         return MapToDto(supplier);
     }
 
@@ -90,7 +90,7 @@ public class SupplierService : ISupplierService
     {
         var supplier =
             await _supplierRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Supplier {id} not found.");
+            ?? throw new NotFoundException($"No se encontró el proveedor {id}.");
 
         supplier.Status = ActiveStatus.Inactive;
         supplier.UpdatedAt = DateTime.UtcNow;

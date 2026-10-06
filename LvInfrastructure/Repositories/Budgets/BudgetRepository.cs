@@ -77,4 +77,18 @@ public class BudgetRepository : IBudgetRepository
             .BudgetHistories.Where(h => h.BudgetId == budgetId)
             .OrderBy(h => h.Timestamp)
             .ToListAsync();
+
+    public async Task<(int? OfferId, int? ProjectId)> GetOfferAndProjectIdsAsync(int budgetId)
+    {
+        var offerId = await _context
+            .Offers.Where(o => o.BudgetId == budgetId)
+            .OrderByDescending(o => o.Id)
+            .Select(o => (int?)o.Id)
+            .FirstOrDefaultAsync();
+        var projectId = await _context
+            .Projects.Where(p => p.BudgetId == budgetId)
+            .Select(p => (int?)p.Id)
+            .FirstOrDefaultAsync();
+        return (offerId, projectId);
+    }
 }

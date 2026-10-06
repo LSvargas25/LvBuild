@@ -153,7 +153,8 @@ public static class ServiceFactory
             new ProjectChapterRepository(context),
             new MaterialTicketRepository(context),
             new PayrollRepository(context),
-            new IncidentRepository(context)
+            new IncidentRepository(context),
+            new ProjectRepository(context)
         );
 
     public static ProjectService CreateProjectService(AppDbContext context) =>

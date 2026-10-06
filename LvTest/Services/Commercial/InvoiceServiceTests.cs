@@ -309,6 +309,40 @@ public class InvoiceServiceTests
     }
 
     [Fact]
+    public async Task IssueAsync_NumbersAreConsecutiveFrom000001_IgnoringPendingDrafts()
+    {
+        using var context = TestDbContextFactory.Create();
+        var (branch, register, userId) = await CreateContextAsync(context, "u17");
+        var product = await CreateValidatedProductAsync(context, userId, "SKU-INV-17");
+        await CreateInventoryAsync(context, branch.Id, product.Id, 20m);
+        var service = ServiceFactory.CreateInvoiceService(context);
+        var drafts = new List<int>();
+        for (var i = 0; i < 3; i++)
+        {
+            var draft = await service.CreateAsync(
+                new CreateInvoiceDto
+                {
+                    BranchId = branch.Id,
+                    CashRegisterId = register.Id,
+                    PaymentType = InvoicePaymentType.Credito,
+                    Details = new()
+                    {
+                        new InvoiceDetailLineDto { ProductId = product.Id, Quantity = 1 },
+                    },
+                },
+                userId
+            );
+            drafts.Add(draft.Id);
+        }
+
+        var first = await service.IssueAsync(drafts[2], new IssueInvoiceDto(), userId);
+        var second = await service.IssueAsync(drafts[0], new IssueInvoiceDto(), userId);
+
+        first.InvoiceNumber.Should().Be("000001");
+        second.InvoiceNumber.Should().Be("000002");
+    }
+
+    [Fact]
     public async Task IssueAsync_StockDropsToThresholdOrBelow_NotifiesGeneralManagerAndOperationsDirector()
     {
         using var context = TestDbContextFactory.Create();

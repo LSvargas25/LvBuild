@@ -61,10 +61,10 @@ public class NotificationService : INotificationService
     {
         var notification =
             await _notificationRepository.GetByIdAsync(id)
-            ?? throw new NotFoundException($"Notification {id} not found.");
+            ?? throw new NotFoundException($"No se encontró la notificación {id}.");
 
         if (notification.UserId != userId)
-            throw new NotFoundException($"Notification {id} not found.");
+            throw new NotFoundException($"No se encontró la notificación {id}.");
 
         if (notification.IsRead)
             return;

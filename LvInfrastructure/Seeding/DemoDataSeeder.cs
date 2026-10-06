@@ -39,7 +39,9 @@ namespace LvInfrastructure.Seeding;
 /// Loads a believable demo company (Seed:Demo=true). Every business flow goes through the real
 /// application services, so totals, stock, project expenses and chapter costs are computed by the
 /// same rules as in production. Dates are relative to "today" in Costa Rica so the demo always
-/// looks current.
+/// looks current: the project starts on the Monday five weeks before the seed, and a final pass
+/// (DemoDataSeeder.Timeline.cs) moves the timestamps the services stamp with "now" to the week
+/// each event belongs to.
 ///
 /// Idempotent: if the demo General Manager already exists nothing is done. On PostgreSQL
 /// everything runs in one transaction, so a failed run leaves no partial data behind.
@@ -138,7 +140,9 @@ public sealed partial class DemoDataSeeder
         var company = await SeedCompanyAsync(users);
         await SeedStoreAsync(users, company);
         await SeedBudgetsInEveryStateAsync(users, company);
-        await SeedActiveProjectAsync(users, company);
+        var timeline = DemoTimeline.From(CostaRicaTime.Today);
+        await SeedActiveProjectAsync(users, company, timeline);
+        await ApplyTimelineAsync(timeline, cancellationToken);
 
         if (transaction is not null)
             await transaction.CommitAsync(cancellationToken);
@@ -687,10 +691,15 @@ public sealed partial class DemoDataSeeder
 
     /// <summary>
     /// Residencia Familia Mora: budget -> offer (accepted) -> project started five weeks ago,
-    /// with material purchases, four approved weekly site logs (two paid payrolls, one pending),
-    /// one site log in review, the current week in draft and an approved incident.
+    /// with material purchases, four approved weekly site logs (three paid payrolls and the
+    /// latest one pending), one site log in review, the current week in draft and an approved
+    /// incident.
     /// </summary>
-    private async Task SeedActiveProjectAsync(DemoUsers users, DemoCompany company)
+    private async Task SeedActiveProjectAsync(
+        DemoUsers users,
+        DemoCompany company,
+        DemoTimeline timeline
+    )
     {
         var budget = await _budgets.CreateAsync(
             new CreateBudgetDto
@@ -758,8 +767,8 @@ public sealed partial class DemoDataSeeder
         await _budgets.ApproveInternalAsync(budget.Id, users.GeneralManager);
 
         var chapters = budget.Chapters.OrderBy(c => c.Order).Select(c => c.Id).ToList();
-        var thisMonday = MondayOf(CostaRicaTime.Today);
-        var startDate = thisMonday.AddDays(-35);
+        var thisMonday = timeline.ThisMonday;
+        var startDate = timeline.ProjectStart;
 
         var offer = await _offers.CreateAsync(
             new CreateOfferDto
@@ -913,8 +922,8 @@ public sealed partial class DemoDataSeeder
             users.ProjectAdmin
         );
 
-        // Payrolls for the approved weeks: the first two paid, the third pending.
-        for (var week = 0; week < 3; week++)
+        // Payrolls for the approved weeks: all paid except the latest one, still pending.
+        for (var week = 0; week < 4; week++)
         {
             var weekEnd = startDate.AddDays((7 * week) + 6);
             var payroll = await _payrolls.CreateAsync(
@@ -943,7 +952,7 @@ public sealed partial class DemoDataSeeder
                 },
                 users.ProjectAdmin
             );
-            if (week < 2)
+            if (week < 3)
                 await _payrolls.MarkAsPaidAsync(payroll.Id);
         }
 
@@ -953,7 +962,7 @@ public sealed partial class DemoDataSeeder
             {
                 ProjectId = project.Id,
                 ChapterId = chapters[1],
-                Date = startDate.AddDays(17),
+                Date = startDate.AddDays(DemoTimeline.IncidentDay),
                 Description =
                     "Lluvia intensa dañó la formaleta de dos columnas; se repuso y se volvió a colar.",
                 Materials =
@@ -974,9 +983,6 @@ public sealed partial class DemoDataSeeder
         );
         await _incidents.ApproveAsync(incident.Id, users.OperationsDirector);
     }
-
-    private static DateTime MondayOf(DateTime date) =>
-        date.AddDays(-(((int)date.DayOfWeek + 6) % 7));
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Demo data already present; skipping.")]
     private static partial void LogAlreadySeeded(ILogger logger);
